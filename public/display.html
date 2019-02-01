@@ -8,14 +8,87 @@
     <title>Display</title>
 </head>
 <body>
-    
     <canvas id="canvasArea"></canvas>
 </body>
 <script>
     document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
+
+    //should not make this 
+    var gameHeight = document.documentElement.clientHeight - 50;
+    var gameWidth = document.documentElement.clientWidth - 50;
+
+    var serverConnection;
+
+    var playerEntities=[
+        {
+            x:1,
+            y:300,
+            width:50,
+            height:50,
+        }
+    ];
+
     function setupDisplayArea(){
         //set width and height and connect to the server
+        
+        gameHeight = document.documentElement.clientHeight - 50;
+        gameWidth = document.documentElement.clientWidth - 50;
+
+        let displayElement = document.getElementById("canvasArea");
+        let canvasDraw = displayElement.getContext("2d");
+
+
+        displayElement.setAttribute("width",gameWidth);
+        displayElement.setAttribute("height",gameHeight);
+
+        canvasDraw.clearRect(0,0,gameWidth,gameHeight);
+
+        canvasDraw.beginPath();
+        canvasDraw.rect(0,0,gameWidth,gameHeight);
+        
+        canvasDraw.stroke();
+
+
+        //get a websocekt connection
+        let serverIpAddress = "192.168.1.82"
+        serverConnection = new WebSocket(`ws://${serverIpAddress}:43211`);
+        serverConnection.onopen = ()=> {
+            console.log("websocket open")
+            serverConnection.send(JSON.stringify({actAsDisplay:true}));
+        }
+
+        serverConnection.onmessage = (message) =>{
+            let theMessage = JSON.parse(message.data);
+
+            if(theMessage.moveRight){
+                playerEntities[0].x += 10
+            }
+            else if(theMessage.moveLeft){
+                playerEntities[0].x -= 10
+            }
+        }
+
+        startGame();
+    }
+
+    function startGame(){
+        setInterval(gameStep,30);
+    }
+
+    function gameStep(){
+        let displayElement = document.getElementById("canvasArea");
+        let canvasDraw = displayElement.getContext("2d");
+
+            
+        canvasDraw.clearRect(0,0,gameWidth,gameHeight);
+        
+        canvasDraw.beginPath();
+        canvasDraw.rect(0,0,gameWidth,gameHeight);
+        playerEntities.forEach(element => {
+            canvasDraw.rect(element.x,element.y,element.width,element.height);
+        });
+        canvasDraw.stroke();
     }
 
 </script>

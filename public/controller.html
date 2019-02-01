@@ -8,25 +8,67 @@
     <title>Controller</title>
 </head>
 <body>
-    <button onclick="leftPressed()">left</button>
-    <button onclick="rightPressed()">right</button>
-    <button onclick="actionPressed()">action</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; height: 90vh">
+        
+        <button onmousedown="leftStart()" onmouseup="leftStop()">left</button>
+        <button onclick="actionPressed()">action </button>
+        <button onmousedown="rightStart()" onmouseup="rightStop()">right</button>
+        <!-- <button onmousedown="leftStart()" onmouseup="leftStop()" onclick="leftPressed()">left</button>
+        <button onmousedown="rightStart()" onmouseup="leftStop()" onclick="actionPressed()">action</button>
+        <button onclick="rightPressed()">right</button> -->
+    </div>
 </body>
 
 <script>
+    var serverConnection;
+
+    var leftPressTimer;
+    var rightPressTimer;
+    
+    document.addEventListener("DOMContentLoaded",connectWebSocket);
+
+
+    function leftStart(){
+        console.log("left pressed")
+        leftPressTimer = setInterval(()=>{
+            serverConnection.send(JSON.stringify({moveLeft:true}));
+        },30)
+    }
+    function leftStop(){
+        clearInterval(leftPressTimer);
+    }
+    
+    function rightStart(){
+        console.log("right pressed")
+        rightPressTimer = setInterval(()=>{
+            serverConnection.send(JSON.stringify({moveRight:true}));
+        },30)
+    }
+    function rightStop(){
+        clearInterval(rightPressTimer);
+    }
+
+
+
     function leftPressed(){
-        alert("left press");
+        //serverConnection.send(JSON.stringify({moveLeft:true}));
     }
     function rightPressed(){
-        alert("right press");
+        //serverConnection.send(JSON.stringify({moveRight:true}));
         
     }
     function actionPressed(){
-        alert("action press");
     }
 
     function connectWebSocket(){
-        
+
+        //get a websocekt connection
+        let serverIpAddress = "192.168.1.82"
+        serverConnection = new WebSocket(`ws://${serverIpAddress}:43211`);
+        serverConnection.onopen = ()=> {
+            console.log("websocket open")
+            // serverConnection.send(JSON.stringify({actAsDisplay:true}));
+        }        
     }
 </script>
 </html>
