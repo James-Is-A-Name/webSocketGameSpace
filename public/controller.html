@@ -10,9 +10,9 @@
 <body>
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; height: 90vh">
         
-        <button onmousedown="leftStart()" onmouseup="leftStop()">left</button>
-        <button onclick="actionPressed()">action </button>
-        <button onmousedown="rightStart()" onmouseup="rightStop()">right</button>
+        <button onpointerdown="leftStart()" onpointerup="leftStop()">left</button>
+        <button onpointerdown="actionPressed()">action </button>
+        <button onpointerdown="rightStart()" onpointerup="rightStop()">right</button>
         <!-- <button onmousedown="leftStart()" onmouseup="leftStop()" onclick="leftPressed()">left</button>
         <button onmousedown="rightStart()" onmouseup="leftStop()" onclick="actionPressed()">action</button>
         <button onclick="rightPressed()">right</button> -->
@@ -58,6 +58,7 @@
         
     }
     function actionPressed(){
+        serverConnection.send(JSON.stringify({actionDo:true}));
     }
 
     function connectWebSocket(){

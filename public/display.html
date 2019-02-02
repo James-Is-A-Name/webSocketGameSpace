@@ -14,18 +14,20 @@
     document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
 
+    let entitieSize = 50;
     //should not make this 
-    var gameHeight = document.documentElement.clientHeight - 50;
-    var gameWidth = document.documentElement.clientWidth - 50;
+    var gameHeight = document.documentElement.clientHeight - entitieSize;
+    var gameWidth = document.documentElement.clientWidth - entitieSize;
 
     var serverConnection;
 
     var playerEntities=[
         {
-            x:1,
-            y:300,
-            width:50,
-            height:50,
+            x:gameWidth/2,
+            y:gameHeight - entitieSize,
+            moveY:0,
+            width:entitieSize,
+            height:entitieSize,
         }
     ];
 
@@ -67,6 +69,9 @@
             else if(theMessage.moveLeft){
                 playerEntities[0].x -= 10
             }
+            else if(theMessage.actionDo){
+                playerEntities[0].moveY = -10
+            }
         }
 
         startGame();
@@ -80,7 +85,30 @@
         let displayElement = document.getElementById("canvasArea");
         let canvasDraw = displayElement.getContext("2d");
 
+
+        playerEntities.map(element => {
             
+            element.y += element.moveY;
+            element.moveY++;
+
+            if (element.y > (gameHeight - entitieSize)){
+                element.y = (gameHeight - entitieSize);
+                if(element.moveY > 0){
+                    element.moveY = 0;
+                }
+            }
+
+            return element;
+        });
+        
+            // x:gameWidth/2,
+            // y:gameHeight - entitieSize,
+            // moveY:0,
+            // width:entitieSize,
+            // height:entitieSize,
+        
+
+         //the draw part   
         canvasDraw.clearRect(0,0,gameWidth,gameHeight);
         
         canvasDraw.beginPath();

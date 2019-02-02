@@ -27,17 +27,10 @@ function webSocketSetup(portNum , completedCallback){
 
         webSocketsConnected.push(theWebsocket);
 
-        //TEST MOVEMENT
-        // let simpleLoop = setInterval( ()=>{
-        //     if(ws.readyState == 1){
-        //         ws.send(JSON.stringify({moveRight:true}))
-        //     }
-        //     else{
-        //         clearInterval(simpleLoop);
-        //     }
-        // },1000)
-        //END OF TEST MOVEMENT
-
+        ws.on("close",()=>{
+            console.log("socket state is  ",theWebsocket.ws.readystate)
+            theWebsocket.ended = true;
+        })
 
         ws.on("message",(message)=>{
             let theMessage = JSON.parse(message);
@@ -49,13 +42,19 @@ function webSocketSetup(portNum , completedCallback){
                 console.log("display connected");
             }
             else{
-                let aDisplay = webSocketsConnected.find((connection)=>{
+                let displays = webSocketsConnected.filter((connection)=>{
                     return connection.isDisplay
                 })
 
-                if(aDisplay){
-                    theMessage.id = webSocket.id;
-                    aDisplay.ws.send(JSON.stringify(theMessage));
+                if(displays.length > 0){
+                    displays.forEach((display)=>{
+                        theMessage.id = webSocket.id;
+                        
+                        let messageToSend = JSON.stringify(theMessage);
+                        if(display.ws.readystate === webSocket.OPEN){
+                            display.ws.send(messageToSend);
+                        }
+                    })
                 }
             }
         })
