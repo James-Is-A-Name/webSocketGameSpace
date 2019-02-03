@@ -35,27 +35,20 @@ function webSocketSetup(portNum , completedCallback){
         ws.on("message",(message)=>{
             let theMessage = JSON.parse(message);
 
-            console.log("got message of ",message)
 
             if(theMessage.actAsDisplay){
                 theWebsocket.isDisplay = true;
                 console.log("display connected");
             }
-            else{
-                let displays = webSocketsConnected.filter((connection)=>{
-                    return connection.isDisplay
-                })
+            else if(theMessage.newPlayer){
+                ws.send(JSON.stringify({playerId:theWebsocket.id}))
 
-                if(displays.length > 0){
-                    displays.forEach((display)=>{
-                        theMessage.id = webSocket.id;
-                        
-                        let messageToSend = JSON.stringify(theMessage);
-                        if(display.ws.readystate === webSocket.OPEN){
-                            display.ws.send(messageToSend);
-                        }
-                    })
-                }
+                sendMessageToDisplays({
+                    newPlayerId : theWebsocket.id
+                });
+            }
+            else{
+                sendMessageToDisplays(theMessage,theWebsocket.id)
             }
         })
     })
@@ -63,6 +56,25 @@ function webSocketSetup(portNum , completedCallback){
     completedCallback();
 }
 
+function sendMessageToDisplays(theMessage,senderId){
+    
+    let displays = webSocketsConnected.filter((connection)=>{
+        return connection.isDisplay
+    })
+
+    if(displays.length > 0){
+        displays.forEach((display)=>{
+            theMessage.id = senderId;
+            
+            let messageToSend = JSON.stringify(theMessage);
+
+            
+            if(display.ws.readyState === 1){
+                display.ws.send(messageToSend);
+            }
+        })
+    }
+}
 
 
 

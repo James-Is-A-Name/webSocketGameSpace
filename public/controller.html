@@ -25,7 +25,7 @@
     var leftPressTimer;
     var rightPressTimer;
     
-    document.addEventListener("DOMContentLoaded",connectWebSocket);
+    document.addEventListener("DOMContentLoaded",getServerIp);
 
 
     function leftStart(){
@@ -61,15 +61,42 @@
         serverConnection.send(JSON.stringify({actionDo:true}));
     }
 
-    function connectWebSocket(){
+    function connectWebSocket(serverIp){
 
         //get a websocekt connection
-        let serverIpAddress = "192.168.1.82"
-        serverConnection = new WebSocket(`ws://${serverIpAddress}:43211`);
+        // let serverIpAddress = "192.168.1.82"
+        let serverIpAddress = "localhost"
+        serverConnection = new WebSocket(`ws://${serverIp}:43211`);
         serverConnection.onopen = ()=> {
             console.log("websocket open")
-            // serverConnection.send(JSON.stringify({actAsDisplay:true}));
-        }        
+            serverConnection.send(JSON.stringify({newPlayer:true}));
+        }
+        serverConnection.onmessage = (theMessage) => {
+
+            if(theMessage.playerId){
+                //show the user what player number they are
+            }
+        }
     }
+
+
+
+    function getServerIp(){
+        fetch("/getIp").then(response => {
+
+            response.text().then((text)=>{
+                let serverIp = JSON.parse(text).serverIp;
+
+                connectWebSocket(serverIp);
+
+            }).catch((err)=>{
+                console.log("something went wrong the computer says")
+            })
+        })
+        .catch((err)=>{
+        console.log("i porbably wrote something wrong got err of ",err)
+        })
+    }
+
 </script>
 </html>

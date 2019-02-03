@@ -21,15 +21,9 @@
 
     var serverConnection;
 
-    var playerEntities=[
-        {
-            x:gameWidth/2,
-            y:gameHeight - entitieSize,
-            moveY:0,
-            width:entitieSize,
-            height:entitieSize,
-        }
-    ];
+    //Will want to make this an object of objects not an array
+        //alter elsewher eto itterate over the keys
+    var playerEntities={};
 
     function setupDisplayArea(){
         //set width and height and connect to the server
@@ -51,10 +45,18 @@
         
         canvasDraw.stroke();
 
+        getServerIp();
 
-        //get a websocekt connection
-        let serverIpAddress = "192.168.1.82"
-        serverConnection = new WebSocket(`ws://${serverIpAddress}:43211`);
+        startGame();
+    }
+
+    
+    function connectWebSocket(serverIp){
+
+    //get a websocekt connection
+        // let serverIpAddress = "192.168.1.82"
+        let serverIpAddress = "localhost"
+        serverConnection = new WebSocket(`ws://${serverIp}:43211`);
         serverConnection.onopen = ()=> {
             console.log("websocket open")
             serverConnection.send(JSON.stringify({actAsDisplay:true}));
@@ -63,18 +65,59 @@
         serverConnection.onmessage = (message) =>{
             let theMessage = JSON.parse(message.data);
 
-            if(theMessage.moveRight){
-                playerEntities[0].x += 10
+            if(theMessage.newPlayerId){
+                //this should enforce unique ids
+                let newPlayer = {
+                    id:theMessage.newPlayerId,
+                    x:gameWidth/2,
+                    y:gameHeight - entitieSize,
+                    moveY:0,
+                    width:entitieSize,
+                    height:entitieSize,
+                }
+                playerEntities[theMessage.newPlayerId] = newPlayer;
+            }
+            else if(! Object.keys(playerEntities).find( (key)=> {return key == theMessage.id})){
+
+                // for now just make a new ertrie in it
+                let newPlayer = {
+                    id:theMessage.id,
+                    x:gameWidth/2,
+                    y:gameHeight - entitieSize,
+                    moveY:0,
+                    width:entitieSize,
+                    height:entitieSize,
+                }
+
+                playerEntities[theMessage.id] = newPlayer;
+            }
+            else if(theMessage.moveRight){
+                playerEntities[theMessage.id].x += 10;
             }
             else if(theMessage.moveLeft){
-                playerEntities[0].x -= 10
+                playerEntities[theMessage.id].x -= 10;
             }
             else if(theMessage.actionDo){
-                playerEntities[0].moveY = -10
+                playerEntities[theMessage.id].moveY = -10;
             }
         }
+    }
+    
+    function getServerIp(){
+        fetch("/getIp").then(response => {
 
-        startGame();
+            response.text().then((text)=>{
+                let serverIp = JSON.parse(text).serverIp;
+
+                connectWebSocket(serverIp);
+
+            }).catch((err)=>{
+                console.log("something went wrong the computer says")
+            })
+        })
+        .catch((err)=>{
+        console.log("i porbably wrote something wrong got err of ",err)
+        })
     }
 
     function startGame(){
@@ -86,8 +129,9 @@
         let canvasDraw = displayElement.getContext("2d");
 
 
-        playerEntities.map(element => {
-            
+        Object.keys(playerEntities).map(key => {
+            let element = playerEntities[key];
+
             element.y += element.moveY;
             element.moveY++;
 
@@ -98,23 +142,19 @@
                 }
             }
 
-            return element;
+            playerEntities[key] = element;
         });
-        
-            // x:gameWidth/2,
-            // y:gameHeight - entitieSize,
-            // moveY:0,
-            // width:entitieSize,
-            // height:entitieSize,
-        
 
          //the draw part   
         canvasDraw.clearRect(0,0,gameWidth,gameHeight);
         
         canvasDraw.beginPath();
         canvasDraw.rect(0,0,gameWidth,gameHeight);
-        playerEntities.forEach(element => {
+
+        Object.keys(playerEntities).forEach(key => {
+            let element = playerEntities[key];
             canvasDraw.rect(element.x,element.y,element.width,element.height);
+            canvasDraw.fillText(element.id,element.x,element.y)
         });
         canvasDraw.stroke();
     }
