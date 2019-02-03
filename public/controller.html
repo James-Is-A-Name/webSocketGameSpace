@@ -30,22 +30,29 @@
 
     function leftStart(){
         console.log("left pressed")
-        leftPressTimer = setInterval(()=>{
-            serverConnection.send(JSON.stringify({moveLeft:true}));
-        },30)
+        if(!leftPressTimer){
+            leftPressTimer = setInterval(()=>{
+                serverConnection.send(JSON.stringify({moveLeft:true}));
+            },30)
+        }
     }
     function leftStop(){
         clearInterval(leftPressTimer);
+        leftPressTimer = undefined;
     }
     
     function rightStart(){
         console.log("right pressed")
-        rightPressTimer = setInterval(()=>{
-            serverConnection.send(JSON.stringify({moveRight:true}));
-        },30)
+
+        if(!rightPressTimer){
+            rightPressTimer = setInterval(()=>{
+                serverConnection.send(JSON.stringify({moveRight:true}));
+            },30)
+        }
     }
     function rightStop(){
         clearInterval(rightPressTimer);
+        rightPressTimer = undefined;
     }
 
 
