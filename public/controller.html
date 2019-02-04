@@ -99,6 +99,10 @@
 
                 title.innerHTML = `Person ${theMessage.playerId}`;
             }
+            if(theMessage.playerDisplay){
+                let playerLocation = document.getElementById("locationText");
+                playerLocation.innerHTML = `on Display ${theMessage.playerDisplay}`;
+            }
         }
     }
 

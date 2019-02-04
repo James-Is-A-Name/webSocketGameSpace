@@ -8,7 +8,10 @@
     <title>Display</title>
 </head>
 <body>
-    <canvas id="canvasArea"></canvas>
+    <div style="position:relative">
+        <h1 style="position: absolute" id="displayId">Display is --</h1>
+        <canvas id="canvasArea"></canvas>
+    </div>
 </body>
 <script>
     document.addEventListener("DOMContentLoaded",setupDisplayArea);
@@ -65,7 +68,11 @@
         serverConnection.onmessage = (message) =>{
             let theMessage = JSON.parse(message.data);
 
-            if(theMessage.newPlayerId){
+            if(theMessage.displayId){
+                let displayIdMessage = document.getElementById("displayId");
+                displayIdMessage.innerHTML = theMessage.displayId;
+            }
+            else if(theMessage.newPlayerId){
                 //this should enforce unique ids
                 let newPlayer = {
                     id:theMessage.newPlayerId,

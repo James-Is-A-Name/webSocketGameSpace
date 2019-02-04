@@ -53,6 +53,7 @@ function webSocketSetup(portNum , completedCallback){
             if(theMessage.actAsDisplay){
                 theWebsocket.isDisplay = true;
                 console.log(`display ${theWebsocket.id} connected`);
+                ws.send(JSON.stringify({displayId:theWebsocket.id}))
             }
             else if(theMessage.newPlayer){
                 ws.send(JSON.stringify({playerId:theWebsocket.id}))
@@ -126,6 +127,13 @@ function shiftToNextDisplay(currentDisplay,player){
         if(nextDisplay){
             playerDisplayLocation[player] = nextDisplay.id;
             nextDisplay.ws.send(JSON.stringify({newPlayerId:player}));
+            let playerConnection = webSocketsConnected.find((connection)=>{
+                return connection.id == player
+            })
+            if(playerConnection){
+
+                playerConnection.ws.send(JSON.stringify({playerDisplay:playerDisplayLocation[player]}));
+            }
         }
         else{
             nextDisplay = displays.find((display)=>{
@@ -134,6 +142,15 @@ function shiftToNextDisplay(currentDisplay,player){
             if(nextDisplay){
                 playerDisplayLocation[player] = nextDisplay.id
                 nextDisplay.ws.send(JSON.stringify({newPlayerId:player}));
+
+
+                let playerConnection = webSocketsConnected.find((connection)=>{
+                    return connection.id == player
+                })
+                if(playerConnection){
+
+                    playerConnection.ws.send(JSON.stringify({playerDisplay:playerDisplayLocation[player]}));
+                }
             }
         }
     }
