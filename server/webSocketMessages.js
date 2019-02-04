@@ -103,7 +103,7 @@ function webSocketSetup(portNum , completedCallback){
                     return connection.id == playerDisplayLocation[theWebsocket.id]
                 });
 
-                if(display.ws.readyState === 1){
+                if(display && display.ws.readyState === 1){
                     display.ws.send(messageToSend);
                 }
                 // sendMessageToDisplays(theMessage,theWebsocket.id)
