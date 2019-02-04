@@ -206,9 +206,8 @@
         Object.keys(playerEntities).forEach(key => {
             let element = playerEntities[key];
             // canvasDraw.rect(element.x,element.y,element.width,element.height);
-            // canvasDraw.fillText(element.id,element.x,element.y)
-           drawPerson(element.x,element.y,element.width,element.height,canvasDraw);
-
+            canvasDraw.fillText(element.id,element.x,element.y)
+            drawPerson(element.x,element.y,element.width,element.height,canvasDraw);
         });
 
         canvasDraw.stroke();
