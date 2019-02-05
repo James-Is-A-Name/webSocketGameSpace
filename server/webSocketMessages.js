@@ -34,7 +34,7 @@ function webSocketSetup(portNum , completedCallback){
         webSocketsConnected.push(theWebsocket);
 
         ws.on("close",()=>{
-            console.log("socket state is  ",theWebsocket.ws.readystate)
+            console.log(`socket ${theWebsocket} state is closed`)
             theWebsocket.ended = true;
 
             Object.keys(playerDisplayLocation).forEach((key)=>{
@@ -42,180 +42,100 @@ function webSocketSetup(portNum , completedCallback){
                     shiftToNextDisplay(theWebsocket.id,key);
                 }
             })
-            
-
         })
 
         ws.on("message",(message)=>{
             let theMessage = JSON.parse(message);
 
-
             if(theMessage.actAsDisplay){
-                theWebsocket.isDisplay = true;
-                console.log(`display ${theWebsocket.id} connected`);
-                ws.send(JSON.stringify({displayId:theWebsocket.id}))
-            }
-            else if(theMessage.newPlayer){
-                ws.send(JSON.stringify({playerId:theWebsocket.id}))
-
-                // sendMessageToDisplays({
-                //     newPlayerId : theWebsocket.id
-                // });
-                
-                let firstDisplay = webSocketsConnected.find((connection)=>{
-                    return connection.isDisplay && !connection.ended
-                })
-
-                if (firstDisplay){
-                    playerDisplayLocation[theWebsocket.id] = firstDisplay.id;
-                    console.log(`controller ${theWebsocket.id} connected to display ${firstDisplay.id}`);
-                }
-            }
-            else if(theWebsocket.isDisplay){
-                if(theMessage.shiftPlayer){
-                    // let displays = webSocketsConnected.filter((connection)=>{
-                    //     return connection.isDisplay
-                    // })
-
-                    // if(displays){
-                    //     let nextDisplay = displays.find((display)=>{
-                    //         return display.id > theWebsocket.id
-                    //     })
-
-                    //     if(nextDisplay){
-                    //         playerDisplayLocation[theMessage.shiftPlayer] = nextDisplay.id
-                    //     }
-                    //     else{
-                    //         nextDisplay = displays.find((display)=>{
-                    //             return display.id != theWebsocket.id
-                    //         })
-                    //         if(nextDisplay){
-                    //             playerDisplayLocation[theMessage.shiftPlayer] = nextDisplay.id
-                    //         }
-                    //     }
-                    // }
-                    shiftToNextDisplay(theWebsocket.id,theMessage.shiftPlayer);
-                }
-                else if(theMessage.shiftPlayerPrevious){
-                    shiftToPreviousDisplay(theWebsocket.id,theMessage.shiftPlayerPrevious);
-                }
-            }
-            else{
-                theMessage.id = theWebsocket.id;
-                let messageToSend = JSON.stringify(theMessage);
-                let display = webSocketsConnected.find((connection)=>{
-                    return connection.id == playerDisplayLocation[theWebsocket.id]
-                });
-
-                if(display && display.ws.readyState === 1){
-                    display.ws.send(messageToSend);
-                }
-                // sendMessageToDisplays(theMessage,theWebsocket.id)
+                handleNewDisplay(theWebsocket)
+            } else if(theMessage.newPlayer){
+                handleNewPlayer(theWebsocket);
+            }else if(theWebsocket.isDisplay){
+                handleDisplayMessage(theWebsocket,theMessage);
+            }else{
+                handlePlayerMessage(theWebsocket,theMessage);
             }
         })
     })
 
     completedCallback();
 }
+
+function handleNewDisplay(webSocket){
+    webSocket.isDisplay = true;
+    // console.log(`display ${webSocket.id} connected`);
+    webSocket.ws.send(JSON.stringify({displayId:webSocket.id}))
+}
+function handleNewPlayer(webSocket){
+    webSocket.ws.send(JSON.stringify({playerId:webSocket.id}))
+
+    let firstDisplay = webSocketsConnected.find(connection=> connection.isDisplay && !connection.ended)
+
+    if (firstDisplay){
+        playerDisplayLocation[webSocket.id] = firstDisplay.id;
+        // console.log(`controller ${webSocket.id} connected to display ${firstDisplay.id}`);
+        sendMessage(firstDisplay,{newPlayerId:webSocket.id})
+    }
+}
+function handleDisplayMessage(webSocket,message){
+
+    if(message.shiftPlayer){
+        shiftToNextDisplay(webSocket.id,message.shiftPlayer);
+    }else if(message.shiftPlayerPrevious){
+        shiftToPreviousDisplay(webSocket.id,message.shiftPlayerPrevious);
+    }
+}
+function handlePlayerMessage(webSocket,message){
+    message.id = webSocket.id;
+    let display = webSocketsConnected.find(connection=> connection.id == playerDisplayLocation[webSocket.id]);
+    sendMessage(display,message)
+}
+
+
 function shiftToNextDisplay(currentDisplay,player){
-    let displays = webSocketsConnected.filter((connection)=>{
-        return connection.isDisplay
-    })
+    let displays = webSocketsConnected.filter(connection=> connection.isDisplay)
 
     if(displays){
-        let nextDisplay = displays.find((display)=>{
-            return display.id > currentDisplay && !display.ended
-        })
+        let nextDisplay = displays.find(display=> ((display.id > currentDisplay) && !display.ended))
 
-        if(nextDisplay){
-            playerDisplayLocation[player] = nextDisplay.id;
-            if(nextDisplay.ws.readyState === 1){
-                nextDisplay.ws.send(JSON.stringify({newPlayerId:player}));
-            }
-            let playerConnection = webSocketsConnected.find((connection)=>{
-                return connection.id == player
-            })
-            if(playerConnection){
-                if(playerConnection.ws.readyState === 1){
-                    playerConnection.ws.send(JSON.stringify({playerDisplay:playerDisplayLocation[player]}));
-                }
-            }
+        if(nextDisplay == undefined){
+            nextDisplay = displays.find(display=> display.id != currentDisplay && !display.ended)
         }
-        else{
-            nextDisplay = displays.find((display)=>{
-                return display.id != currentDisplay && !display.ended
-            })
-            if(nextDisplay){
-                playerDisplayLocation[player] = nextDisplay.id
-
-                if(nextDisplay.ws.readyState === 1){
-                    nextDisplay.ws.send(JSON.stringify({newPlayerId:player}));
-                }
-
-
-                let playerConnection = webSocketsConnected.find((connection)=>{
-                    return connection.id == player
-                })
-                if(playerConnection){
-
-                    if(playerConnection.ws.readyState === 1){
-                        playerConnection.ws.send(JSON.stringify({playerDisplay:playerDisplayLocation[player]}));
-                    }
-                }
-            }
-        }
+        shiftPlayer(nextDisplay,player)
     }
 }
 function shiftToPreviousDisplay(currentDisplay,player){
-    let displays = webSocketsConnected.filter((connection)=>{
-        return connection.isDisplay
-    })
+    let displays = webSocketsConnected.filter(connection=>connection.isDisplay)
 
-    if(displays){
-
-        let priorDisplays = displays.filter((display)=>{
+    if(displays.length > 0){
+        let previousDisplays = displays.filter((display)=>{
             return display.id < currentDisplay && !display.ended
         })
-
-        if(priorDisplays.length>0){
-            let priorDisplay = priorDisplays[priorDisplays.length-1];
-            playerDisplayLocation[player] = priorDisplay.id;
-
-            console.log(`shifting player ${player} to display ${priorDisplay.id} `)
-
-            if(priorDisplay.ws.readyState === 1){
-                priorDisplay.ws.send(JSON.stringify({newPlayerId:player}));
-            }
-            let playerConnection = webSocketsConnected.find((connection)=>{
-                return connection.id == player
-            })
-            if(playerConnection){
-                if(playerConnection.ws.readyState === 1){
-                    playerConnection.ws.send(JSON.stringify({playerDisplay:playerDisplayLocation[player]}));
-                }
-            }
+        let previousDisplay = undefined;
+        if(previousDisplays.length>0){
+            previousDisplay = previousDisplays[previousDisplays.length-1];
         }
         else if(displays[displays.length - 1].id != currentDisplay){
-            let priorDisplay = displays[displays.length - 1];
-            playerDisplayLocation[player] = priorDisplay.id
+            previousDisplay = displays[displays.length - 1];
+        }
+        shiftPlayer(previousDisplay,player)
+    }
+}
+function shiftPlayer(newDisplay,player){
+    if(newDisplay != undefined){
+        playerDisplayLocation[player] = newDisplay.id
 
-            console.log(`shifting player ${player} back around to to display ${priorDisplay.id} `)
-            
-            if(priorDisplay.ws.readyState === 1){
-                priorDisplay.ws.send(JSON.stringify({newPlayerId:player}));
-            }
-            let playerConnection = webSocketsConnected.find((connection)=>{
-                return connection.id == player
-            })
-            if(playerConnection){
-                if(playerConnection.ws.readyState === 1){
-                    playerConnection.ws.send(JSON.stringify({playerDisplay:playerDisplayLocation[player]}));
-                }
-            }
+        sendMessage(newDisplay,{newPlayerId:player})
+
+        let playerConnection = webSocketsConnected.find(connection=>connection.id == player)
+        if(playerConnection){
+            sendMessage(playerConnection,{playerDisplay:playerDisplayLocation[player]})
         }
     }
 }
 
+//This might be unneeded
 function sendMessageToDisplays(theMessage,senderId){
     
     let displays = webSocketsConnected.filter((connection)=>{
@@ -226,16 +146,18 @@ function sendMessageToDisplays(theMessage,senderId){
         displays.forEach((display)=>{
             theMessage.id = senderId;
             
-            let messageToSend = JSON.stringify(theMessage);
-
-            
-            if(display.ws.readyState === 1){
-                display.ws.send(messageToSend);
-            }
+            sendMessage(display,theMessage)
         })
     }
 }
 
+function sendMessage(target,theMessage){
+    if(target){
+        if(target.ws.readyState === 1){
+            target.ws.send(JSON.stringify(theMessage));
+        }
+    }
+}
 
 
 module.exports = {
