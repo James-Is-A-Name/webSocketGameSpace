@@ -2,14 +2,16 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
     let entitieSize = 50;
     //should not make this 
-    var gameHeight = document.documentElement.clientHeight - entitieSize;
-    var gameWidth = document.documentElement.clientWidth - entitieSize;
+    let gameHeight = document.documentElement.clientHeight - entitieSize;
+    let gameWidth = document.documentElement.clientWidth - entitieSize;
 
-    var serverConnection;
+    let serverConnection;
 
     //Will want to make this an object of objects not an array
         //alter elsewher eto itterate over the keys
-    var playerEntities={};
+    let playerEntities={};
+
+    let playerMoveSpeed = 5;
 
     function setupDisplayArea(){
         //set width and height and connect to the server
@@ -63,6 +65,7 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
                     // x:0,
                     y:gameHeight - entitieSize,
                     moveY:0,
+                    moveX:0,
                     width:entitieSize,
                     height:entitieSize,
                 }
@@ -77,6 +80,7 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
                     // x:0,
                     y:gameHeight - entitieSize,
                     moveY:0,
+                    moveX:0,
                     width:entitieSize,
                     height:entitieSize,
                 }
@@ -84,10 +88,20 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
                 playerEntities[theMessage.id] = newPlayer;
             }
             else if(theMessage.moveRight){
-                playerEntities[theMessage.id].x += 10;
+                playerEntities[theMessage.id].moveX = playerMoveSpeed;
             }
             else if(theMessage.moveLeft){
-                playerEntities[theMessage.id].x -= 10;
+                playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+            }
+            else if(theMessage.moveRightHalt){
+                if (playerEntities[theMessage.id].moveX > 0){
+                    playerEntities[theMessage.id].moveX = 0;
+                }
+            }
+            else if(theMessage.moveLeftHalt){
+                if (playerEntities[theMessage.id].moveX < 0){
+                    playerEntities[theMessage.id].moveX = 0;
+                }
             }
             else if(theMessage.actionDo){
                 playerEntities[theMessage.id].moveY = -20;
@@ -158,6 +172,8 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
             element.y += element.moveY;
             element.moveY++;
+            
+            element.x += element.moveX;
 
             if (element.y > (gameHeight - entitieSize)){
                 element.y = (gameHeight - entitieSize);
