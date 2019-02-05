@@ -76,8 +76,8 @@
                 //this should enforce unique ids
                 let newPlayer = {
                     id:theMessage.newPlayerId,
-                    // x:gameWidth/2,
-                    x:0,
+                    x:gameWidth/2,
+                    // x:0,
                     y:gameHeight - entitieSize,
                     moveY:0,
                     width:entitieSize,
@@ -90,8 +90,8 @@
                 // for now just make a new ertrie in it
                 let newPlayer = {
                     id:theMessage.id,
-                    // x:gameWidth/2,
-                    x:0,
+                    x:gameWidth/2,
+                    // x:0,
                     y:gameHeight - entitieSize,
                     moveY:0,
                     width:entitieSize,
@@ -186,6 +186,10 @@
             if(element.x+element.width > gameWidth){
                 playersShifted.push(key)
                 serverConnection.send(JSON.stringify({shiftPlayer:key}));
+            }
+            if(element.x < 0){
+                playersShifted.push(key)
+                serverConnection.send(JSON.stringify({shiftPlayerPrevious:key}));
             }
 
             playerEntities[key] = element;
