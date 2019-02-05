@@ -206,7 +206,6 @@ function updateEntityStates(){
         playerEntities[key] = element;
     });
 
-
     //need to move to work on a response from the server as following movement commands can be obtained from the server before its redireted
         //But after this has deleted it locally
     playersShifted.forEach( (keyToDelete)=>{
