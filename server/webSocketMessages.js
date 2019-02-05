@@ -1,13 +1,11 @@
 
 let webSocket = require("ws").Server;
 
-
 //This is not safe, would need atomic interaction
 let idRefNumber = 1;
 
 //this should just be an object/class thing
 let webSocketsConnected = []
-
 
 //to asign an entity to a display
 let playerDisplayLocation = {
