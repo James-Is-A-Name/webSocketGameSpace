@@ -33,7 +33,9 @@
 
     var leftPressTimer;
     var rightPressTimer;
-    
+   
+    let timerIntervalMs = 15;
+
     document.addEventListener("DOMContentLoaded",getServerIp);
 
 
@@ -42,7 +44,7 @@
         if(!leftPressTimer){
             leftPressTimer = setInterval(()=>{
                 serverConnection.send(JSON.stringify({moveLeft:true}));
-            },30)
+            },timerIntervalMs)
         }
     }
     function leftStop(){
@@ -56,7 +58,7 @@
         if(!rightPressTimer){
             rightPressTimer = setInterval(()=>{
                 serverConnection.send(JSON.stringify({moveRight:true}));
-            },30)
+            },timerIntervalMs)
         }
     }
     function rightStop(){
