@@ -1,5 +1,4 @@
 
-let webSocket = require("ws").Server;
 
 //This is not safe, would need atomic interaction
 let idRefNumber = 1;
@@ -12,9 +11,9 @@ let playerDisplayLocation = {
 
 }
 
-function webSocketSetup(portNum , completedCallback){
+function webSocketSetup(portNum, webSocketServer, completedCallback){
 
-    let webSocketServer = new webSocket({port:portNum});
+    // let webSocketServer = new webSocket({port:portNum});
     
     webSocketServer.on("connection",(ws)=>{
         //This should be atomic or handed off to a locking function or something

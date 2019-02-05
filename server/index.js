@@ -1,19 +1,23 @@
 const express = require("express")
-const server = express()
+const app = express()
+let webSocket = require("ws").Server;
 
 const webSocketMessages = require("./webSocketMessages")
 
 const port = process.env.PORT || 3000;
-const WEBSOCKETPORT = 43211;
+const websocketport = port;
+// const websocketport = 43211;
 
-server.use(express.json())
-server.use(express.static(__dirname+"/../public"))
+app.use(express.json())
+app.use(express.static(__dirname+"/../public"))
 
 const localInfo = require('os')
 
 
+let server = require("http").createServer();
+
 //to allow the page to grab the ip for the websocket connection while testing locally
-server.get('/getIp',(req,res)=>{
+app.get('/getIp',(req,res)=>{
     //the hardcoded 1 in here is to grab the second entry which is ipv4 not the ipv6
         //This is something that should be corrected to be less flimsy
             //maybe list it out and have the user who started it select the option they want
@@ -21,6 +25,18 @@ server.get('/getIp',(req,res)=>{
     
     res.send({serverIp});
 })
+
+
+server.on('request',app)
+
+
+let webSocketServer = new webSocket({server: server});
+
+
+webSocketMessages.start(websocketport,webSocketServer,() =>{
+    console.log(`websocket stuff setup on port ${websocketport}`)
+});
+
 
 
 server.listen(port,function(){
@@ -31,7 +47,3 @@ server.listen(port,function(){
     
     console.log(`the ip adress is ${serverIp}`)
 })
-
-webSocketMessages.start(WEBSOCKETPORT,() =>{
-    console.log(`websocket stuff setup on port ${WEBSOCKETPORT}`)
-});

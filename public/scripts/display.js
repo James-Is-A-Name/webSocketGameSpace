@@ -40,7 +40,8 @@ function connectWebSocket(serverIp){
 //get a websocekt connection
     // let serverIpAddress = "192.168.1.82"
     let serverIpAddress = "localhost"
-    serverConnection = new WebSocket(`ws://${serverIp}:43211`);
+    // serverConnection = new WebSocket(`ws://${serverIp}:43211`);
+    serverConnection = new WebSocket(`ws://${serverIp}:3000`); //now using the same port as the http server. will need to change this when deploying to something
     serverConnection.onopen = ()=> {
         console.log("websocket open")
         serverConnection.send(JSON.stringify({actAsDisplay:true}));
