@@ -42,6 +42,9 @@ function webSocketSetup(portNum , completedCallback){
                     shiftToNextDisplay(theWebsocket.id,key);
                 }
             })
+
+            //if a player make it send a delete command to the display
+                //could also be used for avoiding the lingering player entity
         })
 
         ws.on("message",(message)=>{
