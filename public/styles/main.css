@@ -1,0 +1,14 @@
+
+
+
+
+.controllerButton{
+
+    font-size: 2em;
+
+    border: solid 1px;
+    border-radius: 50px;
+    background: linear-gradient(rgb(255,255,255),rgb(220,220,220),rgb(255,255,255)); 
+
+    margin: 10px;
+}
