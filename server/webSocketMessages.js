@@ -25,7 +25,8 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
             id,
             ws,
             isDisplay: false,
-            ended: false
+            ended: false,
+            controllerHistory: {},
         }
 
         webSocketsConnected.push(theWebsocket);
@@ -80,14 +81,62 @@ function handleNewPlayer(webSocket){
 }
 function handleDisplayMessage(webSocket,message){
 
+    let refreshState = {}
+
     if(message.shiftPlayer){
         shiftToNextDisplay(webSocket.id,message.shiftPlayer);
+        refreshState.do = true;
+        refreshState.player = message.shiftPlayer;
+
     }else if(message.shiftPlayerPrevious){
         shiftToPreviousDisplay(webSocket.id,message.shiftPlayerPrevious);
+        refreshState.do = true;
+        refreshState.player = message.shiftPlayerPrevious;
+    }
+
+
+    if(refreshState.do){
+
+        let newDisplayLocation = playerDisplayLocation[refreshState.player];
+
+        let displayConnection = webSocketsConnected.find((connection) => connection.id == newDisplayLocation)
+        let controllerConnection = webSocketsConnected.find((connection) => connection.id == refreshState.player)
+
+        if(controllerConnection.controllerHistory.moveRight){
+            sendMessage(displayConnection,{id:refreshState.player,moveRight:true})
+        }
+        if(controllerConnection.controllerHistory.moveLeft){
+            sendMessage(displayConnection,{id:refreshState.player,moveLeft:true})
+        }
     }
 }
 function handlePlayerMessage(webSocket,message){
     message.id = webSocket.id;
+
+
+    // this simple solution does not work with the current comms type
+    //      needs more interconnection logic 
+    // webSocket.controllerHistory = {
+    //     ...webSocket.controllerHistory,
+    //     ...message
+    // }
+    // console.log("controller state is  ",webSocket.controllerHistory)
+
+    if(message.moveRight){
+        webSocket.controllerHistory.moveRight = true;
+    }
+    if(message.moveRightHalt){
+        delete webSocket.controllerHistory.moveRight;
+    }
+    if(message.moveLeft){
+        webSocket.controllerHistory.moveLeft = true;
+    }
+    if(message.moveLeftHalt){
+        delete webSocket.controllerHistory.moveLeft;
+    }
+    
+
+
     let display = webSocketsConnected.find(connection=> connection.id == playerDisplayLocation[webSocket.id]);
     sendMessage(display,message)
 }
