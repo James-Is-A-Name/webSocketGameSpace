@@ -99,7 +99,7 @@ function addPlayerEntity(player){
         //y:gameHeight - entitieSize,
         moveY:0,
         moveX:0,
-        width:entitieSize,
+        width:entitieSize/4,
         height:entitieSize,
     }
     playerEntities[player] = newPlayer;

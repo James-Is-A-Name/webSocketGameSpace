@@ -17,9 +17,6 @@ const objectDrawFunctions = {
         let xCenter = x + width/2;
         let yCenter = y + height/2;
         let size = height/8;
-        if(width < height){
-            size = width/8;
-        }
 
         canvas.moveTo(xCenter+size,y+size);
         canvas.arc(xCenter,y+size,size,0,Math.PI*2);
@@ -70,9 +67,6 @@ const objectDrawFunctions = {
             let height = playerObject.height;
             
             let size = height/8;
-            if(width < height){
-                size = width/8;
-            }
 
             let xCenter = x + width/2;
             let yCenter = y + height/2;
