@@ -8,3 +8,4 @@ setup now to just work on a local machine. node server/index.js then connect to 
 
 Possible future plans
 * alter to be a generic base for distibuted interactive things. e.g. make a solid API for inter browser comms
+	- alter the controller to be a generic state tracked system
