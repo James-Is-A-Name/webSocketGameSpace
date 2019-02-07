@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
-let entitieSize = 50;
+let entitieSize = 300;
 //should not make this 
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
@@ -174,6 +174,8 @@ function drawEnteties(canvas){
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
         canvas.fillText(element.id,element.x,element.y)
+
+        canvas.rect(element.x,element.y,element.width,element.height);
         drawPerson(element.x,element.y,element.width,element.height,canvas);
     });
     canvas.stroke();

@@ -9,7 +9,8 @@
     <script type="text/javascript" src="/scripts/controller.js"></script>
 </head>
 <body>
-    <div style="height: 90vh; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr 4fr;">
+    <!-- the unselectable is so on phones you cant tap it repeatidly without it stoping to try and copy the text -->
+    <div unselectable="on" style="height: 90vh; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr 4fr;">
         <div style="text-align:center; display: grid; grid-template-columns: 1fr 1fr 1fr;">
             <h1 id="titleText">Player --</h1>
             <h1 id="locationText">on display --</h1>
