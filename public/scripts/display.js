@@ -1,4 +1,9 @@
+
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
+
+
+//THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
+//VERY EASY FOR THIS TO TURN UGLY
 
 let entitieSize = 300;
 //should not make this 
@@ -114,37 +119,6 @@ function getServerIp(){
     })
 }
 
-
-function drawPerson(x,y,width,height,canvas){
-
-    let xCenter = x + width/2;
-    let yCenter = y + height/2;
-    let size = height/8;
-    if(width < height){
-        size = width/8;
-    }
-
-    canvas.moveTo(xCenter+size,y+size);
-    canvas.arc(xCenter,y+size,size,0,Math.PI*2);
-    canvas.moveTo(xCenter,y+size*2);
-    canvas.lineTo(xCenter,y+height*0.7);
-
-    if(y > gameHeight - height*1.2){
-        canvas.moveTo(xCenter+size,gameHeight);
-        canvas.lineTo(xCenter+size,gameHeight-(height*0.3));
-        canvas.lineTo(xCenter,y+height*0.7);
-        canvas.lineTo(xCenter-size,gameHeight-(height*0.3));
-        canvas.lineTo(xCenter-size,gameHeight);
-    }
-    else{
-        canvas.moveTo(xCenter+size,y+height*1.2);
-        canvas.lineTo(xCenter+size,y+height*0.9);
-        canvas.lineTo(xCenter,y+height*0.7);
-        canvas.lineTo(xCenter-size,y+height*0.9);
-        canvas.lineTo(xCenter-size,y+height*1.2);
-    }
-}
-
 function startGame(){
     setInterval(gameStep,20);
 }
@@ -176,8 +150,14 @@ function drawEnteties(canvas){
         canvas.fillText(element.id,element.x,element.y)
 
         canvas.rect(element.x,element.y,element.width,element.height);
-        drawPerson(element.x,element.y,element.width,element.height,canvas);
+        if(element.x < gameHeight/4){
+            objectDrawFunctions.playerDismantle(element,canvas);
+        }
+        else{
+            objectDrawFunctions.drawPerson(element,canvas);
+        }
     });
+
     canvas.stroke();
 }
 
@@ -209,7 +189,6 @@ function updateEntityStates(){
 
         playerEntities[key] = element;
     });
-
     //need to move to work on a response from the server as following movement commands can be obtained from the server before its redireted
         //But after this has deleted it locally
     playersShifted.forEach( (keyToDelete)=>{
