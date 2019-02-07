@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
 
-let entitieSize = 50;
+let entitieSize = 200;
 //should not make this 
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
@@ -17,7 +17,7 @@ let serverConnection;
 let playerEntities={};
 let playersDeleting={};
 
-let playerMoveSpeed = 5;
+let playerMoveSpeed = 15;
 
 function setupDisplayArea(){
     
@@ -150,7 +150,7 @@ function drawEnteties(canvas){
         let element = playerEntities[key];
         canvas.fillText(element.id,element.x,element.y)
 
-        canvas.rect(element.x,element.y,element.width,element.height);
+        // canvas.rect(element.x,element.y,element.width,element.height);
 
         objectDrawFunctions.drawPerson(element,canvas);
 

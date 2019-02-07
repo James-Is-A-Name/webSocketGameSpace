@@ -31,7 +31,7 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
         webSocketsConnected.push(theWebsocket);
 
         ws.on("close",()=>{
-            console.log(`socket ${theWebsocket} state is closed`)
+            console.log(`socket ${theWebsocket.id} state is closed`)
             theWebsocket.ended = true;
 
             Object.keys(playerDisplayLocation).forEach((key)=>{

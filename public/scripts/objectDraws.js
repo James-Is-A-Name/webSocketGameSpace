@@ -4,9 +4,6 @@
 //simple test to see if multiple js files can be kept relativly contained
     //will want to make it a class at somepoint
 const objectDrawFunctions = {
-    drawASquare: (canvas) => {
-        canvas.rect(0,0,50,50);
-    },
 
     drawPerson: (playerObject,canvas) =>{
 
