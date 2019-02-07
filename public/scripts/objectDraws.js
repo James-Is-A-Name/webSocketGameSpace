@@ -45,6 +45,13 @@ const objectDrawFunctions = {
         }
     },
 
+    isPlayerDismantled: (playerObject)=>{
+        
+        //this total frames needs to match up with the one in playerDismatle. more drive to make it a class
+        let totalNumFrames = 30;
+        return playerObject.playerDismantleState >= totalNumFrames
+    },
+
     playerDismantle: (playerObject,canvas)=>{
 
         //this will hopefullt catch null and undefined as well
@@ -54,7 +61,7 @@ const objectDrawFunctions = {
             playerObject.playerDismantleState = 1
         }
 
-        let totalNumFrames = 5;
+        let totalNumFrames = 30;
         let offsetMax = 60;
         let offset = offsetMax*playerObject.playerDismantleState/totalNumFrames;
 
@@ -82,18 +89,17 @@ const objectDrawFunctions = {
 
             if(y > gameHeight - height*1.2){
 
-                console.log("draw here")
 
                 canvas.moveTo(xCenter+size-offset,gameHeight-offset);
                 canvas.lineTo(xCenter+size-offset,gameHeight-(height*0.3)-offset);
+
                 canvas.moveTo(xCenter+size+offset,gameHeight-(height*0.3));
-
                 canvas.lineTo(xCenter+offset,y+height*0.7);
+
                 canvas.moveTo(xCenter-offset,y+height*0.7);
-
                 canvas.lineTo(xCenter-size-offset,gameHeight-(height*0.3));
+                
                 canvas.moveTo(xCenter-size,gameHeight-(height*0.3)-offset);
-
                 canvas.lineTo(xCenter-size,gameHeight-offset);
                 // canvas.moveTo(xCenter-size,gameHeight);
 
@@ -102,17 +108,15 @@ const objectDrawFunctions = {
                 canvas.moveTo(xCenter+size,y+height*1.2);
                 canvas.lineTo(xCenter+size,y+height*0.9);
 
-                canvas.moveTo(xCenter+offset,y+height*0.7);
+                canvas.moveTo(xCenter+size,y+height*0.9);
                 canvas.lineTo(xCenter+offset,y+height*0.7);
 
-                canvas.moveTo(xCenter-size-offset,y+height*0.9);
+                canvas.moveTo(xCenter+offset,y+height*0.7);
                 canvas.lineTo(xCenter-size-offset,y+height*0.9);
 
-                canvas.moveTo(xCenter-size,y+height*1.2+offset);
+                canvas.moveTo(xCenter-size-offset,y+height*0.9);
                 canvas.lineTo(xCenter-size,y+height*1.2+offset);
             }
-
-            canvas.stroke();
 
             if(playerObject.playerDismantleState < totalNumFrames){
                 playerObject.playerDismantleState++;

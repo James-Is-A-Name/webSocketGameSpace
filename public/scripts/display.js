@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
 
-let entitieSize = 300;
+let entitieSize = 50;
 //should not make this 
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
@@ -15,6 +15,7 @@ let serverConnection;
 //Will want to make this an object of objects not an array
     //alter elsewher eto itterate over the keys
 let playerEntities={};
+let playersDeleting={};
 
 let playerMoveSpeed = 5;
 
@@ -150,12 +151,16 @@ function drawEnteties(canvas){
         canvas.fillText(element.id,element.x,element.y)
 
         canvas.rect(element.x,element.y,element.width,element.height);
-        if(element.x < gameHeight/4){
-            objectDrawFunctions.playerDismantle(element,canvas);
-        }
-        else{
-            objectDrawFunctions.drawPerson(element,canvas);
-        }
+
+        objectDrawFunctions.drawPerson(element,canvas);
+
+    });
+
+    Object.keys(playersDeleting).forEach(key => {
+
+        let element = playersDeleting[key];
+        objectDrawFunctions.playerDismantle(element,canvas);
+
     });
 
     canvas.stroke();
@@ -192,6 +197,21 @@ function updateEntityStates(){
     //need to move to work on a response from the server as following movement commands can be obtained from the server before its redireted
         //But after this has deleted it locally
     playersShifted.forEach( (keyToDelete)=>{
+        playersDeleting[keyToDelete] = playerEntities[keyToDelete];
+        console.log("start dismantling player ",keyToDelete)
+
         delete playerEntities[keyToDelete];
+    })
+
+    
+    //i dont think this is the best way to delete from an object
+    let playersDeletingKeys = Object.keys(playersDeleting)
+    playersDeletingKeys.forEach( (key)=>{
+        
+        console.log("dismantling player ",key)
+
+        if(objectDrawFunctions.isPlayerDismantled(playersDeleting[key])){
+            delete playersDeleting[key];
+        }
     })
 }
