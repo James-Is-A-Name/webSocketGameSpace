@@ -17,12 +17,20 @@
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr;">
             
-            <button class="controllerButton" onpointerdown="leftStart()" onpointerup="leftStop()">left</button>
+            
+            <button class="controllerButton" value="moveLeft">left</button>
             <div style="text-align:center; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr;">
-                <button class="controllerButton" onpointerdown="actionPressed(2)">action 2</button>
-                <button class="controllerButton" onpointerdown="actionPressed(1)">action 1</button>
+                <button class="controllerButton" value="action2">action 2</button>
+                <button class="controllerButton" value="action1">action 1</button>
             </div>
-            <button class="controllerButton" onpointerdown="rightStart()" onpointerup="rightStop()">right</button>
+            <button class="controllerButton" value="moveRight">right</button>
+
+            <!-- <button class="controllerButton" onpointerdown="buttonPressed(this)" onpointerup="buttonReleased(this)" value="moveLeft">left</button>
+            <div style="text-align:center; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr;">
+                <button class="controllerButton" onpointerdown="actionPressed(2)" value="action2">action 2</button>
+                <button class="controllerButton" onpointerdown="buttonPressed(this)" onpointerup="buttonReleased(this)" value="action2">action 1</button>
+            </div>
+            <button class="controllerButton" onpointerdown="buttonPressed(this)" onpointerup="buttonReleased(this)" value="moveRight">right</button> -->
         </div>
     </div>
 </body>

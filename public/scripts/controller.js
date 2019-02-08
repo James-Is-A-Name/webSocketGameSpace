@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded",getServerIp);
+document.addEventListener("DOMContentLoaded",startUpController);
 
 var serverConnection;
 
@@ -7,26 +7,28 @@ var rightPressTimer;
 
 let timerIntervalMs = 15;
 
-function leftStart(){
-    console.log("left pressed")
-    serverConnection.send(JSON.stringify({moveLeft:true}));
-}
-function leftStop(){
-    serverConnection.send(JSON.stringify({moveLeftHalt:true}));
+
+function setupControllerButtons(){
+    let controllerButtons = document.getElementsByClassName("controllerButton")
+
+    console.log(controllerButtons);
+
+    Object.keys(controllerButtons).forEach((key) => {
+        let controllerButton = controllerButtons[key]
+        controllerButton.addEventListener("pointerdown",buttonPressed)
+        controllerButton.addEventListener("pointerup",buttonReleased)
+    })
 }
 
-function rightStart(){
-    console.log("right pressed")
+function buttonPressed(pointerEvent){
+    targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
+    serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
+}
+function buttonReleased(pointerEvent){
+    targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
+    serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
+}
 
-    serverConnection.send(JSON.stringify({moveRight:true}));
-}
-function rightStop(){
-    serverConnection.send(JSON.stringify({moveRightHalt:true}));
-}
-
-function actionPressed(){
-    serverConnection.send(JSON.stringify({actionDo:true}));
-}
 
 function connectWebSocket(serverIp){
 
@@ -59,7 +61,13 @@ function connectWebSocket(serverIp){
     }
 }
 
+function startUpController(){
+    setupControllerButtons();
+    getServerIp();
+}
+
 function getServerIp(){
+    
     fetch("/getIp").then(response => {
 
         response.text().then((text)=>{

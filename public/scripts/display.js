@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
 
-let entitieSize = 200;
+let entitieSize = 50;
 //should not make this 
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
@@ -17,7 +17,7 @@ let serverConnection;
 let playerEntities={};
 let playersDeleting={};
 
-let playerMoveSpeed = 15;
+let playerMoveSpeed = entitieSize/10;
 
 function setupDisplayArea(){
     
@@ -70,23 +70,23 @@ function connectWebSocket(serverIp){
             //This might actually be a hinderance to things having the display assume unknow player is valid
             addPlayerEntity(theMessage.id)
         }
-        else if(theMessage.moveRight){
+        else if(theMessage.moveRight === true){
             playerEntities[theMessage.id].moveX = playerMoveSpeed;
         }
-        else if(theMessage.moveLeft){
+        else if(theMessage.moveLeft === true){
             playerEntities[theMessage.id].moveX = -playerMoveSpeed;
         }
-        else if(theMessage.moveRightHalt){
+        else if(theMessage.moveRight === false){
             if (playerEntities[theMessage.id].moveX > 0){
                 playerEntities[theMessage.id].moveX = 0;
             }
         }
-        else if(theMessage.moveLeftHalt){
+        else if(theMessage.moveLeft === false){
             if (playerEntities[theMessage.id].moveX < 0){
                 playerEntities[theMessage.id].moveX = 0;
             }
         }
-        else if(theMessage.actionDo){
+        else if(theMessage.action1 === true){
             playerEntities[theMessage.id].moveY = -20;
         }
     }

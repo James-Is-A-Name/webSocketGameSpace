@@ -102,41 +102,23 @@ function handleDisplayMessage(webSocket,message){
         let displayConnection = webSocketsConnected.find((connection) => connection.id == newDisplayLocation)
         let controllerConnection = webSocketsConnected.find((connection) => connection.id == refreshState.player)
 
-        if(controllerConnection.controllerHistory.moveRight){
-            sendMessage(displayConnection,{id:refreshState.player,moveRight:true})
-        }
-        if(controllerConnection.controllerHistory.moveLeft){
-            sendMessage(displayConnection,{id:refreshState.player,moveLeft:true})
-        }
+
+        Object.keys(controllerConnection.controllerHistory).forEach((key)=>{
+            if(controllerConnection.controllerHistory[key] === true){
+                sendMessage(displayConnection,{id:refreshState.player,[key]:true})
+            }
+        })
     }
 }
 function handlePlayerMessage(webSocket,message){
     message.id = webSocket.id;
 
-
-    // this simple solution does not work with the current comms type
-    //      needs more interconnection logic 
-    // webSocket.controllerHistory = {
-    //     ...webSocket.controllerHistory,
-    //     ...message
-    // }
-    // console.log("controller state is  ",webSocket.controllerHistory)
-
-    if(message.moveRight){
-        webSocket.controllerHistory.moveRight = true;
+    webSocket.controllerHistory = {
+        ...webSocket.controllerHistory,
+        ...message
     }
-    if(message.moveRightHalt){
-        delete webSocket.controllerHistory.moveRight;
-    }
-    if(message.moveLeft){
-        webSocket.controllerHistory.moveLeft = true;
-    }
-    if(message.moveLeftHalt){
-        delete webSocket.controllerHistory.moveLeft;
-    }
+    console.log("controller state is  ",webSocket.controllerHistory)
     
-
-
     let display = webSocketsConnected.find(connection=> connection.id == playerDisplayLocation[webSocket.id]);
     sendMessage(display,message)
 }
