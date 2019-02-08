@@ -7,6 +7,8 @@ const objectDrawFunctions = {
 
     drawPerson: (playerObject,canvas) =>{
 
+        if(!(playerObject.stepState > 0)) {playerObject.stepState = 1}
+
         playerObject.playerDismantleState = 0;
         
         let x = playerObject.x;
@@ -24,11 +26,21 @@ const objectDrawFunctions = {
         canvas.lineTo(xCenter,y+height*0.7);
 
         if(y > gameHeight - height*1.2){
-            canvas.moveTo(xCenter+size,gameHeight);
-            canvas.lineTo(xCenter+size,gameHeight-(height*0.3));
-            canvas.lineTo(xCenter,y+height*0.7);
-            canvas.lineTo(xCenter-size,gameHeight-(height*0.3));
-            canvas.lineTo(xCenter-size,gameHeight);
+            if(playerObject.moveX > 0 || playerObject.moveX < 0){
+                canvas.moveTo(xCenter+(size *playerObject.stepState/10),gameHeight);
+                canvas.lineTo(xCenter+(size *playerObject.stepState/20),gameHeight-(height*0.3));
+                canvas.lineTo(xCenter,y+height*0.7);
+                canvas.lineTo(xCenter-(size *playerObject.stepState/20),gameHeight-(height*0.3));
+                canvas.lineTo(xCenter-(size *playerObject.stepState/10),gameHeight);
+            }
+            else{
+                
+                canvas.moveTo(xCenter+(size),gameHeight);
+                canvas.lineTo(xCenter+(size),gameHeight-(height*0.3));
+                canvas.lineTo(xCenter,y+height*0.7);
+                canvas.lineTo(xCenter-(size),gameHeight-(height*0.3));
+                canvas.lineTo(xCenter-(size),gameHeight);
+            }
         }
         else{
             canvas.moveTo(xCenter+size,y+height*1.2);
@@ -36,6 +48,11 @@ const objectDrawFunctions = {
             canvas.lineTo(xCenter,y+height*0.7);
             canvas.lineTo(xCenter-size,y+height*0.9);
             canvas.lineTo(xCenter-size,y+height*1.2);
+        }
+
+        playerObject.stepState ++
+        if(playerObject.stepState > 10){
+            playerObject.stepState = 1
         }
     },
 
