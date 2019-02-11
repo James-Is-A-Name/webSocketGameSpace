@@ -137,7 +137,9 @@ function gameStep(){
 
     //test platform draw
     canvasDraw.beginPath();
-    canvasDraw.rect(gameWidth/2-100,gameHeight-50,200,50);
+
+
+    canvasDraw.rect(gameWidth/2-100,gameHeight-100,200,100);
     canvasDraw.stroke();
 
     drawEnteties(canvasDraw);
@@ -185,11 +187,34 @@ function onPlatform(player,platform){
         return false;
     }
 
-    if(player.y + player.height < gameHeight - 50){
+    if(player.y + player.height < platform.y){
         return false;
     }
 
-    return true;
+    let centerPoint = {x:player.width/2+player.x, y:player.y+player.height}
+
+
+    if(centerPoint.y <= platform.y){
+        //
+        return {x:player.x,y: platform.y-player.height,collison:"y"}
+    }
+
+    if(player.moveY < 2 && player.moveY > -2){
+        //assumed to be on top of the thing
+        return {x:player.x,y: platform.y-player.height,collison:"y"}
+    }
+
+    if(centerPoint.x + player.width/4 < platform.x){
+        //left side
+        return {x:platform.x - player.width,y: player.y,collison:"x"}
+    }
+    if(centerPoint.x - player.width/4 > platform.x + platform.width){
+        //right side
+        return {x:platform.x + platform.width,y: player.y,collison:"x"}
+    }
+
+
+    // return true;
 }
 
 function updateEntityStates(){
@@ -202,16 +227,34 @@ function updateEntityStates(){
         
         element.x += element.moveX;
 
+        //test platform
+        let testPlatform = {
+            x: gameWidth/2 - 100,
+            width: 200,
+            y: gameHeight - 100,
+            height: 100
+        }
+
         if (element.y > (gameHeight - entitieSize)){
             element.y = (gameHeight - entitieSize);
             if(element.moveY > 0){
                 element.moveY = 0;
             }
         }
-        else if(onPlatform(element)){
-            element.moveY = 0;
-            //wouldalso want to set the y to be on the object
-            element.y = gameHeight- 50 - element.height;
+        else{
+
+            let platformCollision = onPlatform(element,testPlatform);
+            if(platformCollision){
+                if(platformCollision.collison == "y"){
+                    element.moveY = 0;
+                }
+                else {
+                    element.moveX = 0;
+                }
+                //wouldalso want to set the y to be on the object
+                element.y = platformCollision.y;
+                element.x = platformCollision.x;
+            }
         }
 
         if(element.x+element.width > gameWidth){
