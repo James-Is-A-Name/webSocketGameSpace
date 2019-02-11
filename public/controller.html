@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html style="height:95%" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +8,9 @@
     <title>Controller</title>
     <script type="text/javascript" src="/scripts/controller.js"></script>
 </head>
-<body>
+<body style="height:100%">
     <!-- the unselectable is so on phones you cant tap it repeatidly without it stoping to try and copy the text -->
-    <div unselectable="on" style="height: 90vh; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr 4fr;">
+    <div unselectable="on" style="height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: 20vh 4fr;">
         <div style="text-align:center; display: grid; grid-template-columns: 1fr 1fr 1fr;">
             <h1 id="titleText">Player --</h1>
             <h1 id="locationText">on display --</h1>
@@ -24,13 +24,6 @@
                 <button class="controllerButton" value="action1">action 1</button>
             </div>
             <button class="controllerButton" value="moveRight">right</button>
-
-            <!-- <button class="controllerButton" onpointerdown="buttonPressed(this)" onpointerup="buttonReleased(this)" value="moveLeft">left</button>
-            <div style="text-align:center; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr;">
-                <button class="controllerButton" onpointerdown="actionPressed(2)" value="action2">action 2</button>
-                <button class="controllerButton" onpointerdown="buttonPressed(this)" onpointerup="buttonReleased(this)" value="action2">action 1</button>
-            </div>
-            <button class="controllerButton" onpointerdown="buttonPressed(this)" onpointerup="buttonReleased(this)" value="moveRight">right</button> -->
         </div>
     </div>
 </body>

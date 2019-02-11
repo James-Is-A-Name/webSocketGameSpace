@@ -18,3 +18,11 @@
 
     margin: 10px;
 }
+
+.controllerButton:active{
+    background: linear-gradient(rgb(220,220,220),rgb(255,255,255),rgb(220,220,220));     
+}
+
+.controllerButton:focus{
+    outline: none;
+}

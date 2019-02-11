@@ -135,6 +135,11 @@ function gameStep(){
 
     refreshCanvas(canvasDraw);
 
+    //test platform draw
+    canvasDraw.beginPath();
+    canvasDraw.rect(gameWidth/2-100,gameHeight-50,200,50);
+    canvasDraw.stroke();
+
     drawEnteties(canvasDraw);
 }
 
@@ -169,6 +174,24 @@ function drawEnteties(canvas){
     canvas.stroke();
 }
 
+function onPlatform(player,platform){
+
+    //test platform in the middle
+    if(player.x+player.width < gameWidth/2 -100){
+        return false;
+    }
+
+    if(player.x > gameWidth/2 + 100){
+        return false;
+    }
+
+    if(player.y + player.height < gameHeight - 50){
+        return false;
+    }
+
+    return true;
+}
+
 function updateEntityStates(){
     let playersShifted = [];
     Object.keys(playerEntities).map(key => {
@@ -184,6 +207,11 @@ function updateEntityStates(){
             if(element.moveY > 0){
                 element.moveY = 0;
             }
+        }
+        else if(onPlatform(element)){
+            element.moveY = 0;
+            //wouldalso want to set the y to be on the object
+            element.y = gameHeight- 50 - element.height;
         }
 
         if(element.x+element.width > gameWidth){
