@@ -139,7 +139,7 @@ function gameStep(){
     canvasDraw.beginPath();
 
 
-    canvasDraw.rect(gameWidth/2-100,gameHeight-100,200,100);
+    canvasDraw.rect(gameWidth/2-100,gameHeight-400,200,100);
     canvasDraw.stroke();
 
     drawEnteties(canvasDraw);
@@ -191,30 +191,38 @@ function onPlatform(player,platform){
         return false;
     }
 
-    let centerPoint = {x:player.width/2+player.x, y:player.y+player.height}
-
-
-    if(centerPoint.y <= platform.y){
-        //
-        return {x:player.x,y: platform.y-player.height,collison:"y"}
+    if(player.y > platform.y + platform.height){
+        return false;
     }
 
-    if(player.moveY < 2 && player.moveY > -2){
-        //assumed to be on top of the thing
+    let basePoint = {x:player.width/2+player.x, y:player.y+player.height}
+
+
+    if(basePoint.y <= platform.y){
         return {x:player.x,y: platform.y-player.height,collison:"y"}
     }
-
-    if(centerPoint.x + player.width/4 < platform.x){
+    if(basePoint.x + player.width/4 < platform.x){
         //left side
         return {x:platform.x - player.width,y: player.y,collison:"x"}
     }
-    if(centerPoint.x - player.width/4 > platform.x + platform.width){
+    if(basePoint.x - player.width/4 > platform.x + platform.width){
         //right side
         return {x:platform.x + platform.width,y: player.y,collison:"x"}
     }
 
+    
 
-    // return true;
+    if(basePoint.y < platform.y + platform.height){
+        //catch it inside the block
+        return {x:player.x,y: platform.y-player.height,collison:"y"}
+    }
+    else{
+        let newY = (player.y > platform.y+platform.height) ? player.y : platform.y+platform.height;
+        //hit from below we shall say
+        return {x:player.x,y:newY,collison:"bellow"}
+    }
+
+    return false;
 }
 
 function updateEntityStates(){
@@ -231,7 +239,7 @@ function updateEntityStates(){
         let testPlatform = {
             x: gameWidth/2 - 100,
             width: 200,
-            y: gameHeight - 100,
+            y: gameHeight - 400,
             height: 100
         }
 
@@ -247,6 +255,11 @@ function updateEntityStates(){
             if(platformCollision){
                 if(platformCollision.collison == "y"){
                     element.moveY = 0;
+                }
+                else if(platformCollision.collison == "bellow"){
+                    if(element.moveY < 0){
+                        element.moveY = 0;
+                    }
                 }
                 else {
                     element.moveX = 0;

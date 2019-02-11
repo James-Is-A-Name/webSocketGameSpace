@@ -25,22 +25,32 @@ const objectDrawFunctions = {
         canvas.moveTo(xCenter,y+size*2);
         canvas.lineTo(xCenter,y+height*0.7);
 
-        if(y > gameHeight - height*1.2){
+        let playerWalking = false;
+        let playerStanding = false;
+
+        // if(y > gameHeight - height*1.2){
+        if(playerObject.moveY < 1.1 && playerObject.moveY > -1.1){
             if(playerObject.moveX > 0 || playerObject.moveX < 0){
-                canvas.moveTo(xCenter+(size *playerObject.stepState/10),gameHeight);
-                canvas.lineTo(xCenter+(size *playerObject.stepState/20),gameHeight-(height*0.3));
-                canvas.lineTo(xCenter,y+height*0.7);
-                canvas.lineTo(xCenter-(size *playerObject.stepState/20),gameHeight-(height*0.3));
-                canvas.lineTo(xCenter-(size *playerObject.stepState/10),gameHeight);
+                playerWalking = true;
             }
             else{
-                
-                canvas.moveTo(xCenter+(size),gameHeight);
-                canvas.lineTo(xCenter+(size),gameHeight-(height*0.3));
-                canvas.lineTo(xCenter,y+height*0.7);
-                canvas.lineTo(xCenter-(size),gameHeight-(height*0.3));
-                canvas.lineTo(xCenter-(size),gameHeight);
+                playerStanding = true;
             }
+        }
+
+        if(playerWalking){
+            canvas.moveTo(xCenter+(size *playerObject.stepState/10),y + height);
+            canvas.lineTo(xCenter+(size *playerObject.stepState/20),y + height-(height*0.3));
+            canvas.lineTo(xCenter,y+height*0.7);
+            canvas.lineTo(xCenter-(size *playerObject.stepState/20),y + height-(height*0.3));
+            canvas.lineTo(xCenter-(size *playerObject.stepState/10),y + height);
+        }
+        else if(playerStanding){
+            canvas.moveTo(xCenter+(size),y + height);
+            canvas.lineTo(xCenter+(size),y + height-(height*0.3));
+            canvas.lineTo(xCenter,y+height*0.7);
+            canvas.lineTo(xCenter-(size),y + height-(height*0.3));
+            canvas.lineTo(xCenter-(size),y + height);
         }
         else{
             canvas.moveTo(xCenter+size,y+height*1.2);
