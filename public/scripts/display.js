@@ -139,7 +139,8 @@ function gameStep(){
     canvasDraw.beginPath();
 
 
-    canvasDraw.rect(gameWidth/2-100,gameHeight-400,200,100);
+    canvasDraw.rect(100,gameHeight-400,200,100);
+    canvasDraw.rect(gameWidth/2-100,gameHeight-100,200,100);
     canvasDraw.stroke();
 
     drawEnteties(canvasDraw);
@@ -179,11 +180,11 @@ function drawEnteties(canvas){
 function onPlatform(player,platform){
 
     //test platform in the middle
-    if(player.x+player.width < gameWidth/2 -100){
+    if(player.x+player.width < platform.x){
         return false;
     }
 
-    if(player.x > gameWidth/2 + 100){
+    if(player.x > platform.x + platform.width){
         return false;
     }
 
@@ -236,13 +237,51 @@ function updateEntityStates(){
         element.x += element.moveX;
 
         //test platform
-        let testPlatform = {
-            x: gameWidth/2 - 100,
-            width: 200,
-            y: gameHeight - 400,
-            height: 100
-        }
+        let testPlatforms = [
+            {
+                x: gameWidth/2 - 100,
+                width: 200,
+                y: gameHeight - 100,
+                height: 100
+            },
+            {
+                x: 100,
+                width: 200,
+                y: gameHeight - 400,
+                height: 100
+            },
+        ]
 
+        //this is not the best as find seems to keep going through the whole array even after finding the thing
+        let platformCollision = testPlatforms.reduce( (prev,testPlatform,i) => {
+            let result = onPlatform(element,testPlatform);
+            if(!prev && result){
+                console.log(`collison with object at ${testPlatform.x} of type ${result.collison} at x=${result.x} y=${result.y}`)
+                return result;
+            }
+            
+            return prev;
+        },false);
+
+            
+        if(platformCollision){
+            if(platformCollision.collison == "y"){
+                element.moveY = 0;
+            }
+            else if(platformCollision.collison == "bellow"){
+                if(element.moveY < 0){
+                    element.moveY = 0;
+                }
+            }
+            else {
+                element.moveX = 0;
+            }
+            //wouldalso want to set the y to be on the object
+            element.y = platformCollision.y;
+            element.x = platformCollision.x;
+        }
+        
+        //seperate from the collison it sseems
         if (element.y > (gameHeight - entitieSize)){
             element.y = (gameHeight - entitieSize);
             if(element.moveY > 0){
@@ -251,23 +290,23 @@ function updateEntityStates(){
         }
         else{
 
-            let platformCollision = onPlatform(element,testPlatform);
-            if(platformCollision){
-                if(platformCollision.collison == "y"){
-                    element.moveY = 0;
-                }
-                else if(platformCollision.collison == "bellow"){
-                    if(element.moveY < 0){
-                        element.moveY = 0;
-                    }
-                }
-                else {
-                    element.moveX = 0;
-                }
-                //wouldalso want to set the y to be on the object
-                element.y = platformCollision.y;
-                element.x = platformCollision.x;
-            }
+            // // let platformCollision = onPlatform(element,testPlatform);
+            // if(platformCollision){
+            //     if(platformCollision.collison == "y"){
+            //         element.moveY = 0;
+            //     }
+            //     else if(platformCollision.collison == "bellow"){
+            //         if(element.moveY < 0){
+            //             element.moveY = 0;
+            //         }
+            //     }
+            //     else {
+            //         element.moveX = 0;
+            //     }
+            //     //wouldalso want to set the y to be on the object
+            //     element.y = platformCollision.y;
+            //     element.x = platformCollision.x;
+            // }
         }
 
         if(element.x+element.width > gameWidth){
