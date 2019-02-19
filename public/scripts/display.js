@@ -17,6 +17,27 @@ let serverConnection;
 let playerEntities={};
 let playersDeleting={};
 
+let objectPlatforms = [
+    {
+        x: gameWidth/2 - 100,
+        width: 200,
+        y: gameHeight - 100,
+        height: 100
+    },
+    {
+        x: 100,
+        width: 200,
+        y: gameHeight - 400,
+        height: 100
+    },
+    {
+        x: gameWidth-200,
+        width: 200,
+        y: gameHeight - 200,
+        height: 100
+    },
+]
+
 let playerMoveSpeed = entitieSize/10;
 
 function setupDisplayArea(){
@@ -135,13 +156,7 @@ function gameStep(){
 
     refreshCanvas(canvasDraw);
 
-    //test platform draw
-    canvasDraw.beginPath();
-
-
-    canvasDraw.rect(100,gameHeight-400,200,100);
-    canvasDraw.rect(gameWidth/2-100,gameHeight-100,200,100);
-    canvasDraw.stroke();
+    drawPlatforms(canvasDraw);
 
     drawEnteties(canvasDraw);
 }
@@ -152,6 +167,16 @@ function refreshCanvas(canvas){
     canvas.beginPath();
     canvas.rect(0,0,gameWidth,gameHeight);
     canvas.stroke();
+}
+
+function drawPlatforms(canvas){
+    objectPlatforms.forEach((platform)=>{
+        canvas.beginPath();
+        canvas.rect(platform.x,platform.y,platform.width,platform.height);
+        canvas.stroke();
+    })
+
+    
 }
 
 function drawEnteties(canvas){
@@ -236,27 +261,11 @@ function updateEntityStates(){
         
         element.x += element.moveX;
 
-        //test platform
-        let testPlatforms = [
-            {
-                x: gameWidth/2 - 100,
-                width: 200,
-                y: gameHeight - 100,
-                height: 100
-            },
-            {
-                x: 100,
-                width: 200,
-                y: gameHeight - 400,
-                height: 100
-            },
-        ]
 
         //this is not the best as find seems to keep going through the whole array even after finding the thing
-        let platformCollision = testPlatforms.reduce( (prev,testPlatform,i) => {
-            let result = onPlatform(element,testPlatform);
+        let platformCollision = objectPlatforms.reduce( (prev,objectPlatforms,i) => {
+            let result = onPlatform(element,objectPlatforms);
             if(!prev && result){
-                console.log(`collison with object at ${testPlatform.x} of type ${result.collison} at x=${result.x} y=${result.y}`)
                 return result;
             }
             
@@ -290,7 +299,7 @@ function updateEntityStates(){
         }
         else{
 
-            // // let platformCollision = onPlatform(element,testPlatform);
+            // // let platformCollision = onPlatform(element,objectPlatforms);
             // if(platformCollision){
             //     if(platformCollision.collison == "y"){
             //         element.moveY = 0;
