@@ -12,6 +12,8 @@ let gameWidth = document.documentElement.clientWidth - entitieSize;
 
 let serverConnection;
 
+let placePlatformsAllow = false;
+
 //CHANGE TO BE BETTER LAYED OUT
 let mouseDownLocation = undefined;
 let mouseUpLocation = undefined;
@@ -43,6 +45,88 @@ let areaPlatforms = [
 ]
 
 let playerMoveSpeed = entitieSize/10;
+
+
+function swapMenuContent(show){
+    let menuSection = document.getElementById("menuSection")
+
+    let newContent = undefined;
+    //I dont like this magic number use here. feels icky
+        //also i screws up when formatting the html with line breaks as they are not drawn but count as text elements of a div
+    let oldContent = menuSection.childNodes[0];
+    
+    console.log(menuSection.childNodes)
+
+    if(show){
+        newContent = document.createElement("div");
+        
+        let newButton = document.createElement("button");
+        newButton.title = "Hide Menu";
+        newButton.innerHTML = newButton.title;
+        newButton.onclick = () => {swapMenuContent(false)};
+        newButton.style.width = "50%"
+        newButton.style.height = "100%"
+
+        let newTitle = document.createElement("h1")
+        newTitle.innerHTML = "MENU STUFF"
+
+        let platformDrawButton = document.createElement("button")
+        
+        if(placePlatformsAllow){
+            platformDrawButton.innerHTML = "platform draw enabled"
+        }
+        else{
+            platformDrawButton.innerHTML = "platform draw disabled"
+        }
+
+        platformDrawButton.onclick = () => {
+
+            //As it will be toggled
+            if(!placePlatformsAllow){
+                platformDrawButton.innerHTML = "platform draw enabled"
+            }
+            else{
+                platformDrawButton.innerHTML = "platform draw disabled"
+            }
+            setNewPlatformDraw(!placePlatformsAllow);
+        }
+
+        newContent.appendChild(newButton)
+        newContent.appendChild(platformDrawButton)
+        newContent.appendChild(newTitle)
+
+        menuSection.replaceChild(newContent,oldContent);
+    }
+    else{
+
+        let newButton = document.createElement("button");
+        newButton.title = "Options menu";
+        newButton.innerHTML = newButton.title;
+        newButton.onclick = () => {swapMenuContent(true)};
+        newButton.style.width = "50%"
+        newButton.style.height = "100%"
+
+        menuSection.replaceChild(newButton,oldContent);
+    }
+}
+
+function setNewPlatformDraw(allow){
+    //the == true is to enforce true or false incase a non boolean option is given
+        //at least that is the intention
+    placePlatformsAllow = (allow == true);
+}
+function addNewPlatform(x,y,width,height){
+    if(placePlatformsAllow){
+
+        //Should proabaly verify the values as being valid
+        areaPlatforms.push({
+            x,
+            y,
+            width,
+            height
+        });        
+    }
+}
 
 function setupDisplayArea(){
     
@@ -160,19 +244,17 @@ function setupMouseClicks(){
     let displayElement = document.getElementById("canvasArea");
     
     displayElement.addEventListener("mousedown",(evt)=>{
-        mouseDownLocation = {x:evt.x,y:evt.y}
-        console.log(`click at x=${evt.x} y=${evt.y}`)
+        mouseDownLocation = {x:evt.clientX,y:evt.clientY}
     })
     displayElement.addEventListener("mouseup",(evt)=>{
         
-        mouseUpLocation = {x:evt.x,y:evt.y}
+        //if screenX is used it grabs the location in relation to the monitor
+        mouseUpLocation = {x:evt.clientX,y:evt.clientY}
 
         if(mouseDownLocation != undefined){
 
             let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
             let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
-
-
 
             //Need to figure out proper offset. this isnt quite right
                 //Got it. needs the whole hirachy of the dom to the canvas object. its offset is relative to its parent. click is based on the overall location on the window
@@ -189,13 +271,11 @@ function setupMouseClicks(){
                 width:platformWidth,
                 height:platformHeight,
             }
-
-            areaPlatforms.push(newPlatform);
+            
+            //probably easier to just pass the object really. but already done this
+            addNewPlatform(newPlatform.x,newPlatform.y,newPlatform.width,newPlatform.height);
+            // areaPlatforms.push(newPlatform);
         }
-
-        console.log(`release at x=${evt.x} y=${evt.y} offset left=${displayElement.offsetLeft}`)
-
-
     })
 }
 
