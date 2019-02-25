@@ -438,6 +438,14 @@ function updateEntityStates(){
             element.y = platformCollision.y;
             element.x = platformCollision.x;
         }
+        else{
+            if(element.moveRight && element.moveX == 0){
+                element.moveX = playerMoveSpeed;
+            }
+            else if(element.moveLeft && element.moveX == 0){
+                element.moveX = -playerMoveSpeed;
+            }
+        }
         
         //seperate from the collison it sseems
         if (element.y > (gameHeight - entitieSize)){
