@@ -10,9 +10,54 @@
     <script type="text/javascript" src="/scripts/display.js"></script>
 </head>
 <body>
-    <div style="position:relative">
-        <h1 style="position: absolute" id="displayId">Display is --</h1>
+    <div style="position:relative; text-align: center" id="topDiv">
+        <h1 style="position: absolute; left: 2%" id="displayId">Display is --</h1>
+        <!-- if this is broken onto multiple lines then the linebreaks count as text elements annoyingly -->
+        <div id="menuSection" style="position: absolute; left: 40%; top: 0%; width: 20%; height: 5%; text-align: center"><button style="width: 50%; height: 100%" onclick="swapMenuContent(true)">Options menu</button></div>
         <canvas id="canvasArea"></canvas>
     </div>
 </body>
 </html>
+
+
+<script>
+    function swapMenuContent(show){
+        let menuSection = document.getElementById("menuSection")
+
+        let newContent = undefined;
+        //I dont like this magic number use here. feels icky
+        let oldContent = menuSection.childNodes[0];
+        
+        console.log(menuSection.childNodes)
+
+        if(show){
+            newContent = document.createElement("div");
+            
+            let newButton = document.createElement("button");
+            newButton.title = "Hide Menu";
+            newButton.innerHTML = newButton.title;
+            newButton.onclick = () => {swapMenuContent(false)};
+            newButton.style.width = "50%"
+            newButton.style.height = "100%"
+
+            let newTitle = document.createElement("h1")
+            newTitle.innerHTML = "MENU STUFF"
+
+            newContent.appendChild(newButton)
+            newContent.appendChild(newTitle)
+
+            menuSection.replaceChild(newContent,oldContent);
+        }
+        else{
+
+            let newButton = document.createElement("button");
+            newButton.title = "Options menu";
+            newButton.innerHTML = newButton.title;
+            newButton.onclick = () => {swapMenuContent(true)};
+            newButton.style.width = "50%"
+            newButton.style.height = "100%"
+
+            menuSection.replaceChild(newButton,oldContent);
+        }
+    }
+</script>

@@ -12,6 +12,10 @@ let gameWidth = document.documentElement.clientWidth - entitieSize;
 
 let serverConnection;
 
+//CHANGE TO BE BETTER LAYED OUT
+let mouseDownLocation = undefined;
+let mouseUpLocation = undefined;
+
 //Will want to make this an object of objects not an array
     //alter elsewher eto itterate over the keys
 let playerEntities={};
@@ -145,7 +149,54 @@ function getServerIp(){
 }
 
 function startGame(){
+
+    setupMouseClicks()
+
     setInterval(gameStep,20);
+}
+
+function setupMouseClicks(){
+    
+    let displayElement = document.getElementById("canvasArea");
+    
+    displayElement.addEventListener("mousedown",(evt)=>{
+        mouseDownLocation = {x:evt.x,y:evt.y}
+        console.log(`click at x=${evt.x} y=${evt.y}`)
+    })
+    displayElement.addEventListener("mouseup",(evt)=>{
+        
+        mouseUpLocation = {x:evt.x,y:evt.y}
+
+        if(mouseDownLocation != undefined){
+
+            let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
+            let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
+
+
+
+            //Need to figure out proper offset. this isnt quite right
+                //Got it. needs the whole hirachy of the dom to the canvas object. its offset is relative to its parent. click is based on the overall location on the window
+            let topDiv = document.getElementById("topDiv")
+            platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
+            platformY -= displayElement.offsetTop + topDiv.offsetTop;
+
+            let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
+            let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+
+            let newPlatform = {
+                x:platformX,
+                y:platformY,
+                width:platformWidth,
+                height:platformHeight,
+            }
+
+            areaPlatforms.push(newPlatform);
+        }
+
+        console.log(`release at x=${evt.x} y=${evt.y} offset left=${displayElement.offsetLeft}`)
+
+
+    })
 }
 
 function gameStep(){
