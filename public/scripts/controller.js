@@ -18,6 +18,9 @@ function setupControllerButtons(){
         let controllerButton = controllerButtons[key]
         controllerButton.addEventListener("pointerdown",buttonPressed)
         controllerButton.addEventListener("pointerup",buttonReleased)
+        
+        controllerButton.addEventListener("touchstart",touchStart)
+        controllerButton.addEventListener("touchend",touchEnd)
             
         // controllerButton.addEventListener("touchstart",buttonPressed, false)
         // controllerButton.addEventListener("touchend",buttonReleased, false)
@@ -32,6 +35,19 @@ function buttonPressed(pointerEvent){
 }
 function buttonReleased(pointerEvent){
     targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
+    serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
+}
+
+function touchStart(touchEvent){
+
+    //iphone has issues with the event it seems
+    // targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
+    targetButtonValue = touchEvent.target.value
+    serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
+}
+function touchEnd(touchEvent){
+    // targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
+    targetButtonValue = touchEvent.target.value
     serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
 }
 

@@ -239,6 +239,8 @@ function startGame(){
     setInterval(gameStep,20);
 }
 
+//This wont work on mobiles. consider using pointer up down events.
+    //ios might require touchstart/touchStop
 function setupMouseClicks(){
     
     let displayElement = document.getElementById("canvasArea");
