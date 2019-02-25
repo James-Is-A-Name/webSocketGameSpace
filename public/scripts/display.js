@@ -24,24 +24,24 @@ let playerEntities={};
 let playersDeleting={};
 
 let areaPlatforms = [
-    {
-        x: gameWidth/2 - 100,
-        width: 200,
-        y: gameHeight - 100,
-        height: 100
-    },
-    {
-        x: 100,
-        width: 200,
-        y: gameHeight - 400,
-        height: 100
-    },
-    {
-        x: gameWidth-200,
-        width: 200,
-        y: gameHeight - 200,
-        height: 100
-    },
+    // {
+    //     x: gameWidth/2 - 100,
+    //     width: 200,
+    //     y: gameHeight - 100,
+    //     height: 100
+    // },
+    // {
+    //     x: 100,
+    //     width: 200,
+    //     y: gameHeight - 400,
+    //     height: 100
+    // },
+    // {
+    //     x: gameWidth-200,
+    //     width: 200,
+    //     y: gameHeight - 200,
+    //     height: 100
+    // },
 ]
 
 let playerMoveSpeed = entitieSize/10;
@@ -181,19 +181,35 @@ function connectWebSocket(serverIp){
         }
         else if(theMessage.moveRight === true){
             playerEntities[theMessage.id].moveX = playerMoveSpeed;
+
+            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
         }
         else if(theMessage.moveLeft === true){
             playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+
+            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
         }
         else if(theMessage.moveRight === false){
             if (playerEntities[theMessage.id].moveX > 0){
                 playerEntities[theMessage.id].moveX = 0;
+                
+                if(playerEntities[theMessage.id].moveLeft){
+                    playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+                }
             }
+
+            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
         }
         else if(theMessage.moveLeft === false){
             if (playerEntities[theMessage.id].moveX < 0){
                 playerEntities[theMessage.id].moveX = 0;
+
+                if(playerEntities[theMessage.id].moveRight){
+                    playerEntities[theMessage.id].moveX = playerMoveSpeed;
+                }
             }
+
+            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
         }
         else if(theMessage.action1 === true){
             playerEntities[theMessage.id].moveY = -20;
