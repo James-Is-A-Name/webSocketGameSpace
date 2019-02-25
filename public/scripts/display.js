@@ -17,7 +17,7 @@ let serverConnection;
 let playerEntities={};
 let playersDeleting={};
 
-let objectPlatforms = [
+let areaPlatforms = [
     {
         x: gameWidth/2 - 100,
         width: 200,
@@ -170,7 +170,7 @@ function refreshCanvas(canvas){
 }
 
 function drawPlatforms(canvas){
-    objectPlatforms.forEach((platform)=>{
+    areaPlatforms.forEach((platform)=>{
         canvas.beginPath();
         canvas.rect(platform.x,platform.y,platform.width,platform.height);
         canvas.stroke();
@@ -263,8 +263,8 @@ function updateEntityStates(){
 
 
         //this is not the best as find seems to keep going through the whole array even after finding the thing
-        let platformCollision = objectPlatforms.reduce( (prev,objectPlatforms,i) => {
-            let result = onPlatform(element,objectPlatforms);
+        let platformCollision = areaPlatforms.reduce( (prev,platform,i) => {
+            let result = onPlatform(element,platform);
             if(!prev && result){
                 return result;
             }
@@ -299,7 +299,7 @@ function updateEntityStates(){
         }
         else{
 
-            // // let platformCollision = onPlatform(element,objectPlatforms);
+            // // let platformCollision = onPlatform(element,areaPlatforms);
             // if(platformCollision){
             //     if(platformCollision.collison == "y"){
             //         element.moveY = 0;
