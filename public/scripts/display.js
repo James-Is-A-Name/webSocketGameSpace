@@ -353,19 +353,15 @@ function drawEnteties(canvas){
 
 function onPlatform(player,platform){
 
-    //test platform in the middle
     if(player.x+player.width < platform.x){
         return false;
     }
-
     if(player.x > platform.x + platform.width){
         return false;
     }
-
     if(player.y + player.height < platform.y){
         return false;
     }
-
     if(player.y > platform.y + platform.height){
         return false;
     }
@@ -412,31 +408,39 @@ function updateEntityStates(){
 
 
         //this is not the best as find seems to keep going through the whole array even after finding the thing
-        let platformCollision = areaPlatforms.reduce( (prev,platform,i) => {
+        let platformCollisions = areaPlatforms.reduce( (prev,platform,i) => {
             let result = onPlatform(element,platform);
-            if(!prev && result){
-                return result;
+            if(result){
+                // return result;
+                prev.push(result)
             }
             
             return prev;
-        },false);
+        },[]);
 
             
-        if(platformCollision){
-            if(platformCollision.collison == "y"){
-                element.moveY = 0;
+        if(platformCollisions.length > 0){
+            if(platformCollisions.length > 1){
+
+                console.log("two collisions of ",platformCollisions)
             }
-            else if(platformCollision.collison == "bellow"){
-                if(element.moveY < 0){
+
+            platformCollisions.forEach((platformCollision)=>{
+                if(platformCollision.collison == "y"){
+                    element.y = platformCollision.y;
                     element.moveY = 0;
                 }
-            }
-            else {
-                element.moveX = 0;
-            }
-            //wouldalso want to set the y to be on the object
-            element.y = platformCollision.y;
-            element.x = platformCollision.x;
+                else if(platformCollision.collison == "x"){
+                    element.x = platformCollision.x;
+                    element.moveX = 0;
+                }
+                else if(platformCollision.collison == "bellow"){
+                    if(element.moveY < 0){
+                        element.moveY = 0;
+                    }
+                }
+            })
+
         }
         else{
             if(element.moveRight && element.moveX == 0){
