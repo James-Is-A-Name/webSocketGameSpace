@@ -24,24 +24,6 @@ let playerEntities={};
 let playersDeleting={};
 
 let areaPlatforms = [
-    // {
-    //     x: gameWidth/2 - 100,
-    //     width: 200,
-    //     y: gameHeight - 100,
-    //     height: 100
-    // },
-    // {
-    //     x: 100,
-    //     width: 200,
-    //     y: gameHeight - 400,
-    //     height: 100
-    // },
-    // {
-    //     x: gameWidth-200,
-    //     width: 200,
-    //     y: gameHeight - 200,
-    //     height: 100
-    // },
 ]
 
 let playerMoveSpeed = entitieSize/10;
@@ -264,6 +246,12 @@ function setupMouseClicks(){
     displayElement.addEventListener("mousedown",(evt)=>{
         mouseDownLocation = {x:evt.clientX,y:evt.clientY}
     })
+    //
+    displayElement.addEventListener("mousemove",(evt)=>{
+
+        //use this to draw a demo square        
+        mouseUpLocation = {x:evt.clientX,y:evt.clientY}
+    })
     displayElement.addEventListener("mouseup",(evt)=>{
         
         //if screenX is used it grabs the location in relation to the monitor
@@ -290,6 +278,9 @@ function setupMouseClicks(){
                 height:platformHeight,
             }
             
+            mouseDownLocation = undefined
+            mouseUpLocation = undefined
+
             //probably easier to just pass the object really. but already done this
             addNewPlatform(newPlatform.x,newPlatform.y,newPlatform.width,newPlatform.height);
             // areaPlatforms.push(newPlatform);
@@ -347,6 +338,26 @@ function drawEnteties(canvas){
         objectDrawFunctions.playerDismantle(element,canvas);
 
     });
+
+    if(mouseUpLocation && mouseDownLocation && placePlatformsAllow){
+
+        console.log("yup here")
+        //is straight copied from the mouse event part so very much a candidate for refactoring
+        let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
+        let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
+
+        let displayElement = document.getElementById("canvasArea");
+        let topDiv = document.getElementById("topDiv")
+        platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
+        platformY -= displayElement.offsetTop + topDiv.offsetTop;
+
+        let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
+        let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+
+        // canvas.stroke(10);
+        canvas.beginPath();
+        canvas.rect(platformX,platformY,platformWidth,platformHeight);
+    }
 
     canvas.stroke();
 }
@@ -457,26 +468,6 @@ function updateEntityStates(){
             if(element.moveY > 0){
                 element.moveY = 0;
             }
-        }
-        else{
-
-            // // let platformCollision = onPlatform(element,areaPlatforms);
-            // if(platformCollision){
-            //     if(platformCollision.collison == "y"){
-            //         element.moveY = 0;
-            //     }
-            //     else if(platformCollision.collison == "bellow"){
-            //         if(element.moveY < 0){
-            //             element.moveY = 0;
-            //         }
-            //     }
-            //     else {
-            //         element.moveX = 0;
-            //     }
-            //     //wouldalso want to set the y to be on the object
-            //     element.y = platformCollision.y;
-            //     element.x = platformCollision.x;
-            // }
         }
 
         if(element.x+element.width > gameWidth){
