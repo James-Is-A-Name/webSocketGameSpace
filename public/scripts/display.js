@@ -372,11 +372,11 @@ function onPlatform(player,platform){
     if(basePoint.y <= platform.y){
         return {x:player.x,y: platform.y-player.height,collison:"y"}
     }
-    if(basePoint.x + player.width/4 < platform.x){
+    if(basePoint.x < platform.x){
         //left side
         return {x:platform.x - player.width,y: player.y,collison:"x"}
     }
-    if(basePoint.x - player.width/4 > platform.x + platform.width){
+    if(basePoint.x > platform.x + platform.width){
         //right side
         return {x:platform.x + platform.width,y: player.y,collison:"x"}
     }
