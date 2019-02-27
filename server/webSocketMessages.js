@@ -83,7 +83,13 @@ function handleDisplayMessage(webSocket,message){
 
     let refreshState = {}
 
-    if(message.shiftPlayer){
+    
+    if(message.shiftPlayerSpecify){
+        shiftToDesignatedDisplay(webSocket.id,message.shiftPlayerDirect,message.targetDisplay);
+        refreshState.do = true;
+        refreshState.player = message.shiftPlayerDirect;
+    }
+    else if(message.shiftPlayer){
         shiftToNextDisplay(webSocket.id,message.shiftPlayer);
         refreshState.do = true;
         refreshState.player = message.shiftPlayer;
@@ -123,6 +129,17 @@ function handlePlayerMessage(webSocket,message){
     sendMessage(display,message)
 }
 
+function shiftToDesignatedDisplay(currentDisplay,player,newDisplayId){
+
+    //possibly use the current display to check it already has the player
+
+    let newDisplay = displays.find(display=> (display.id == newDisplayId))
+
+    if(newDisplay){
+        shiftPlayer(newDisplay,player)
+    }
+
+}
 
 function shiftToNextDisplay(currentDisplay,player){
     let displays = webSocketsConnected.filter(connection=> connection.isDisplay)

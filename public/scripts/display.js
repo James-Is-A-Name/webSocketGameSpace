@@ -479,6 +479,13 @@ function updateEntityStates(){
             serverConnection.send(JSON.stringify({shiftPlayerPrevious:key}));
         }
 
+        //temp testing of the teleport
+        
+        if(element.y < 0){
+            playersShifted.push(key)
+            serverConnection.send(JSON.stringify({shiftPlayerDirect:key,targetDisplay:1}));
+        }
+
         playerEntities[key] = element;
     });
     //need to move to work on a response from the server as following movement commands can be obtained from the server before its redireted
