@@ -316,15 +316,11 @@ function gameStep(){
 
     drawPlatforms(canvasDraw);
 
+    drawPortals(canvasDraw);
+
     drawEnteties(canvasDraw);
 
-    //------------------TESTING------------------
-    portals.forEach((portal) => {
-        console.log("portal draw")
-        canvasDraw.beginPath();
-        canvasDraw.arc(portal.x,portal.y,20,0,Math.PI*2);
-        canvasDraw.stroke();
-    })
+    drawVisualAdditions(canvasDraw);
 }
 
 function refreshCanvas(canvas){
@@ -335,14 +331,46 @@ function refreshCanvas(canvas){
     canvas.stroke();
 }
 
+//For drawing things that ddont interact like the example platform square or drag and drop location of things
+function drawVisualAdditions(canvas){
+
+    if(mouseUpLocation && mouseDownLocation && placePlatformsAllow){
+        console.log("yup here")
+        //is straight copied from the mouse event part so very much a candidate for refactoring
+        let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
+        let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
+
+        let displayElement = document.getElementById("canvasArea");
+        let topDiv = document.getElementById("topDiv")
+        platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
+        platformY -= displayElement.offsetTop + topDiv.offsetTop;
+
+        let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
+        let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+
+        canvas.beginPath();
+        canvas.rect(platformX,platformY,platformWidth,platformHeight);
+        canvas.stroke();
+    }
+}
+
 function drawPlatforms(canvas){
     areaPlatforms.forEach((platform)=>{
         canvas.beginPath();
         canvas.rect(platform.x,platform.y,platform.width,platform.height);
         canvas.stroke();
     })
+}
 
-    
+function drawPortals(canvas){
+    portals.forEach((portal) => {
+        console.log("portal draw")
+        canvas.beginPath();
+        canvas.arc(portal.x,portal.y,20,0,Math.PI*2);
+        canvas.font = "20px Verdana"
+        canvas.fillText(portal.destination,portal.x,portal.y);
+        canvas.stroke();
+    })
 }
 
 function drawEnteties(canvas){
@@ -364,26 +392,6 @@ function drawEnteties(canvas){
         objectDrawFunctions.playerDismantle(element,canvas);
 
     });
-
-    if(mouseUpLocation && mouseDownLocation && placePlatformsAllow){
-
-        console.log("yup here")
-        //is straight copied from the mouse event part so very much a candidate for refactoring
-        let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
-        let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
-
-        let displayElement = document.getElementById("canvasArea");
-        let topDiv = document.getElementById("topDiv")
-        platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
-        platformY -= displayElement.offsetTop + topDiv.offsetTop;
-
-        let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
-        let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
-
-        // canvas.stroke(10);
-        canvas.beginPath();
-        canvas.rect(platformX,platformY,platformWidth,platformHeight);
-    }
 
     canvas.stroke();
 }
