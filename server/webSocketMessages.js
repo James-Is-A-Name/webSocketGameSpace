@@ -65,7 +65,6 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
 
 function handleNewDisplay(webSocket){
     webSocket.isDisplay = true;
-    // console.log(`display ${webSocket.id} connected`);
     webSocket.ws.send(JSON.stringify({displayId:webSocket.id}))
 }
 function handleNewPlayer(webSocket){
@@ -75,7 +74,6 @@ function handleNewPlayer(webSocket){
 
     if (firstDisplay){
         playerDisplayLocation[webSocket.id] = firstDisplay.id;
-        // console.log(`controller ${webSocket.id} connected to display ${firstDisplay.id}`);
         sendMessage(firstDisplay,{newPlayerId:webSocket.id})
     }
 }
@@ -84,7 +82,7 @@ function handleDisplayMessage(webSocket,message){
     let refreshState = {}
 
     
-    if(message.shiftPlayerSpecify){
+    if(message.shiftPlayerDirect){
         shiftToDesignatedDisplay(webSocket.id,message.shiftPlayerDirect,message.targetDisplay);
         refreshState.do = true;
         refreshState.player = message.shiftPlayerDirect;
@@ -123,7 +121,6 @@ function handlePlayerMessage(webSocket,message){
         ...webSocket.controllerHistory,
         ...message
     }
-    console.log("controller state is  ",webSocket.controllerHistory)
     
     let display = webSocketsConnected.find(connection=> connection.id == playerDisplayLocation[webSocket.id]);
     sendMessage(display,message)
@@ -132,7 +129,7 @@ function handlePlayerMessage(webSocket,message){
 function shiftToDesignatedDisplay(currentDisplay,player,newDisplayId){
 
     //possibly use the current display to check it already has the player
-
+    let displays = webSocketsConnected.filter(connection=> connection.isDisplay)
     let newDisplay = displays.find(display=> (display.id == newDisplayId))
 
     if(newDisplay){
