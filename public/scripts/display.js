@@ -23,8 +23,26 @@ let mouseUpLocation = undefined;
 let playerEntities={};
 let playersDeleting={};
 
-let areaPlatforms = [
-]
+let areaPlatforms = [];
+
+let portals = [
+    
+    {
+        x: 200,
+        y: 200,
+        destination: 3
+    },
+    {
+        x: 400,
+        y: 400,
+        destination: 1
+    },
+    {
+        x: 800,
+        y: 400,
+        destination: 2
+    }
+];
 
 let playerMoveSpeed = entitieSize/10;
 
@@ -299,6 +317,14 @@ function gameStep(){
     drawPlatforms(canvasDraw);
 
     drawEnteties(canvasDraw);
+
+    //------------------TESTING------------------
+    portals.forEach((portal) => {
+        console.log("portal draw")
+        canvasDraw.beginPath();
+        canvasDraw.arc(portal.x,portal.y,20,0,Math.PI*2);
+        canvasDraw.stroke();
+    })
 }
 
 function refreshCanvas(canvas){
@@ -479,12 +505,13 @@ function updateEntityStates(){
             serverConnection.send(JSON.stringify({shiftPlayerPrevious:key}));
         }
 
-        //temp testing of the teleport
-        
-        if(element.y < 0){
-            playersShifted.push(key)
-            serverConnection.send(JSON.stringify({shiftPlayerDirect:key,targetDisplay:1}));
-        }
+        //------------------TESTING------------------
+        portals.forEach((portal) => {
+            if(( Math.abs(element.x + element.width/2 - portal.x) < 20) && (Math.abs(element.y + element.height/2 - portal.y) < 20 )){
+                playersShifted.push(key)
+                serverConnection.send(JSON.stringify({shiftPlayerDirect:key,targetDisplay:portal.destination}));
+            }
+        })
 
         playerEntities[key] = element;
     });
