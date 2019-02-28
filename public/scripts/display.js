@@ -38,7 +38,7 @@ let portals = [
         destination: 1
     },
     {
-        x: 800,
+        x: 400,
         y: 400,
         destination: 2
     }
@@ -516,8 +516,11 @@ function updateEntityStates(){
         //------------------TESTING------------------
         portals.forEach((portal) => {
             if(( Math.abs(element.x + element.width/2 - portal.x) < 20) && (Math.abs(element.y + element.height/2 - portal.y) < 20 )){
-                playersShifted.push(key)
-                serverConnection.send(JSON.stringify({shiftPlayerDirect:key,targetDisplay:portal.destination}));
+
+                if(!playersShifted.find( player => player == key)){
+                    playersShifted.push(key)
+                    serverConnection.send(JSON.stringify({shiftPlayerDirect:key,targetDisplay:portal.destination}));
+                }
             }
         })
 
