@@ -50,6 +50,7 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
 
             if(theMessage.actAsDisplay){
                 handleNewDisplay(theWebsocket)
+                sendMessageToDisplays({newDisplay:true},theWebsocket.id);
             } else if(theMessage.newPlayer){
                 handleNewPlayer(theWebsocket);
             }else if(theWebsocket.isDisplay){

@@ -27,21 +27,21 @@ let areaPlatforms = [];
 
 let portals = [
     
-    {
-        x: 200,
-        y: 200,
-        destination: 3
-    },
-    {
-        x: 400,
-        y: 400,
-        destination: 1
-    },
-    {
-        x: 400,
-        y: 400,
-        destination: 2
-    }
+    // {
+    //     x: 200,
+    //     y: 200,
+    //     destination: 3
+    // },
+    // {
+    //     x: 400,
+    //     y: 400,
+    //     destination: 1
+    // },
+    // {
+    //     x: 400,
+    //     y: 400,
+    //     destination: 2
+    // }
 ];
 
 let playerMoveSpeed = entitieSize/10;
@@ -171,6 +171,13 @@ function connectWebSocket(serverIp){
         if(theMessage.displayId){
             let displayIdMessage = document.getElementById("displayId");
             displayIdMessage.innerHTML = theMessage.displayId;
+        }
+        else if(theMessage.newDisplay){
+            portals.push({
+                    x: 100*theMessage.id,
+                    y: 100,
+                    destination: theMessage.id
+            })
         }
         else if(theMessage.newPlayerId){
             addPlayerEntity(theMessage.newPlayerId)
@@ -516,7 +523,6 @@ function updateEntityStates(){
         //------------------TESTING------------------
         portals.forEach((portal) => {
             if(( Math.abs(element.x + element.width/2 - portal.x) < 20) && (Math.abs(element.y + element.height/2 - portal.y) < 20 )){
-
                 if(!playersShifted.find( player => player == key)){
                     playersShifted.push(key)
                     serverConnection.send(JSON.stringify({shiftPlayerDirect:key,targetDisplay:portal.destination}));
