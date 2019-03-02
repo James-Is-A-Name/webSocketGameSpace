@@ -18,7 +18,14 @@ let placePlatformsAllow = false;
 
 //CHANGE TO BE BETTER LAYED OUT
 let mouseDownLocation = undefined;
+let lastMousePosition = undefined;
 let mouseUpLocation = undefined;
+
+let previousPlatformWidth;
+let previousPlatformHeight;
+let previousPlatformX;
+let previousPlatformY;
+
 
 //Will want to make this an object of objects not an array
     //alter elsewher eto itterate over the keys
@@ -319,8 +326,10 @@ function gameStep(){
     let displayElement = document.getElementById("canvasAreaFront");
     let canvasDraw = displayElement.getContext("2d");
 
+    
+    //Must be done before the entities are moved
+    clearEntities(canvasDraw);
     updateEntityStates();
-
 
     if(updateBackground){
         updateBackground = false;
@@ -329,7 +338,8 @@ function gameStep(){
         drawPortals(canvasDrawBackground);
     }
 
-    refreshCanvas(canvasDraw);
+    // refreshCanvas(canvasDraw);
+    //Alter to just claer where things have been drawn rather than the whole thing
     drawEnteties(canvasDraw);
     drawVisualAdditions(canvasDraw);
 }
@@ -359,6 +369,16 @@ function drawVisualAdditions(canvas){
         let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
         let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
 
+
+        if(previousPlatformWidth){
+            canvas.clearRect(previousPlatformX-2,previousPlatformY-2,previousPlatformWidth+4,previousPlatformHeight+4)
+        }
+        previousPlatformX = platformX
+        previousPlatformY = platformY
+        previousPlatformWidth = platformWidth
+        previousPlatformHeight = platformHeight
+        
+
         canvas.beginPath();
         canvas.rect(platformX,platformY,platformWidth,platformHeight);
         canvas.stroke();
@@ -384,6 +404,28 @@ function drawPortals(canvas){
     })
 }
 
+function clearEntities(canvas){
+    canvas.beginPath();    
+    Object.keys(playerEntities).forEach(key => {
+        let element = playerEntities[key];
+        let x = element.x;
+        let y = element.y;
+        let width = element.width;
+        let height = element.height;
+        //very loose at the moment
+        canvas.clearRect(x-20, y-20, width+40, height*1.4+20);
+    });
+    
+    Object.keys(playersDeleting).forEach(key => {
+        let element = playersDeleting[key];
+        let x = element.x;
+        let y = element.y;
+        let width = element.width;
+        let height = element.height;
+        //this is just being played by ear at the moment
+        canvas.clearRect(x-width*5, y-height/2, width*11, height*3);
+    });
+}
 function drawEnteties(canvas){
 
     canvas.beginPath();    
