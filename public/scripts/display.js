@@ -12,6 +12,8 @@ let gameWidth = document.documentElement.clientWidth - entitieSize;
 
 let serverConnection;
 
+let updateBackground = true;
+
 let placePlatformsAllow = false;
 
 //CHANGE TO BE BETTER LAYED OUT
@@ -25,24 +27,7 @@ let playersDeleting={};
 
 let areaPlatforms = [];
 
-let portals = [
-    
-    // {
-    //     x: 200,
-    //     y: 200,
-    //     destination: 3
-    // },
-    // {
-    //     x: 400,
-    //     y: 400,
-    //     destination: 1
-    // },
-    // {
-    //     x: 400,
-    //     y: 400,
-    //     destination: 2
-    // }
-];
+let portals = [];
 
 let playerMoveSpeed = entitieSize/10;
 
@@ -124,7 +109,9 @@ function addNewPlatform(x,y,width,height){
             y,
             width,
             height
-        });        
+        }); 
+        
+        updateBackground = true;
     }
 }
 
@@ -133,11 +120,20 @@ function setupDisplayArea(){
     gameHeight = document.documentElement.clientHeight - 50;
     gameWidth = document.documentElement.clientWidth - 50;
 
-    let displayElement = document.getElementById("canvasArea");
+    
+    let displayElementBackground = document.getElementById("canvasArea");
+    let canvasDrawBackground = displayElementBackground.getContext("2d");
+
+    let displayElement = document.getElementById("canvasAreaFront");
     let canvasDraw = displayElement.getContext("2d");
 
+    displayElementBackground.setAttribute("width",gameWidth);
+    displayElementBackground.setAttribute("height",gameHeight);
     displayElement.setAttribute("width",gameWidth);
     displayElement.setAttribute("height",gameHeight);
+
+    
+    canvasDrawBackground.clearRect(0,0,gameWidth,gameHeight);
 
     canvasDraw.clearRect(0,0,gameWidth,gameHeight);
     canvasDraw.beginPath();
@@ -173,11 +169,14 @@ function connectWebSocket(serverIp){
             displayIdMessage.innerHTML = theMessage.displayId;
         }
         else if(theMessage.newDisplay){
+
+            //Should be put in its own function
             portals.push({
                     x: 100*theMessage.id,
                     y: 100,
                     destination: theMessage.id
             })
+            updateBackground = true;
         }
         else if(theMessage.newPlayerId){
             addPlayerEntity(theMessage.newPlayerId)
@@ -266,7 +265,7 @@ function startGame(){
     //ios might require touchstart/touchStop
 function setupMouseClicks(){
     
-    let displayElement = document.getElementById("canvasArea");
+    let displayElement = document.getElementById("canvasAreaFront");
     
     displayElement.addEventListener("mousedown",(evt)=>{
         mouseDownLocation = {x:evt.clientX,y:evt.clientY}
@@ -305,7 +304,7 @@ function setupMouseClicks(){
             
             mouseDownLocation = undefined
             mouseUpLocation = undefined
-
+            
             //probably easier to just pass the object really. but already done this
             addNewPlatform(newPlatform.x,newPlatform.y,newPlatform.width,newPlatform.height);
             // areaPlatforms.push(newPlatform);
@@ -314,19 +313,24 @@ function setupMouseClicks(){
 }
 
 function gameStep(){
-    let displayElement = document.getElementById("canvasArea");
+    let displayElementBackground = document.getElementById("canvasArea");
+    let canvasDrawBackground = displayElementBackground.getContext("2d");
+    
+    let displayElement = document.getElementById("canvasAreaFront");
     let canvasDraw = displayElement.getContext("2d");
 
     updateEntityStates();
 
+
+    if(updateBackground){
+        updateBackground = false;
+        refreshCanvas(canvasDrawBackground);
+        drawPlatforms(canvasDrawBackground);
+        drawPortals(canvasDrawBackground);
+    }
+
     refreshCanvas(canvasDraw);
-
-    drawPlatforms(canvasDraw);
-
-    drawPortals(canvasDraw);
-
     drawEnteties(canvasDraw);
-
     drawVisualAdditions(canvasDraw);
 }
 
