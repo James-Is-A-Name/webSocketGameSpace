@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
 
-let entitieSize = 50;
+const entitieSize = 50;
 //should not make this 
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
@@ -451,149 +451,167 @@ function drawEnteties(canvas){
 
 function onPlatform(player,platform){
 
-    if(player.x+player.width < platform.x){
-        return false;
-    }
-    if(player.x > platform.x + platform.width){
-        return false;
-    }
-    if(player.y + player.height < platform.y){
-        return false;
-    }
-    if(player.y > platform.y + platform.height){
+    if((player.x+player.width < platform.x) || (player.x > platform.x + platform.width) || (player.y + player.height < platform.y) || (player.y > platform.y + platform.height) ){
         return false;
     }
 
     let basePoint = {x:player.width/2+player.x, y:player.y+player.height}
 
-
     if(basePoint.y <= platform.y){
         return {x:player.x,y: platform.y-player.height,collison:"y"}
     }
-    if(basePoint.x < platform.x){
-        //left side
+    if(basePoint.x < platform.x){   //left side
         return {x:platform.x - player.width,y: player.y,collison:"x"}
     }
-    if(basePoint.x > platform.x + platform.width){
-        //right side
+    if(basePoint.x > platform.x + platform.width){  //right side
         return {x:platform.x + platform.width,y: player.y,collison:"x"}
     }
 
-    
-
-    if(basePoint.y < platform.y + platform.height){
-        //catch it inside the block
+    if(basePoint.y < platform.y + platform.height){ //catch it inside the block
         return {x:player.x,y: platform.y-player.height,collison:"y"}
     }
-    else{
+    else{   //hit from below we shall say
         let newY = (player.y > platform.y+platform.height) ? player.y : platform.y+platform.height;
-        //hit from below we shall say
         return {x:player.x,y:newY,collison:"bellow"}
     }
-
-    return false;
 }
 
 function updateEntityStates(){
     let playersShifted = [];
-    Object.keys(playerEntities).map(key => {
-        let element = playerEntities[key];
 
-        element.y += element.moveY;
-        element.moveY++;
-        
-        element.x += element.moveX;
+    Object.keys(playerEntities).map(playerIndex => {
+        let playerObject = playerEntities[playerIndex];
 
+        playerObject = playerMovements(playerObject);
 
-        //this is not the best as find seems to keep going through the whole array even after finding the thing
-        let platformCollisions = areaPlatforms.reduce( (prev,platform,i) => {
-            let result = onPlatform(element,platform);
-            if(result){
-                // return result;
-                prev.push(result)
-            }
-            
-            return prev;
-        },[]);
-
+        let platformCollisions = getPlatformCollisions(playerObject);
             
         if(platformCollisions.length > 0){
-            if(platformCollisions.length > 1){
-
-                console.log("two collisions of ",platformCollisions)
-            }
-
-            platformCollisions.forEach((platformCollision)=>{
-                if(platformCollision.collison == "y"){
-                    element.y = platformCollision.y;
-                    element.moveY = 0;
-                }
-                else if(platformCollision.collison == "x"){
-                    element.x = platformCollision.x;
-                    element.moveX = 0;
-                }
-                else if(platformCollision.collison == "bellow"){
-                    if(element.moveY < 0){
-                        element.moveY = 0;
-                    }
-                }
-            })
-
+            playerObject = platformCollisionsAction(platformCollisions,playerObject)
         }
         else{
-            if(element.moveRight && element.moveX == 0){
-                element.moveX = playerMoveSpeed;
-            }
-            else if(element.moveLeft && element.moveX == 0){
-                element.moveX = -playerMoveSpeed;
-            }
+            playerObject = playerMovementCheck(playerObject)
         }
-        
+
         //seperate from the collison it sseems
-        if (element.y > (gameHeight - entitieSize)){
-            element.y = (gameHeight - entitieSize);
-            if(element.moveY > 0){
-                element.moveY = 0;
-            }
+        playerObject = playerGroundDetectionAction(playerObject)
+        
+        //very similar things
+        if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
+            playersShifted.push(playerIndex)
         }
-
-        if(element.x+element.width > gameWidth){
-            playersShifted.push(key)
-            serverConnection.send(JSON.stringify({shiftPlayer:key}));
-        }
-        if(element.x < 0){
-            playersShifted.push(key)
-            serverConnection.send(JSON.stringify({shiftPlayerPrevious:key}));
-        }
-
-        //------------------TESTING------------------
-        portals.forEach((portal) => {
-            if(( Math.abs(element.x + element.width/2 - portal.x) < 20) && (Math.abs(element.y + element.height/2 - portal.y) < 20 )){
-                if(!playersShifted.find( player => player == key)){
-                    playersShifted.push(key)
-                    serverConnection.send(JSON.stringify({shiftPlayerDirect:key,targetDisplay:portal.destination}));
-                }
-            }
-        })
-
-        playerEntities[key] = element;
+        playerEntities[playerIndex] = playerObject;
     });
-    //need to move to work on a response from the server as following movement commands can be obtained from the server before its redireted
-        //But after this has deleted it locally
-    playersShifted.forEach( (keyToDelete)=>{
-        playersDeleting[keyToDelete] = playerEntities[keyToDelete];
-        console.log("start dismantling player ",keyToDelete)
 
-        delete playerEntities[keyToDelete];
+    //playerRemoval()   //could logically combine the two
+    playerDeletingAction(playersShifted)
+    playerDismantlingAction()
+}
+
+function playerMovements(playerObject){
+    playerObject.y += playerObject.moveY;
+    playerObject.moveY++;
+    
+    playerObject.x += playerObject.moveX;
+
+    return playerObject
+}
+
+
+function getPlatformCollisions(playerObject){
+    return areaPlatforms.reduce( (prev,platform,i) => {
+        let result = onPlatform(playerObject,platform);
+        if(result){
+            prev.push(result)
+        }
+        return prev;
+    },[]);
+}
+
+//seperate from the collison it sseems
+function playerGroundDetectionAction(playerObject){
+    if (playerObject.y > (gameHeight - entitieSize)){
+        playerObject.y = (gameHeight - entitieSize);
+        if(playerObject.moveY > 0){
+            playerObject.moveY = 0;
+        }
+    }
+    return playerObject;
+}
+
+function playerMovementCheck(playerObject){
+    if(playerObject.moveRight && playerObject.moveX == 0){
+        playerObject.moveX = playerMoveSpeed;
+    }
+    else if(playerObject.moveLeft && playerObject.moveX == 0){
+        playerObject.moveX = -playerMoveSpeed;
+    }
+    return playerObject;
+}
+
+function platformCollisionsAction(platformCollisions,playerObject){
+    platformCollisions.forEach((platformCollision)=>{
+        if(platformCollision.collison == "y"){
+            playerObject.y = platformCollision.y;
+            playerObject.moveY = 0;
+        }
+        else if(platformCollision.collison == "x"){
+            playerObject.x = platformCollision.x;
+            playerObject.moveX = 0;
+        }
+        else if(platformCollision.collison == "bellow"){
+            if(playerObject.moveY < 0){
+                playerObject.moveY = 0;
+            }
+        }
+    })
+    return playerObject;
+}
+
+function displaySideCollision(playersShifted,playerObject,playerIndex){
+
+    if(playerObject.x+playerObject.width > gameWidth){
+        serverConnection.send(JSON.stringify({shiftPlayer:playerIndex}));
+        return true
+    }
+    else if(playerObject.x < 0){
+        serverConnection.send(JSON.stringify({shiftPlayerPrevious:playerIndex}));
+        return true
+    }
+    return false
+}
+
+function portalCollisons(playersShifted,playerObject,playerIndex){
+    let portalCollision = portals.find((portal) => {
+        if(( Math.abs(playerObject.x + playerObject.width/2 - portal.x) < 20) && (Math.abs(playerObject.y + playerObject.height/2 - portal.y) < 20 )){
+            if(!playersShifted.find( player => player == playerIndex)){
+                return true;
+            }
+        }
     })
 
-    
-    //i dont think this is the best way to delete from an object
+    if(portalCollision){
+        //previously doing this but not a great way of doing it
+        // playersShifted.push(key)
+        //This should be elsewhere really
+        serverConnection.send(JSON.stringify({shiftPlayerDirect:playerIndex,targetDisplay:portalCollision.destination}));
+
+        return true
+    }
+    return false
+}
+
+function playerDeletingAction(playersShifted){
+    playersShifted.forEach( (keyToDelete)=>{
+        playersDeleting[keyToDelete] = playerEntities[keyToDelete];
+        delete playerEntities[keyToDelete];
+    })
+}
+
+function playerDismantlingAction(){
+    //still dont think im doing this is a good way
     let playersDeletingKeys = Object.keys(playersDeleting)
     playersDeletingKeys.forEach( (key)=>{
-        
-        console.log("dismantling player ",key)
-
         if(objectDrawFunctions.isPlayerDismantled(playersDeleting[key])){
             delete playersDeleting[key];
         }
