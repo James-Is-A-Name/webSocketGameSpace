@@ -273,7 +273,10 @@ function startGame(){
 function setupMouseClicks(){
     
     let displayElement = document.getElementById("canvasAreaFront");
-    
+    //displayElement.addEventListener("mousedown",mouseDownHandle)
+    //displayElement.addEventListener("mousemove",mouseMoveHandle)
+    //displayElement.addEventListener("mouseup",mouseUpHandle)
+
     displayElement.addEventListener("mousedown",(evt)=>{
         mouseDownLocation = {x:evt.clientX,y:evt.clientY}
     })
@@ -328,7 +331,7 @@ function gameStep(){
 
     
     //Must be done before the entities are moved
-    clearEntities(canvasDraw);
+    clearOldEntities(canvasDraw);
     updateEntityStates();
 
     if(updateBackground){
@@ -404,7 +407,7 @@ function drawPortals(canvas){
     })
 }
 
-function clearEntities(canvas){
+function clearOldEntities(canvas){
     canvas.beginPath();    
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
@@ -429,21 +432,17 @@ function clearEntities(canvas){
 function drawEnteties(canvas){
 
     canvas.beginPath();    
+
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
-        canvas.fillText(element.id,element.x,element.y)
 
-        // canvas.rect(element.x,element.y,element.width,element.height);
-
+        // canvas.fillText(element.id,element.x,element.y)
         objectDrawFunctions.drawPerson(element,canvas);
-
     });
 
     Object.keys(playersDeleting).forEach(key => {
-
         let element = playersDeleting[key];
         objectDrawFunctions.playerDismantle(element,canvas);
-
     });
 
     canvas.stroke();
@@ -460,14 +459,13 @@ function onPlatform(player,platform){
     if(basePoint.y <= platform.y){
         return {x:player.x,y: platform.y-player.height,collison:"y"}
     }
-    if(basePoint.x < platform.x){   //left side
+    else if(basePoint.x < platform.x){   //left side
         return {x:platform.x - player.width,y: player.y,collison:"x"}
     }
-    if(basePoint.x > platform.x + platform.width){  //right side
+    else if(basePoint.x > platform.x + platform.width){  //right side
         return {x:platform.x + platform.width,y: player.y,collison:"x"}
     }
-
-    if(basePoint.y < platform.y + platform.height){ //catch it inside the block
+    else if(basePoint.y < platform.y + platform.height){ //catch it inside the block
         return {x:player.x,y: platform.y-player.height,collison:"y"}
     }
     else{   //hit from below we shall say
