@@ -10,6 +10,13 @@ const entitieSize = 50;
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
 
+
+
+// let gameThing = {
+//     serverConnection: undefined
+//     updateBackground: true,
+//     and so on
+// }
 let serverConnection;
 
 let updateBackground = true;
@@ -27,11 +34,10 @@ let previousPlatformX;
 let previousPlatformY;
 
 
-//Will want to make this an object of objects not an array
-    //alter elsewher eto itterate over the keys
 let playerEntities={};
 let playersDeleting={};
-
+//Will want to make this an object of objects not an array
+    //alter elsewher eto itterate over the keys
 let areaPlatforms = [];
 
 let portals = [];
@@ -126,7 +132,6 @@ function setupDisplayArea(){
     
     gameHeight = document.documentElement.clientHeight - 50;
     gameWidth = document.documentElement.clientWidth - 50;
-
     
     let displayElementBackground = document.getElementById("canvasArea");
     let canvasDrawBackground = displayElementBackground.getContext("2d");
@@ -139,7 +144,6 @@ function setupDisplayArea(){
     displayElement.setAttribute("width",gameWidth);
     displayElement.setAttribute("height",gameHeight);
 
-    
     canvasDrawBackground.clearRect(0,0,gameWidth,gameHeight);
 
     canvasDraw.clearRect(0,0,gameWidth,gameHeight);
@@ -147,21 +151,14 @@ function setupDisplayArea(){
     canvasDraw.rect(0,0,gameWidth,gameHeight);
     canvasDraw.stroke();
 
-    getServerIp();
+    connectWebSocket();
 
     startGame();
 }
 
 
-function connectWebSocket(serverIp){
-
-//get a websocekt connection
-    // let serverIpAddress = "192.168.1.82"
-    let serverIpAddress = "localhost"
-    console.log("Host is",self.location.host)
-    // serverConnection = new WebSocket(`ws://${serverIp}:43211`);
-    // serverConnection = new WebSocket(`ws://${serverIp}:3000`); //now using the same port as the http server. will need to change this when deploying to something
-    serverConnection = new WebSocket(`ws://${self.location.host}`); //now using the same port as the http server. will need to change this when deploying to something
+function connectWebSocket(){
+    serverConnection = new WebSocket(`ws://${self.location.host}`);
     
     serverConnection.onopen = ()=> {
         console.log("websocket open")
@@ -235,9 +232,7 @@ function addPlayerEntity(player){
     let newPlayer = {
         id:player,
         x:gameWidth/2,
-        // x:0,
         y:gameHeight/2,
-        //y:gameHeight - entitieSize,
         moveY:0,
         moveX:0,
         width:entitieSize/4,
@@ -245,20 +240,6 @@ function addPlayerEntity(player){
     }
     playerEntities[player] = newPlayer;
 
-}
-
-function getServerIp(){
-    fetch("/getIp").then(response => {
-        response.text().then((text)=>{
-            let serverIp = JSON.parse(text).serverIp;
-            connectWebSocket(serverIp);
-        }).catch((err)=>{
-            console.log("something went wrong the computer says")
-        })
-    })
-    .catch((err)=>{
-    console.log("i porbably wrote something wrong got err of ",err)
-    })
 }
 
 function startGame(){
