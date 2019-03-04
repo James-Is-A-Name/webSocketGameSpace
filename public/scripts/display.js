@@ -44,6 +44,52 @@ let portals = [];
 
 let playerMoveSpeed = entitieSize/10;
 
+function p2pTestThing(){
+
+    
+    console.log("testing the p2p stuff")
+
+    let testConnection = getAWebRTC();
+
+    testConnection.sendOfferFunction = ()=>{
+        console.log("send an offer of ",testConnection.offerToSend)
+        fetch("http://localhost:3001/sendOffer",{
+            method: "POST",
+            // mode: "no-cors", // no-cors, cors, *same-origin
+            headers: {
+                "Content-Type": "application/json",
+            },
+
+            // body: JSON.stringify(testConnection.offerToSend)
+            //woops already made it a json object
+            body: testConnection.offerToSend
+            // body: JSON.stringify({testing:"hello"})
+        })
+    }
+
+    testConnection.createOffer()
+
+    let buttonForAcceptAnswer = document.getElementById("testingp2p")
+    
+    buttonForAcceptAnswer.onclick = ()=>{
+        console.log("clicked")
+        
+        fetch("http://localhost:3001/getAnswer",{method: "GET"})
+        .then((response)=>{
+            console.log("got answer")
+            return response.json()})
+        .then((data)=>{
+            console.log("answer is ",data)
+            testConnection.acceptAnswer(data)
+        })
+    }
+
+    
+    let send = document.getElementById("p2pSend")
+    send.onclick = ()=>{
+        testConnection.dataChannel.send("hello from the other side")
+    }
+}
 
 function swapMenuContent(show){
     let menuSection = document.getElementById("menuSection")
@@ -89,8 +135,32 @@ function swapMenuContent(show){
             setNewPlatformDraw(!placePlatformsAllow);
         }
 
+        /*-------------------TESTING--------------------------*/
+        let p2pTest = document.createElement("button")
+        p2pTest.innerHTML = "p2p Test"
+        p2pTest.onclick = () => {
+            p2pTestThing();
+        }
+        
+        let p2pAcceptAnswerTest = document.createElement("button")
+        p2pAcceptAnswerTest.innerHTML = "p2p anser get Test"
+        p2pAcceptAnswerTest.id = "testingp2p"
+
+        
+        let p2pSend = document.createElement("button")
+        p2pSend.innerHTML = "p2p say hello"
+        p2pSend.id = "p2pSend"
+        /*-------------------TESTING--------------------------*/
+
         newContent.appendChild(newButton)
         newContent.appendChild(platformDrawButton)
+        
+        /*-------------------TESTING--------------------------*/
+        newContent.appendChild(p2pTest)
+        newContent.appendChild(p2pAcceptAnswerTest)
+        newContent.appendChild(p2pSend)
+        /*-------------------TESTING--------------------------*/
+        
         newContent.appendChild(newTitle)
 
         menuSection.replaceChild(newContent,oldContent);
