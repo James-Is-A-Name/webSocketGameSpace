@@ -7,10 +7,29 @@
     <link href="/styles/main.css" rel="stylesheet">
     <title>Web Game</title>
 </head>
-<body>
+<body style="height: 90vh">
 
-    <a href="/display.html">Act as a dsiplay</a>
+
+    <div style="text-align:center">
+        <h1 style="height: 20%; text-align:center; font-size: 4em">A Header for testing</h1>
+        <h2 style="font-size: 2em">
+            This is a simple game that uses multiple browser to allow multiple people to participate with it.
+        </h2>
+        <p style="padding-left: 25%;padding-right: 25%; width:50%">
+            The means that this is accomplished without extreme delay is with the use of webRTC.
+            In its current state no TURN/STUN servers are used so it will only work when all devices intending to connect are on the same local network
+        </p>
+    </div>
     
-    <a href="/controller.html">Act as a controller</a>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; text-align: center; height: 80%;">
+
+        <div style="display:flex; justify-content:space-evenly; flex-direction:column">
+            <a href="/display.html" style="background:rgb(250,250,250); width: 50%; height: 4em; margin: auto; border: solid 1px; font-size: 2em"><p>Act as a dsiplay</p></a>
+        </div>
+        
+        <div style="display:flex; justify-content:space-evenly; flex-direction:column">
+            <a href="/controller.html" style="background:rgb(250,250,250); width: 50%; height: 4em; margin: auto; border: solid 1px; font-size: 2em"><p>Act as a controllerp</p></a>
+        </div>
+    </div>
 </body>
 </html>
