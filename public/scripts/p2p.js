@@ -15,7 +15,7 @@ function getAWebRTC(){
 
     connectionObject.connection.onicecandidate = (data) => {
 
-        console.log("ice canditae change",data)
+        // console.log("ice canditae change",data)
         //this feels all kinda janky
         if(connectionObject.sendOffer && connectionObject.whoTo && connectionObject.sendOfferFunction){
             //send this somewhere
@@ -29,7 +29,7 @@ function getAWebRTC(){
             //this is a half hearted way of doing this
             connectionObject.sendOffer = false;
 
-            console.log("description after offer is ",connectionObject.connection.localDescription)
+            // console.log("description after offer is ",connectionObject.connection.localDescription)
 
             connectionObject.sendOfferFunction();
         }
@@ -42,6 +42,7 @@ function getAWebRTC(){
 
             //this is a half hearted way of doing this
             connectionObject.sendAnswer = false;
+            connectionObject.sendAnswerFunction();
         }
     };
     connectionObject.connection.onnremovestream = () => {
@@ -68,13 +69,15 @@ function getAWebRTC(){
         // event.channel.onmessage = (message) => {
         //     console.log("got message ",message)
         // }
-        // connectionObject.dataChannel = event.channel
+        if(connectionObject.answerCreated){
+            connectionObject.dataChannel = event.channel
+        }
         connectionObject.dataChannel.onmessage = (message) => {
             console.log("got message ",message)
             let output = document.getElementById("messageOutput")
             output.innerHTML = message.data
         }
-        connectionObject.dataChannel.send("hello")
+        event.channel.send("hello")
     }
 
 
@@ -84,8 +87,6 @@ function getAWebRTC(){
             connectionObject.sendOffer = true;
             connectionObject.whoTo = "Does not matter in this testing"
             connectionObject.connection.setLocalDescription(offer);
-
-            console.log("setting up an offer to send")
         })
     }
     connectionObject.acceptOffer = (offer) => {
@@ -109,30 +110,3 @@ function getAWebRTC(){
 
     return connectionObject;
 }
-
-//setupWebRTC(who)
-    //creates a an offer and sends it off to the server to connect it up with the other end. if it exists
-        //will want to make something to trigger on the ice setup and send at that point.
-            //will be done with the web socket probably
-// function createOffer(){
-    // localConnection.createOffer()
-    // .then(offer=>localConnection.setLocalDescription(offer))
-
-
-    //this requires a delay as the ice candidates only get setup after the offer has been created.
-// function sendTheOffer(){
-    // fetch("/sendOffer",{
-    //     method: "POST",
-    //     headers: {"Content-Type": "application/json"},
-    //     body: JSON.stringify(localConnection.localDescription)
-    // })
-
-
-
-//webRTCSetupReponse()
-    //server will respond with an answer or a message saying it dont exist
-
-//p2pSetup()
-    //using the answer/offer setup a webrtc connection
-
-//will want to make the controls and player setup less picky and generally workable

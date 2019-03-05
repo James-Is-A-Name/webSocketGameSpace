@@ -17,6 +17,11 @@ let gameWidth = document.documentElement.clientWidth - entitieSize;
 //     updateBackground: true,
 //     and so on
 // }
+
+let p2pConnectionTesting;
+
+let activeDisplayId = false;
+
 let serverConnection;
 
 let updateBackground = true;
@@ -43,6 +48,69 @@ let areaPlatforms = [];
 let portals = [];
 
 let playerMoveSpeed = entitieSize/10;
+
+
+
+function p2pConnect(){
+
+    //create a socket thing
+    let testConnection = getAWebRTC();
+
+    //setup how to send it off
+    testConnection.sendOfferFunction = ()=>{
+        //Hard code who to send a message for now
+        let message = {
+            p2pConnect: true,
+            target: 1,
+            from: 2,
+            offer: testConnection.offerToSend
+        }
+        serverConnection.send(JSON.stringify(message))
+    }
+
+    //trigger the offer that will then trigger the send
+    testConnection.createOffer()
+
+    p2pConnectionTesting = testConnection;
+}
+
+function p2pAcceptOffer(offer){
+    //got an offer so accept it and send an answer
+    
+    let testConnection = getAWebRTC();
+
+    console.log("accept an offer")
+    testConnection.sendAnswerFunction = () =>{
+        
+        let message = {
+            p2pConnect: true,
+            target: 2,
+            from: 1,
+            answer: testConnection.answerToSend
+        }
+        serverConnection.send(JSON.stringify(message))
+    }
+
+    testConnection.acceptOffer(JSON.parse(offer))
+
+    p2pConnectionTesting = testConnection;
+
+    let send = document.getElementById("p2pSend")
+    send.onclick = ()=>{
+        p2pConnectionTesting.dataChannel.send("hello from the other side")
+    }
+}
+
+function p2pAcceptAnswer(answer){
+    console.log("accept an answer")
+    //got an offer so accept it and send an answer
+    p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
+
+    let send = document.getElementById("p2pSend")
+    send.onclick = ()=>{
+        p2pConnectionTesting.dataChannel.send("hello from the other side")
+    }    
+}
 
 function p2pTestThing(){
 
@@ -136,6 +204,13 @@ function swapMenuContent(show){
         }
 
         /*-------------------TESTING--------------------------*/
+        
+        let p2pConnectButton = document.createElement("button")
+        p2pConnectButton.innerHTML = "p2p connect"
+        p2pConnectButton.onclick = () => {
+            p2pConnect();
+        }
+
         let p2pTest = document.createElement("button")
         p2pTest.innerHTML = "p2p Test"
         p2pTest.onclick = () => {
@@ -156,6 +231,7 @@ function swapMenuContent(show){
         newContent.appendChild(platformDrawButton)
         
         /*-------------------TESTING--------------------------*/
+        newContent.appendChild(p2pConnectButton)
         newContent.appendChild(p2pTest)
         newContent.appendChild(p2pAcceptAnswerTest)
         newContent.appendChild(p2pSend)
@@ -241,7 +317,20 @@ function connectWebSocket(){
         if(theMessage.displayId){
             let displayIdMessage = document.getElementById("displayId");
             displayIdMessage.innerHTML = theMessage.displayId;
+
+            activeDisplayId = theMessage.displayId
         }
+        /*----------------------Testing-----------------------------*/
+        else if(theMessage.p2pConnect){
+
+            if(theMessage.answer){
+                p2pAcceptAnswer(theMessage.answer)
+            }
+            else if(theMessage.offer){
+                p2pAcceptOffer(theMessage.offer)
+            }
+        }
+        /*----------------------Testing-----------------------------*/
         else if(theMessage.newDisplay){
 
             //Should be put in its own function

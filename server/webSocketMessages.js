@@ -53,7 +53,16 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
                 sendMessageToDisplays({newDisplay:true},theWebsocket.id);
             } else if(theMessage.newPlayer){
                 handleNewPlayer(theWebsocket);
-            }else if(theWebsocket.isDisplay){
+            }
+            
+            /*------------- Testing ---------------*/
+            else if(theMessage.p2pConnect){
+                handleP2Pcomms(theWebsocket,theMessage)
+            }
+            /*------------- Testing ---------------*/
+            
+            
+            else if(theWebsocket.isDisplay){
                 handleDisplayMessage(theWebsocket,theMessage);
             }else{
                 handlePlayerMessage(theWebsocket,theMessage);
@@ -62,6 +71,15 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
     })
 
     completedCallback();
+}
+
+function  handleP2Pcomms(webSocket,theMessage){
+    //very loose at the moment just having it pass messages along
+    let targetDisplay = webSocketsConnected.find( (connection)=> theMessage.target == connection.id)
+
+    if(targetDisplay && webSocket.id != targetDisplay.id && targetDisplay.isDisplay){
+        sendMessage(targetDisplay,theMessage)
+    }
 }
 
 function handleNewDisplay(webSocket){
