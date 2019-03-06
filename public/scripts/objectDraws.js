@@ -20,6 +20,21 @@ const objectDrawFunctions = {
         let yCenter = y + height/2;
         let size = height/8;
 
+
+        canvas.beginPath();
+
+        let previousColor = canvas.strokeStyle;
+
+        if(playerObject.stance == 0){
+            canvas.strokeStyle = "rgb(255,0,0)"
+        }
+        else if(playerObject.stance == 1){
+            canvas.strokeStyle = "rgb(0,255,0)"
+        }
+        else{
+            canvas.strokeStyle = "rgb(0,0,255)"
+        }
+
         canvas.moveTo(xCenter+size,y+size);
         canvas.arc(xCenter,y+size,size,0,Math.PI*2);
         canvas.moveTo(xCenter,y+size*2);
@@ -59,6 +74,9 @@ const objectDrawFunctions = {
             canvas.lineTo(xCenter-size,y+height*0.9);
             canvas.lineTo(xCenter-size,y+height*1.2);
         }
+        canvas.stroke()
+        
+        canvas.strokeStyle = previousColor;
 
         playerObject.stepState ++
         if(playerObject.stepState > 10){
@@ -97,10 +115,23 @@ const objectDrawFunctions = {
 
             let xCenter = x + width/2;
             let yCenter = y + height/2;
-            
+        
+            canvas.beginPath();
+
+            let previousColor = canvas.strokeStyle;
+
+            if(playerObject.stance == 0){
+                canvas.strokeStyle = "rgb(255,0,0)"
+            }
+            else if(playerObject.stance == 1){
+                canvas.strokeStyle = "rgb(0,255,0)"
+            }
+            else{
+                canvas.strokeStyle = "rgb(0,0,255)"
+            }
+
             canvas.moveTo(xCenter+size+offset, y+size+offset);
             canvas.arc(xCenter+offset, y+size+offset, size, 0, Math.PI*2);
-
             
             canvas.moveTo(xCenter,y+size*2);
             canvas.lineTo(xCenter,y+height*0.7);
@@ -135,6 +166,9 @@ const objectDrawFunctions = {
                 canvas.moveTo(xCenter-size-offset,y+height*0.9);
                 canvas.lineTo(xCenter-size,y+height*1.2+offset);
             }
+            canvas.stroke()
+        
+            canvas.strokeStyle = previousColor;
 
             if(playerObject.playerDismantleState < totalNumFrames){
                 playerObject.playerDismantleState++;
