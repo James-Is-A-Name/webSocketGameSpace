@@ -64,6 +64,10 @@ function getAWebRTC(){
         // console.log("handleNegotiationNeededEvent -------------------");
     };
 
+    connectionObject.handleMessage = (message)=>{
+        console.log("default message handle function, got ",message)
+    }
+
     connectionObject.connection.ondatachannel = (event) => {
         console.log("data channel on happened",event)
         // event.channel.onmessage = (message) => {
@@ -73,9 +77,9 @@ function getAWebRTC(){
             connectionObject.dataChannel = event.channel
         }
         connectionObject.dataChannel.onmessage = (message) => {
-            console.log("got message ",message)
-            let output = document.getElementById("messageOutput")
-            output.innerHTML = message.data
+            // console.log("got message ",message)
+            connectionObject.handleMessage(message)
+            //should put in some sort of callback here
         }
         event.channel.send("hello")
     }

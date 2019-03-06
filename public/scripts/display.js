@@ -51,7 +51,7 @@ let playerMoveSpeed = entitieSize/10;
 
 
 
-function p2pConnect(){
+function p2pConnect(whoTo){
 
     //create a socket thing
     let testConnection = getAWebRTC();
@@ -61,8 +61,8 @@ function p2pConnect(){
         //Hard code who to send a message for now
         let message = {
             p2pConnect: true,
-            target: 1,
-            from: 2,
+            target: whoTo,
+            from: activeDisplayId,
             offer: testConnection.offerToSend
         }
         serverConnection.send(JSON.stringify(message))
@@ -74,7 +74,7 @@ function p2pConnect(){
     p2pConnectionTesting = testConnection;
 }
 
-function p2pAcceptOffer(offer){
+function p2pAcceptOffer(offer,whoFrom){
     //got an offer so accept it and send an answer
     
     let testConnection = getAWebRTC();
@@ -84,8 +84,8 @@ function p2pAcceptOffer(offer){
         
         let message = {
             p2pConnect: true,
-            target: 2,
-            from: 1,
+            target: whoFrom,
+            from: activeDisplayId,
             answer: testConnection.answerToSend
         }
         serverConnection.send(JSON.stringify(message))
@@ -96,9 +96,18 @@ function p2pAcceptOffer(offer){
     p2pConnectionTesting = testConnection;
 
     let send = document.getElementById("p2pSend")
-    send.onclick = ()=>{
-        p2pConnectionTesting.dataChannel.send("hello from the other side")
+    if(send){
+        send.onclick = ()=>{
+            p2pConnectionTesting.dataChannel.send("hello from the other side")
+        }
     }
+
+    /*-------------------TESTING--------------------------*/
+    //This might fail straight away
+    p2pConnectionTesting.handleMessage = (message)=>{
+        console.log("Outside the object got this",message);
+    }
+    /*-------------------TESTING--------------------------*/
 }
 
 function p2pAcceptAnswer(answer){
@@ -109,55 +118,16 @@ function p2pAcceptAnswer(answer){
     let send = document.getElementById("p2pSend")
     send.onclick = ()=>{
         p2pConnectionTesting.dataChannel.send("hello from the other side")
-    }    
+    }
+    
+    /*-------------------TESTING--------------------------*/
+    //This might fail straight away
+    p2pConnectionTesting.handleMessage = (message)=>{
+        console.log("Outside the object got this",message);
+    }
+    /*-------------------TESTING--------------------------*/
 }
 
-function p2pTestThing(){
-
-    
-    console.log("testing the p2p stuff")
-
-    let testConnection = getAWebRTC();
-
-    testConnection.sendOfferFunction = ()=>{
-        console.log("send an offer of ",testConnection.offerToSend)
-        fetch("http://localhost:3001/sendOffer",{
-            method: "POST",
-            // mode: "no-cors", // no-cors, cors, *same-origin
-            headers: {
-                "Content-Type": "application/json",
-            },
-
-            // body: JSON.stringify(testConnection.offerToSend)
-            //woops already made it a json object
-            body: testConnection.offerToSend
-            // body: JSON.stringify({testing:"hello"})
-        })
-    }
-
-    testConnection.createOffer()
-
-    let buttonForAcceptAnswer = document.getElementById("testingp2p")
-    
-    buttonForAcceptAnswer.onclick = ()=>{
-        console.log("clicked")
-        
-        fetch("http://localhost:3001/getAnswer",{method: "GET"})
-        .then((response)=>{
-            console.log("got answer")
-            return response.json()})
-        .then((data)=>{
-            console.log("answer is ",data)
-            testConnection.acceptAnswer(data)
-        })
-    }
-
-    
-    let send = document.getElementById("p2pSend")
-    send.onclick = ()=>{
-        testConnection.dataChannel.send("hello from the other side")
-    }
-}
 
 function swapMenuContent(show){
     let menuSection = document.getElementById("menuSection")
@@ -167,7 +137,6 @@ function swapMenuContent(show){
         //also i screws up when formatting the html with line breaks as they are not drawn but count as text elements of a div
     let oldContent = menuSection.childNodes[0];
     
-    console.log(menuSection.childNodes)
 
     if(show){
         newContent = document.createElement("div");
@@ -204,23 +173,21 @@ function swapMenuContent(show){
         }
 
         /*-------------------TESTING--------------------------*/
-        
-        let p2pConnectButton = document.createElement("button")
-        p2pConnectButton.innerHTML = "p2p connect"
-        p2pConnectButton.onclick = () => {
-            p2pConnect();
-        }
 
-        let p2pTest = document.createElement("button")
-        p2pTest.innerHTML = "p2p Test"
-        p2pTest.onclick = () => {
-            p2pTestThing();
-        }
-        
-        let p2pAcceptAnswerTest = document.createElement("button")
-        p2pAcceptAnswerTest.innerHTML = "p2p anser get Test"
-        p2pAcceptAnswerTest.id = "testingp2p"
+        let p2pTargetForm = document.createElement("form");
+        p2pTargetForm.onsubmit = (event)=>{
+            event.preventDefault();
 
+            let value = document.getElementById("connectionTarget").value;
+            if(!isNaN(parseInt(value))){
+                p2pConnect(parseInt(value))
+            }
+        }
+        let p2pTarget = document.createElement("input");
+        p2pTarget.type = "text";
+        p2pTarget.id = "connectionTarget";
+
+        p2pTargetForm.appendChild(p2pTarget);
         
         let p2pSend = document.createElement("button")
         p2pSend.innerHTML = "p2p say hello"
@@ -231,15 +198,21 @@ function swapMenuContent(show){
         newContent.appendChild(platformDrawButton)
         
         /*-------------------TESTING--------------------------*/
-        newContent.appendChild(p2pConnectButton)
-        newContent.appendChild(p2pTest)
-        newContent.appendChild(p2pAcceptAnswerTest)
+        newContent.appendChild(p2pTargetForm)
         newContent.appendChild(p2pSend)
         /*-------------------TESTING--------------------------*/
         
         newContent.appendChild(newTitle)
 
         menuSection.replaceChild(newContent,oldContent);
+
+        
+        /*-------------------TESTING--------------------------*/
+        let send = document.getElementById("p2pSend")
+        send.onclick = ()=>{
+            p2pConnectionTesting.dataChannel.send("hello from the other side")
+        }
+        /*-------------------TESTING--------------------------*/
     }
     else{
 
@@ -324,10 +297,10 @@ function connectWebSocket(){
         else if(theMessage.p2pConnect){
 
             if(theMessage.answer){
-                p2pAcceptAnswer(theMessage.answer)
+                p2pAcceptAnswer(theMessage.answer,theMessage.from)
             }
             else if(theMessage.offer){
-                p2pAcceptOffer(theMessage.offer)
+                p2pAcceptOffer(theMessage.offer,theMessage.from)
             }
         }
         /*----------------------Testing-----------------------------*/
