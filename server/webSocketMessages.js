@@ -75,10 +75,10 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
 
 function  handleP2Pcomms(webSocket,theMessage){
     //very loose at the moment just having it pass messages along
-    let targetDisplay = webSocketsConnected.find( (connection)=> theMessage.target == connection.id)
+    let targetConnection = webSocketsConnected.find( (connection)=> theMessage.target == connection.id)
 
-    if(targetDisplay && webSocket.id != targetDisplay.id && targetDisplay.isDisplay){
-        sendMessage(targetDisplay,theMessage)
+    if(targetConnection && webSocket.id != targetConnection.id){
+        sendMessage(targetConnection,theMessage)
     }
 }
 

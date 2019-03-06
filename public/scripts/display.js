@@ -110,7 +110,7 @@ function p2pAcceptOffer(offer,whoFrom){
     /*-------------------TESTING--------------------------*/
 }
 
-function p2pAcceptAnswer(answer){
+function p2pAcceptAnswer(answer,fromWho){
     console.log("accept an answer")
     //got an offer so accept it and send an answer
     p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
@@ -120,10 +120,53 @@ function p2pAcceptAnswer(answer){
         p2pConnectionTesting.dataChannel.send("hello from the other side")
     }
     
+
     /*-------------------TESTING--------------------------*/
     //This might fail straight away
     p2pConnectionTesting.handleMessage = (message)=>{
-        console.log("Outside the object got this",message);
+
+        let theMessage = JSON.parse(message.data)
+
+        //this is not nice but being used to check things
+        theMessage.id = fromWho;
+
+        console.log("the message is ",theMessage)
+
+        if(theMessage.moveRight === true){
+            playerEntities[theMessage.id].moveX = playerMoveSpeed;
+
+            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
+        }
+        else if(theMessage.moveLeft === true){
+            playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+
+            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
+        }
+        else if(theMessage.moveRight === false){
+            if (playerEntities[theMessage.id].moveX > 0){
+                playerEntities[theMessage.id].moveX = 0;
+                
+                if(playerEntities[theMessage.id].moveLeft){
+                    playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+                }
+            }
+
+            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
+        }
+        else if(theMessage.moveLeft === false){
+            if (playerEntities[theMessage.id].moveX < 0){
+                playerEntities[theMessage.id].moveX = 0;
+
+                if(playerEntities[theMessage.id].moveRight){
+                    playerEntities[theMessage.id].moveX = playerMoveSpeed;
+                }
+            }
+
+            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
+        }
+        else if(theMessage.action1 === true){
+            playerEntities[theMessage.id].moveY = -20;
+        }
     }
     /*-------------------TESTING--------------------------*/
 }
@@ -322,39 +365,39 @@ function connectWebSocket(){
             addPlayerEntity(theMessage.id)
         }
         else if(theMessage.moveRight === true){
-            playerEntities[theMessage.id].moveX = playerMoveSpeed;
+            // playerEntities[theMessage.id].moveX = playerMoveSpeed;
 
-            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
+            // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
         }
         else if(theMessage.moveLeft === true){
-            playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+            // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
 
-            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
+            // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
         }
         else if(theMessage.moveRight === false){
             if (playerEntities[theMessage.id].moveX > 0){
-                playerEntities[theMessage.id].moveX = 0;
+                // playerEntities[theMessage.id].moveX = 0;
                 
                 if(playerEntities[theMessage.id].moveLeft){
-                    playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+                    // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
                 }
             }
 
-            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
+            // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
         }
         else if(theMessage.moveLeft === false){
             if (playerEntities[theMessage.id].moveX < 0){
-                playerEntities[theMessage.id].moveX = 0;
+                // playerEntities[theMessage.id].moveX = 0;
 
                 if(playerEntities[theMessage.id].moveRight){
-                    playerEntities[theMessage.id].moveX = playerMoveSpeed;
+                    // playerEntities[theMessage.id].moveX = playerMoveSpeed;
                 }
             }
 
-            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
+            // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
         }
         else if(theMessage.action1 === true){
-            playerEntities[theMessage.id].moveY = -20;
+            // playerEntities[theMessage.id].moveY = -20;
         }
     }
 }
