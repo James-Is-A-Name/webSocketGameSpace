@@ -308,10 +308,11 @@ function setupDisplayArea(){
 
     canvasDrawBackground.clearRect(0,0,gameWidth,gameHeight);
 
-    canvasDraw.clearRect(0,0,gameWidth,gameHeight);
-    canvasDraw.beginPath();
-    canvasDraw.rect(0,0,gameWidth,gameHeight);
-    canvasDraw.stroke();
+    refreshCanvas(canvasDraw)
+    // canvasDraw.clearRect(0,0,gameWidth,gameHeight);
+    // canvasDraw.beginPath();
+    // canvasDraw.rect(0,0,gameWidth,gameHeight);
+    // canvasDraw.stroke();
 
     connectWebSocket();
 
@@ -364,41 +365,41 @@ function connectWebSocket(){
             //This might actually be a hinderance to things having the display assume unknow player is valid
             addPlayerEntity(theMessage.id)
         }
-        else if(theMessage.moveRight === true){
-            // playerEntities[theMessage.id].moveX = playerMoveSpeed;
+        // else if(theMessage.moveRight === true){
+        //     // playerEntities[theMessage.id].moveX = playerMoveSpeed;
 
-            // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        }
-        else if(theMessage.moveLeft === true){
-            // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+        //     // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
+        // }
+        // else if(theMessage.moveLeft === true){
+        //     // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
 
-            // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        }
-        else if(theMessage.moveRight === false){
-            if (playerEntities[theMessage.id].moveX > 0){
-                // playerEntities[theMessage.id].moveX = 0;
+        //     // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
+        // }
+        // else if(theMessage.moveRight === false){
+        //     if (playerEntities[theMessage.id].moveX > 0){
+        //         // playerEntities[theMessage.id].moveX = 0;
                 
-                if(playerEntities[theMessage.id].moveLeft){
-                    // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
-                }
-            }
+        //         if(playerEntities[theMessage.id].moveLeft){
+        //             // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
+        //         }
+        //     }
 
-            // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        }
-        else if(theMessage.moveLeft === false){
-            if (playerEntities[theMessage.id].moveX < 0){
-                // playerEntities[theMessage.id].moveX = 0;
+        //     // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
+        // }
+        // else if(theMessage.moveLeft === false){
+        //     if (playerEntities[theMessage.id].moveX < 0){
+        //         // playerEntities[theMessage.id].moveX = 0;
 
-                if(playerEntities[theMessage.id].moveRight){
-                    // playerEntities[theMessage.id].moveX = playerMoveSpeed;
-                }
-            }
+        //         if(playerEntities[theMessage.id].moveRight){
+        //             // playerEntities[theMessage.id].moveX = playerMoveSpeed;
+        //         }
+        //     }
 
-            // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        }
-        else if(theMessage.action1 === true){
-            // playerEntities[theMessage.id].moveY = -20;
-        }
+        //     // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
+        // }
+        // else if(theMessage.action1 === true){
+        //     // playerEntities[theMessage.id].moveY = -20;
+        // }
     }
 }
 
@@ -509,13 +510,15 @@ function refreshCanvas(canvas){
     canvas.beginPath();
     canvas.rect(0,0,gameWidth,gameHeight);
     canvas.stroke();
+
+    //objectDrawFunctions.clearCanvas(width,height,canvas)
 }
 
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
 function drawVisualAdditions(canvas){
 
     if(mouseUpLocation && mouseDownLocation && placePlatformsAllow){
-        console.log("yup here")
+        
         //is straight copied from the mouse event part so very much a candidate for refactoring
         let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
         let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
@@ -528,61 +531,65 @@ function drawVisualAdditions(canvas){
         let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
         let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
 
-
         if(previousPlatformWidth){
-            canvas.clearRect(previousPlatformX-2,previousPlatformY-2,previousPlatformWidth+4,previousPlatformHeight+4)
+            // canvas.clearRect(previousPlatformX-2,previousPlatformY-2,previousPlatformWidth+4,previousPlatformHeight+4)
+            let previousPlatform = {
+                x:previousPlatformX,
+                y:previousPlatformY,
+                width:previousPlatformWidth,
+                height:previousPlatformHeight
+            }
+            objectDrawFunctions.clearPlatform(previousPlatform,canvas)
+        }
+        let platform = {
+            x:platformX,
+            y:platformY,
+            width:platformWidth,
+            height:platformHeight
         }
         previousPlatformX = platformX
         previousPlatformY = platformY
         previousPlatformWidth = platformWidth
         previousPlatformHeight = platformHeight
         
-
-        canvas.beginPath();
-        canvas.rect(platformX,platformY,platformWidth,platformHeight);
-        canvas.stroke();
+        objectDrawFunctions.drawPlatform(platform,canvas)
+        // canvas.beginPath();
+        // canvas.rect(platformX,platformY,platformWidth,platformHeight);
+        // canvas.stroke();
     }
 }
 
 function drawPlatforms(canvas){
     areaPlatforms.forEach((platform)=>{
-        canvas.beginPath();
-        canvas.rect(platform.x,platform.y,platform.width,platform.height);
-        canvas.stroke();
+        objectDrawFunctions.drawPlatform(platform,canvas)
+        // canvas.beginPath();
+        // canvas.rect(platform.x,platform.y,platform.width,platform.height);
+        // canvas.stroke();
     })
 }
 
 function drawPortals(canvas){
     portals.forEach((portal) => {
-        console.log("portal draw")
-        canvas.beginPath();
-        canvas.arc(portal.x,portal.y,20,0,Math.PI*2);
-        canvas.font = "20px Verdana"
-        canvas.fillText(portal.destination,portal.x,portal.y);
-        canvas.stroke();
+        objectDrawFunctions.drawPortal(portal,canvas)
+        // console.log("portal draw")
+        // canvas.beginPath();
+        // canvas.arc(portal.x,portal.y,20,0,Math.PI*2);
+        // canvas.font = "20px Verdana"
+        // canvas.fillText(portal.destination,portal.x,portal.y);
+        // canvas.stroke();
+
     })
 }
 
 function clearOldEntities(canvas){
-    canvas.beginPath();    
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
-        let x = element.x;
-        let y = element.y;
-        let width = element.width;
-        let height = element.height;
-        //very loose at the moment
-        canvas.clearRect(x-20, y-20, width+40, height*1.4+20);
+        objectDrawFunctions.clearPlayerObject(element,canvas);
     });
     
     Object.keys(playersDeleting).forEach(key => {
         let element = playersDeleting[key];
-        let x = element.x;
-        let y = element.y;
-        let width = element.width;
-        let height = element.height;
-        //this is just being played by ear at the moment
-        canvas.clearRect(x-width*5, y-height/2, width*11, height*3);
+        objectDrawFunctions.clearPlayerObject(element,canvas);
     });
 }
 function drawEnteties(canvas){
