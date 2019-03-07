@@ -5,30 +5,44 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
 
-const entitieSize = 50;
-//should not make this 
-let gameHeight = document.documentElement.clientHeight - entitieSize;
-let gameWidth = document.documentElement.clientWidth - entitieSize;
-
-
-
 // let gameThing = {
 //     serverConnection: undefined
 //     updateBackground: true,
 //     and so on
 // }
 
-let p2pConnectionTesting;
+//CHANGE TO BE BETTER LAYED OUT
 
-let activeDisplayId = false;
+/*---------------------communications----------------------*/
+let p2pConnectionTesting;
 
 let serverConnection;
 
+//store all the p2p display connections
+let displayConnections = {};
+
+//store all the p2p controller connections
+let controllerConnections = {};
+
+//will be used for determining if controller commands to this display are to be used
+let controllersOnScreen = {};
+/*---------------------communications----------------------*/
+
+
+/*---------------------setup related things----------------------*/
 let updateBackground = true;
 
-let placePlatformsAllow = false;
+const entitieSize = 50;
 
-//CHANGE TO BE BETTER LAYED OUT
+let playerMoveSpeed = entitieSize/10;
+
+let gameHeight = document.documentElement.clientHeight - entitieSize;
+let gameWidth = document.documentElement.clientWidth - entitieSize;
+/*---------------------setup related things----------------------*/
+
+
+
+/*---------------------Area alterations----------------------*/
 let mouseDownLocation = undefined;
 let lastMousePosition = undefined;
 let mouseUpLocation = undefined;
@@ -38,6 +52,12 @@ let previousPlatformHeight;
 let previousPlatformX;
 let previousPlatformY;
 
+let placePlatformsAllow = false;
+/*---------------------Area alterations----------------------*/
+
+
+/*---------------------game state----------------------*/
+let activeDisplayId = false;
 
 let playerEntities={};
 let playersDeleting={};
@@ -46,8 +66,9 @@ let playersDeleting={};
 let areaPlatforms = [];
 
 let portals = [];
+/*---------------------game state----------------------*/
 
-let playerMoveSpeed = entitieSize/10;
+
 
 
 
@@ -122,7 +143,7 @@ function p2pAcceptAnswer(answer,fromWho){
     
 
     /*-------------------TESTING--------------------------*/
-    //This might fail straight away
+    //works for the singular case
     p2pConnectionTesting.handleMessage = (message)=>{
 
         let theMessage = JSON.parse(message.data)
@@ -365,41 +386,6 @@ function connectWebSocket(){
             //This might actually be a hinderance to things having the display assume unknow player is valid
             addPlayerEntity(theMessage.id)
         }
-        // else if(theMessage.moveRight === true){
-        //     // playerEntities[theMessage.id].moveX = playerMoveSpeed;
-
-        //     // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        // }
-        // else if(theMessage.moveLeft === true){
-        //     // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
-
-        //     // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        // }
-        // else if(theMessage.moveRight === false){
-        //     if (playerEntities[theMessage.id].moveX > 0){
-        //         // playerEntities[theMessage.id].moveX = 0;
-                
-        //         if(playerEntities[theMessage.id].moveLeft){
-        //             // playerEntities[theMessage.id].moveX = -playerMoveSpeed;
-        //         }
-        //     }
-
-        //     // playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        // }
-        // else if(theMessage.moveLeft === false){
-        //     if (playerEntities[theMessage.id].moveX < 0){
-        //         // playerEntities[theMessage.id].moveX = 0;
-
-        //         if(playerEntities[theMessage.id].moveRight){
-        //             // playerEntities[theMessage.id].moveX = playerMoveSpeed;
-        //         }
-        //     }
-
-        //     // playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        // }
-        // else if(theMessage.action1 === true){
-        //     // playerEntities[theMessage.id].moveY = -20;
-        // }
     }
 }
 
