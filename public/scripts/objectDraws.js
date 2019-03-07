@@ -174,7 +174,7 @@ const objectDrawFunctions = {
     },
     clearPlatform: (platform,canvas) => {
         canvas.beginPath();
-        canvas.clearRect(platform.X-2,platform.Y-2,platform.Width+4,platform.Height+4)
+        canvas.clearRect(platform.x-2,platform.y-2,platform.width+4,platform.height+4)
         canvas.stroke();
     }
 }
