@@ -28,11 +28,13 @@ function p2pAcceptOffer(offer,whoFrom){
 
     console.log("accept an offer")
     testConnection.sendAnswerFunction = () =>{
-        
+
+        //this should have a single point of decleration so the display and controllers don't get out of sync
         let message = {
             p2pConnect: true,
             target: whoFrom,
             from: controllerIdNumber,
+            isADisplay: false,
             answer: testConnection.answerToSend
         }
         serverConnection.send(JSON.stringify(message))
@@ -82,10 +84,25 @@ function buttonPressed(pointerEvent){
     //iphone has issues with the event it seems
     targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
     serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
+
+    if(displayId && displayConnections[displayId]){
+        let connection = displayConnections[displayId].connection
+        if(connection.dataChannel && connection.dataChannel.readyState == "open"){
+            connection.dataChannel.send(JSON.stringify({[targetButtonValue]:true}))
+        }
+    }
 }
 function buttonReleased(pointerEvent){
     targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
     serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
+
+    
+    if(displayId && displayConnections[displayId]){
+        let connection = displayConnections[displayId].connection
+        if(connection.dataChannel && connection.dataChannel.readyState == "open"){
+            connection.dataChannel.send(JSON.stringify({[targetButtonValue]:false}))
+        }
+    }
 }
 
 function touchStart(touchEvent){

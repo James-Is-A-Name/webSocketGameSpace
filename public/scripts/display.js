@@ -68,10 +68,6 @@ let areaPlatforms = [];
 let portals = [];
 /*---------------------game state----------------------*/
 
-
-
-
-
 function p2pConnect(whoTo){
 
     //create a socket thing
@@ -84,6 +80,7 @@ function p2pConnect(whoTo){
             p2pConnect: true,
             target: whoTo,
             from: activeDisplayId,
+            isADisplay: true,
             offer: testConnection.offerToSend
         }
         serverConnection.send(JSON.stringify(message))
@@ -95,7 +92,7 @@ function p2pConnect(whoTo){
     p2pConnectionTesting = testConnection;
 }
 
-function p2pAcceptOffer(offer,whoFrom){
+function p2pAcceptOffer(offer,whoFrom,type){
     //got an offer so accept it and send an answer
     
     let testConnection = getAWebRTC();
@@ -103,10 +100,12 @@ function p2pAcceptOffer(offer,whoFrom){
     console.log("accept an offer")
     testConnection.sendAnswerFunction = () =>{
         
+        //this should have a single point of decleration so the display and controllers don't get out of sync
         let message = {
             p2pConnect: true,
             target: whoFrom,
             from: activeDisplayId,
+            isADisplay: true,
             answer: testConnection.answerToSend
         }
         serverConnection.send(JSON.stringify(message))
@@ -124,14 +123,20 @@ function p2pAcceptOffer(offer,whoFrom){
     }
 
     /*-------------------TESTING--------------------------*/
-    //This might fail straight away
-    p2pConnectionTesting.handleMessage = (message)=>{
-        console.log("Outside the object got this",message);
+    let connectionIsController = true;
+
+    p2pConnectionTesting.connectionId = fromWho;
+
+    if(connectionIsController){
+        p2pConnectionTesting.handleMessage = handleControllerMessage
+    }
+    else{
+        p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
     /*-------------------TESTING--------------------------*/
 }
 
-function p2pAcceptAnswer(answer,fromWho){
+function p2pAcceptAnswer(answer,fromWho,type){
     console.log("accept an answer")
     //got an offer so accept it and send an answer
     p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
@@ -140,58 +145,67 @@ function p2pAcceptAnswer(answer,fromWho){
     send.onclick = ()=>{
         p2pConnectionTesting.dataChannel.send("hello from the other side")
     }
-    
 
+    controllerConnections[fromWho] = p2pConnectionTesting
     /*-------------------TESTING--------------------------*/
-    //works for the singular case
-    p2pConnectionTesting.handleMessage = (message)=>{
 
-        let theMessage = JSON.parse(message.data)
+    let connectionIsController = true;
 
-        //this is not nice but being used to check things
-        theMessage.id = fromWho;
+    p2pConnectionTesting.connectionId = fromWho;
 
-        console.log("the message is ",theMessage)
-
-        if(theMessage.moveRight === true){
-            playerEntities[theMessage.id].moveX = playerMoveSpeed;
-
-            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        }
-        else if(theMessage.moveLeft === true){
-            playerEntities[theMessage.id].moveX = -playerMoveSpeed;
-
-            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        }
-        else if(theMessage.moveRight === false){
-            if (playerEntities[theMessage.id].moveX > 0){
-                playerEntities[theMessage.id].moveX = 0;
-                
-                if(playerEntities[theMessage.id].moveLeft){
-                    playerEntities[theMessage.id].moveX = -playerMoveSpeed;
-                }
-            }
-
-            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        }
-        else if(theMessage.moveLeft === false){
-            if (playerEntities[theMessage.id].moveX < 0){
-                playerEntities[theMessage.id].moveX = 0;
-
-                if(playerEntities[theMessage.id].moveRight){
-                    playerEntities[theMessage.id].moveX = playerMoveSpeed;
-                }
-            }
-
-            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        }
-        else if(theMessage.action1 === true){
-            playerEntities[theMessage.id].moveY = -20;
-        }
+    if(connectionIsController){
+        p2pConnectionTesting.handleMessage = handleControllerMessage
+    }
+    else{
+        p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
     /*-------------------TESTING--------------------------*/
 }
 
+function handleDisplayMessage(message,fromWho){
+
+}
+
+function handleControllerMessage(message,fromWho){
+    //very flimsy will break if not correctly formmatted as JSON 
+    let theMessage = JSON.parse(message.data)
+
+    console.log(theMessage)
+
+    //this is not nice but being used to check things
+    fromWho = fromWho;
+
+    if(theMessage.moveRight === true){
+        playerEntities[fromWho].moveX = playerMoveSpeed;
+        playerEntities[fromWho].moveRight = theMessage.moveRight;
+    }
+    else if(theMessage.moveLeft === true){
+        playerEntities[fromWho].moveX = -playerMoveSpeed;
+        playerEntities[fromWho].moveLeft = theMessage.moveLeft;
+    }
+    else if(theMessage.moveRight === false){
+        if (playerEntities[fromWho].moveX > 0){
+            playerEntities[fromWho].moveX = 0;
+            if(playerEntities[fromWho].moveLeft){
+                playerEntities[fromWho].moveX = -playerMoveSpeed;
+            }
+        }
+        playerEntities[fromWho].moveRight = theMessage.moveRight;
+    }
+    else if(theMessage.moveLeft === false){
+        if (playerEntities[fromWho].moveX < 0){
+            playerEntities[fromWho].moveX = 0;
+
+            if(playerEntities[fromWho].moveRight){
+                playerEntities[fromWho].moveX = playerMoveSpeed;
+            }
+        }
+        playerEntities[fromWho].moveLeft = theMessage.moveLeft;
+    }
+    else if(theMessage.action1 === true){
+        playerEntities[fromWho].moveY = -20;
+    }
+}
 
 function swapMenuContent(show){
     let menuSection = document.getElementById("menuSection")
@@ -372,11 +386,8 @@ function connectWebSocket(){
         else if(theMessage.newDisplay){
 
             //Should be put in its own function
-            portals.push({
-                    x: 100*theMessage.id,
-                    y: 100,
-                    destination: theMessage.id
-            })
+            addPortal(theMessage.id)
+
             updateBackground = true;
         }
         else if(theMessage.newPlayerId){
@@ -387,6 +398,14 @@ function connectWebSocket(){
             addPlayerEntity(theMessage.id)
         }
     }
+}
+
+function addPortal(displayId){
+    portals.push({
+        x: 100*(portals.length + 1),
+        y: 100,
+        destination: displayId
+    })
 }
 
 function addPlayerEntity(player){
@@ -539,31 +558,18 @@ function drawVisualAdditions(canvas){
         previousPlatformHeight = platformHeight
         
         objectDrawFunctions.drawPlatform(platform,canvas)
-        // canvas.beginPath();
-        // canvas.rect(platformX,platformY,platformWidth,platformHeight);
-        // canvas.stroke();
     }
 }
 
 function drawPlatforms(canvas){
     areaPlatforms.forEach((platform)=>{
         objectDrawFunctions.drawPlatform(platform,canvas)
-        // canvas.beginPath();
-        // canvas.rect(platform.x,platform.y,platform.width,platform.height);
-        // canvas.stroke();
     })
 }
 
 function drawPortals(canvas){
     portals.forEach((portal) => {
         objectDrawFunctions.drawPortal(portal,canvas)
-        // console.log("portal draw")
-        // canvas.beginPath();
-        // canvas.arc(portal.x,portal.y,20,0,Math.PI*2);
-        // canvas.font = "20px Verdana"
-        // canvas.fillText(portal.destination,portal.x,portal.y);
-        // canvas.stroke();
-
     })
 }
 

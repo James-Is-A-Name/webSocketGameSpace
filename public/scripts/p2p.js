@@ -78,10 +78,9 @@ function getAWebRTC(){
         }
         connectionObject.dataChannel.onmessage = (message) => {
             // console.log("got message ",message)
-            connectionObject.handleMessage(message)
+            connectionObject.handleMessage(message,connectionObject.connectionId)
             //should put in some sort of callback here
         }
-        event.channel.send("hello")
     }
 
 
