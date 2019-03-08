@@ -9,6 +9,15 @@ let timerIntervalMs = 15;
 
 let controllerIdNumber;
 
+let displayConnections = {
+    //example
+    // 1: {
+    //     id:1,
+    //     connection: webrtcThingx
+    // }
+}
+let displayId;
+
 let p2pConnectionTesting;
 
 //Copied straight from the Display.js so if no large changes are made think about shifting it to the p2p
@@ -36,9 +45,16 @@ function p2pAcceptOffer(offer,whoFrom){
     /*-------------------TESTING--------------------------*/
     //This might fail straight away
     p2pConnectionTesting.handleMessage = (message)=>{
-        console.log("Outside the object got this",message);
+        console.log(`Outside the object got this from ${whoFrom}`,message.data);
     }
     /*-------------------TESTING--------------------------*/
+
+    displayId = whoFrom;
+
+    displayConnections[whoFrom] = {
+        id: whoFrom,
+        connection: testConnection
+    }
 }
 
 
@@ -80,9 +96,10 @@ function touchStart(touchEvent){
     serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
     
     
-    if(p2pConnectionTesting){
-        if(p2pConnectionTesting.dataChannel && p2pConnectionTesting.dataChannel.readyState == "open"){
-            p2pConnectionTesting.dataChannel.send(JSON.stringify({[targetButtonValue]:true}))
+    if(displayId && displayConnections[displayId]){
+        let connection = displayConnections[displayId].connection
+        if(connection.dataChannel && connection.dataChannel.readyState == "open"){
+            connection.dataChannel.send(JSON.stringify({[targetButtonValue]:true}))
         }
     }
 }
@@ -91,10 +108,10 @@ function touchEnd(touchEvent){
     targetButtonValue = touchEvent.target.value
     serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
 
-
-    if(p2pConnectionTesting){
-        if(p2pConnectionTesting.dataChannel && p2pConnectionTesting.dataChannel.readyState == "open"){
-            p2pConnectionTesting.dataChannel.send(JSON.stringify({[targetButtonValue]:false}))
+    if(displayId && displayConnections[displayId]){
+        let connection = displayConnections[displayId].connection
+        if(connection.dataChannel && connection.dataChannel.readyState == "open"){
+            connection.dataChannel.send(JSON.stringify({[targetButtonValue]:false}))
         }
     }
 }
