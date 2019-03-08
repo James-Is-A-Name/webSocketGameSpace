@@ -1,10 +1,13 @@
 
 
 //This is not safe, would need atomic interaction
+    //unless javascript dosnt really do parallelism
 let idRefNumber = 1;
 
 //this should just be an object/class thing
-let webSocketsConnected = []
+// let webSocketsConnected = []
+    //and so it shall be
+let webSocketsConnected = {}
 
 //to asign an entity to a display
 let playerDisplayLocation = {
@@ -19,7 +22,8 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
         //This should be atomic or handed off to a locking function or something
             //except node might be single thread based. still dosent feel nice
         let id = idRefNumber;
-        idRefNumber++;
+        //Make the ids a little less predictable
+        idRefNumber += Math.floor(Math.random()*100+1);
         
         let theWebsocket = {
             id,
@@ -29,7 +33,8 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
             controllerHistory: {},
         }
 
-        webSocketsConnected.push(theWebsocket);
+        // webSocketsConnected.push(theWebsocket);
+        webSocketsConnected[id] = theWebsocket;
 
         ws.on("close",()=>{
             console.log(`socket ${theWebsocket.id} state is closed`)
@@ -75,7 +80,10 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
 
 function  handleP2Pcomms(webSocket,theMessage){
     //very loose at the moment just having it pass messages along
-    let targetConnection = webSocketsConnected.find( (connection)=> theMessage.target == connection.id)
+        //ohh i just made it more complicated
+    // let targetConnection = webSocketsConnected[Object.keys(webSocketsConnected).find( (connection)=> theMessage.target == connection.id)]
+    //Hold up
+    let targetConnection = webSocketsConnected[theMessage.target]
 
     if(targetConnection && webSocket.id != targetConnection.id){
         sendMessage(targetConnection,theMessage)
@@ -89,7 +97,9 @@ function handleNewDisplay(webSocket){
 function handleNewPlayer(webSocket){
     webSocket.ws.send(JSON.stringify({playerId:webSocket.id}))
 
-    let firstDisplay = webSocketsConnected.find(connection=> connection.isDisplay && !connection.ended)
+    let firstDisplay = webSocketsConnected[Object.keys(webSocketsConnected).find(connection=> (
+        webSocketsConnected[connection].isDisplay && !webSocketsConnected[connection].ended
+    ))]
 
     if (firstDisplay){
         playerDisplayLocation[webSocket.id] = firstDisplay.id;
@@ -122,8 +132,10 @@ function handleDisplayMessage(webSocket,message){
 
         let newDisplayLocation = playerDisplayLocation[refreshState.player];
 
-        let displayConnection = webSocketsConnected.find((connection) => connection.id == newDisplayLocation)
-        let controllerConnection = webSocketsConnected.find((connection) => connection.id == refreshState.player)
+        // let displayConnection = webSocketsConnected.find((connection) => connection.id == newDisplayLocation)
+        // let controllerConnection = webSocketsConnected.find((connection) => connection.id == refreshState.player)
+        let displayConnection = webSocketsConnected[newDisplayLocation]
+        let controllerConnection = webSocketsConnected[refreshState.player]
 
 
         Object.keys(controllerConnection.controllerHistory).forEach((key)=>{
@@ -141,14 +153,18 @@ function handlePlayerMessage(webSocket,message){
         ...message
     }
     
-    let display = webSocketsConnected.find(connection=> connection.id == playerDisplayLocation[webSocket.id]);
+    // let display = webSocketsConnected.find(connection=> connection.id == playerDisplayLocation[webSocket.id]);
+    let display = webSocketsConnected[playerDisplayLocation[webSocket.id]];
     sendMessage(display,message)
 }
 
 function shiftToDesignatedDisplay(currentDisplay,player,newDisplayId){
 
     //possibly use the current display to check it already has the player
-    let displays = webSocketsConnected.filter(connection=> connection.isDisplay)
+    let displayIds = Object.keys(webSocketsConnected).filter(id=> webSocketsConnected[id].isDisplay)
+    let displays = displayIds.map((id)=>{
+        return webSocketsConnected[id]
+    })
     let newDisplay = displays.find(display=> (display.id == newDisplayId))
 
     if(newDisplay){
@@ -158,7 +174,11 @@ function shiftToDesignatedDisplay(currentDisplay,player,newDisplayId){
 }
 
 function shiftToNextDisplay(currentDisplay,player){
-    let displays = webSocketsConnected.filter(connection=> connection.isDisplay)
+    // let displays = webSocketsConnected.filter(connection=> connection.isDisplay)
+    let displayIds = Object.keys(webSocketsConnected).filter(id=> webSocketsConnected[id].isDisplay)
+    let displays = displayIds.map((id)=>{
+        return webSocketsConnected[id]
+    })
 
     if(displays){
         let nextDisplay = displays.find(display=> ((display.id > currentDisplay) && !display.ended))
@@ -170,7 +190,11 @@ function shiftToNextDisplay(currentDisplay,player){
     }
 }
 function shiftToPreviousDisplay(currentDisplay,player){
-    let displays = webSocketsConnected.filter(connection=>connection.isDisplay)
+    // let displays = webSocketsConnected.filter(connection=>connection.isDisplay)
+    let displayIds = Object.keys(webSocketsConnected).filter(id=> webSocketsConnected[id].isDisplay)
+    let displays = displayIds.map((id)=>{
+        return webSocketsConnected[id]
+    })
 
     if(displays.length > 0){
         let previousDisplays = displays.filter((display)=>{
@@ -192,7 +216,7 @@ function shiftPlayer(newDisplay,player){
 
         sendMessage(newDisplay,{newPlayerId:player})
 
-        let playerConnection = webSocketsConnected.find(connection=>connection.id == player)
+        let playerConnection = webSocketsConnected[player]
         if(playerConnection){
             sendMessage(playerConnection,{playerDisplay:playerDisplayLocation[player]})
         }
@@ -202,8 +226,12 @@ function shiftPlayer(newDisplay,player){
 //This might be unneeded
 function sendMessageToDisplays(theMessage,senderId){
     
-    let displays = webSocketsConnected.filter((connection)=>{
-        return connection.isDisplay
+    // let displays = webSocketsConnected.filter((connection)=>{
+    //     return connection.isDisplay
+    // })
+    let displayIds = Object.keys(webSocketsConnected).filter(id=> webSocketsConnected[id].isDisplay)
+    let displays = displayIds.map((id)=>{
+        return webSocketsConnected[id]
     })
 
     if(displays.length > 0){

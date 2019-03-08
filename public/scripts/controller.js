@@ -48,6 +48,7 @@ function p2pAcceptOffer(offer,whoFrom){
     //This might fail straight away
     p2pConnectionTesting.handleMessage = (message)=>{
         console.log(`Outside the object got this from ${whoFrom}`,message.data);
+
     }
     /*-------------------TESTING--------------------------*/
 
