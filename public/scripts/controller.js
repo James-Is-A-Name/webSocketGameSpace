@@ -42,13 +42,19 @@ function p2pAcceptOffer(offer,whoFrom){
 
     testConnection.acceptOffer(JSON.parse(offer))
 
-    p2pConnectionTesting = testConnection;
+    // p2pConnectionTesting = testConnection;
 
     /*-------------------TESTING--------------------------*/
     //This might fail straight away
-    p2pConnectionTesting.handleMessage = (message)=>{
+    testConnection.handleMessage = (message)=>{
         console.log(`Outside the object got this from ${whoFrom}`,message.data);
 
+        let shiftedDisplay = JSON.parse(message.data).shiftDisplay
+
+        if(shiftedDisplay){
+            console.log("change display to ",shiftedDisplay)
+            displayId = shiftedDisplay;
+        }
     }
     /*-------------------TESTING--------------------------*/
 

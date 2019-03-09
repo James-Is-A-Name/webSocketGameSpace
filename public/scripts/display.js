@@ -92,7 +92,7 @@ function p2pConnect(whoTo){
     p2pConnectionTesting = testConnection;
 }
 
-function p2pAcceptOffer(offer,whoFrom,type){
+function p2pAcceptOffer(offer,fromWho,isAController){
     //got an offer so accept it and send an answer
     
     let testConnection = getAWebRTC();
@@ -103,7 +103,7 @@ function p2pAcceptOffer(offer,whoFrom,type){
         //this should have a single point of decleration so the display and controllers don't get out of sync
         let message = {
             p2pConnect: true,
-            target: whoFrom,
+            target: fromWho,
             from: activeDisplayId,
             isADisplay: true,
             answer: testConnection.answerToSend
@@ -123,7 +123,7 @@ function p2pAcceptOffer(offer,whoFrom,type){
     }
 
     /*-------------------TESTING--------------------------*/
-    let connectionIsController = true;
+    let connectionIsController = isAController;
 
     p2pConnectionTesting.connectionId = fromWho;
 
@@ -131,12 +131,18 @@ function p2pAcceptOffer(offer,whoFrom,type){
         p2pConnectionTesting.handleMessage = handleControllerMessage
     }
     else{
+        //if not in portals add it
+        if(!portals.find( (portal) => portal.id == fromWho )){
+            addPortal(fromWho)
+            updateBackground = true;
+        }
+
         p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
     /*-------------------TESTING--------------------------*/
 }
 
-function p2pAcceptAnswer(answer,fromWho,type){
+function p2pAcceptAnswer(answer,fromWho,isAController){
     console.log("accept an answer")
     //got an offer so accept it and send an answer
     p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
@@ -149,14 +155,19 @@ function p2pAcceptAnswer(answer,fromWho,type){
     controllerConnections[fromWho] = p2pConnectionTesting
     /*-------------------TESTING--------------------------*/
 
-    let connectionIsController = true;
+    let connectionIsController = isAController;
+    // let connectionIsController = true;
 
     p2pConnectionTesting.connectionId = fromWho;
 
     if(connectionIsController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
     }
-    else{
+    else{        //if not in portals add it
+        if(!portals.find( (portal) => portal.id == fromWho )){
+            addPortal(fromWho)
+            updateBackground = true;
+        }
         p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
     /*-------------------TESTING--------------------------*/
@@ -170,40 +181,38 @@ function handleControllerMessage(message,fromWho){
     //very flimsy will break if not correctly formmatted as JSON 
     let theMessage = JSON.parse(message.data)
 
-    console.log(theMessage)
 
-    //this is not nice but being used to check things
-    fromWho = fromWho;
-
-    if(theMessage.moveRight === true){
-        playerEntities[fromWho].moveX = playerMoveSpeed;
-        playerEntities[fromWho].moveRight = theMessage.moveRight;
-    }
-    else if(theMessage.moveLeft === true){
-        playerEntities[fromWho].moveX = -playerMoveSpeed;
-        playerEntities[fromWho].moveLeft = theMessage.moveLeft;
-    }
-    else if(theMessage.moveRight === false){
-        if (playerEntities[fromWho].moveX > 0){
-            playerEntities[fromWho].moveX = 0;
-            if(playerEntities[fromWho].moveLeft){
-                playerEntities[fromWho].moveX = -playerMoveSpeed;
-            }
+    if(playerEntities[fromWho]){
+        if(theMessage.moveRight === true){
+            playerEntities[fromWho].moveX = playerMoveSpeed;
+            playerEntities[fromWho].moveRight = theMessage.moveRight;
         }
-        playerEntities[fromWho].moveRight = theMessage.moveRight;
-    }
-    else if(theMessage.moveLeft === false){
-        if (playerEntities[fromWho].moveX < 0){
-            playerEntities[fromWho].moveX = 0;
-
-            if(playerEntities[fromWho].moveRight){
-                playerEntities[fromWho].moveX = playerMoveSpeed;
-            }
+        else if(theMessage.moveLeft === true){
+            playerEntities[fromWho].moveX = -playerMoveSpeed;
+            playerEntities[fromWho].moveLeft = theMessage.moveLeft;
         }
-        playerEntities[fromWho].moveLeft = theMessage.moveLeft;
-    }
-    else if(theMessage.action1 === true){
-        playerEntities[fromWho].moveY = -20;
+        else if(theMessage.moveRight === false){
+            if (playerEntities[fromWho].moveX > 0){
+                playerEntities[fromWho].moveX = 0;
+                if(playerEntities[fromWho].moveLeft){
+                    playerEntities[fromWho].moveX = -playerMoveSpeed;
+                }
+            }
+            playerEntities[fromWho].moveRight = theMessage.moveRight;
+        }
+        else if(theMessage.moveLeft === false){
+            if (playerEntities[fromWho].moveX < 0){
+                playerEntities[fromWho].moveX = 0;
+
+                if(playerEntities[fromWho].moveRight){
+                    playerEntities[fromWho].moveX = playerMoveSpeed;
+                }
+            }
+            playerEntities[fromWho].moveLeft = theMessage.moveLeft;
+        }
+        else if(theMessage.action1 === true){
+            playerEntities[fromWho].moveY = -20;
+        }
     }
 }
 
@@ -376,19 +385,18 @@ function connectWebSocket(){
         else if(theMessage.p2pConnect){
 
             if(theMessage.answer){
-                p2pAcceptAnswer(theMessage.answer,theMessage.from)
+                p2pAcceptAnswer(theMessage.answer,theMessage.from,!theMessage.isADisplay)
             }
             else if(theMessage.offer){
-                p2pAcceptOffer(theMessage.offer,theMessage.from)
+                p2pAcceptOffer(theMessage.offer,theMessage.from,!theMessage.isADisplay)
             }
         }
         /*----------------------Testing-----------------------------*/
         else if(theMessage.newDisplay){
 
-            //Should be put in its own function
-            addPortal(theMessage.id)
+            // addPortal(theMessage.id)
 
-            updateBackground = true;
+            // updateBackground = true;
         }
         else if(theMessage.newPlayerId){
             addPlayerEntity(theMessage.newPlayerId)
@@ -748,6 +756,8 @@ function portalCollisons(playersShifted,playerObject,playerIndex){
         // playersShifted.push(key)
         //This should be elsewhere really
         serverConnection.send(JSON.stringify({shiftPlayerDirect:playerIndex,targetDisplay:portalCollision.destination}));
+        
+        controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
 
         return true
     }
