@@ -189,11 +189,15 @@ function updateDisplayConnections(){
 
     //in a more planned manner do the same with the list of displays
         //tell one of two displays to connect. not both
+
+    let connectedControllerIds = {addControllerConnections:Object.keys(controllerConnections)}
+
+    console.log(connectedControllerIds)
+
+    broadcastToDisplays(connectedControllerIds)
 }
 
-function broadcastToDisplays(message){    
-    console.log("the message is ",message)
-
+function broadcastToDisplays(message){
     Object.keys(displayConnections).forEach((key)=>{
         displayConnections[key].dataChannel.send(JSON.stringify(message))
     })
@@ -218,6 +222,18 @@ function handleDisplayMessage(message,fromWho){
         //If they all try make connections i think a race condition might occur
             //try some sort of reduction thing
                 //tell 1 about 2,3,4,5. 2 about 3,4,5. 3 about 4,5 and 4 about 5 
+    }
+    else if(theMessage.addControllerConnections){
+        let newConnections = theMessage.addControllerConnections.filter((connectionToAdd)=>{
+            return !(Object.keys(controllerConnections).find((connectedControllerId)=>{
+                return connectedControllerId == connectionToAdd;
+            }))
+        })
+
+        newConnections.forEach((connectionId)=>{
+            console.log("connecting to ",connectionId)
+            p2pConnect(connectionId);
+        })
     }
 }
 
