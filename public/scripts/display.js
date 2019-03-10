@@ -129,12 +129,17 @@ function p2pAcceptOffer(offer,fromWho,isAController){
 
     if(connectionIsController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
+        
+        controllerConnections[fromWho] = p2pConnectionTesting
     }
     else{
         //if not in portals add it
         if(!portals.find( (portal) => portal.id == fromWho )){
             addPortal(fromWho)
             updateBackground = true;
+            
+            //should make this check if its already connected
+            displayConnections[fromWho] = p2pConnectionTesting
         }
 
         p2pConnectionTesting.handleMessage = handleDisplayMessage
@@ -152,7 +157,6 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
         p2pConnectionTesting.dataChannel.send("hello from the other side")
     }
 
-    controllerConnections[fromWho] = p2pConnectionTesting
     /*-------------------TESTING--------------------------*/
 
     let connectionIsController = isAController;
@@ -162,19 +166,59 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
 
     if(connectionIsController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
+        
+        controllerConnections[fromWho] = p2pConnectionTesting
     }
     else{        //if not in portals add it
         if(!portals.find( (portal) => portal.id == fromWho )){
             addPortal(fromWho)
             updateBackground = true;
+
+            //should make this check if its already connected
+            displayConnections[fromWho] = p2pConnectionTesting
         }
         p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
     /*-------------------TESTING--------------------------*/
 }
 
-function handleDisplayMessage(message,fromWho){
 
+function updateDisplayConnections(){
+
+    //send to all displays the current list of controllers
+
+    //in a more planned manner do the same with the list of displays
+        //tell one of two displays to connect. not both
+}
+
+function broadcastToDisplays(message){    
+    console.log("the message is ",message)
+
+    Object.keys(displayConnections).forEach((key)=>{
+        displayConnections[key].dataChannel.send(JSON.stringify(message))
+    })
+}
+
+function handleDisplayMessage(message,fromWho){
+    let theMessage = JSON.parse(message.data)
+
+    console.log("the message is ",theMessage)
+
+    if(theMessage.addConnections){
+        let newConnections = theMessage.addConnections.filter((connectionToAdd)=>{
+            if(activeDisplayId == connectionToAdd){
+                return false;
+            }
+            return !(Object.keys(displayConnections).find((displayConnection)=>{
+                return displayConnection == connectionToAdd;
+            }))
+        })
+
+        console.log("need to add connections ",newConnections)
+        //If they all try make connections i think a race condition might occur
+            //try some sort of reduction thing
+                //tell 1 about 2,3,4,5. 2 about 3,4,5. 3 about 4,5 and 4 about 5 
+    }
 }
 
 function handleControllerMessage(message,fromWho){
