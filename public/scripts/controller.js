@@ -55,10 +55,19 @@ function p2pAcceptOffer(offer,whoFrom){
             console.log("change display to ",shiftedDisplay)
             displayId = shiftedDisplay;
         }
+
+        
+        let connectionDisplayId = JSON.parse(message.data).displayId
+
+        if(connectionDisplayId && !displayId){
+            displayId = connectionDisplayId;
+        }
     }
     /*-------------------TESTING--------------------------*/
 
-    displayId = whoFrom;
+    if(!displayId){
+        displayId = whoFrom;
+    }
 
     displayConnections[whoFrom] = {
         id: whoFrom,
@@ -192,6 +201,7 @@ function startUpController(){
     getServerIp();
 }
 
+//outdated. plan on removing later
 function getServerIp(){
     
     fetch("/getIp").then(response => {

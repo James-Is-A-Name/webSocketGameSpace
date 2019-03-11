@@ -131,6 +131,8 @@ function p2pAcceptOffer(offer,fromWho,isAController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
         
         controllerConnections[fromWho] = p2pConnectionTesting
+
+        controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:activeDisplayId}))
     }
     else{
         //if not in portals add it
@@ -272,6 +274,9 @@ function handleControllerMessage(message,fromWho){
         }
         else if(theMessage.action1 === true){
             playerEntities[fromWho].moveY = -20;
+        }
+        else if(theMessage.whoAreYou){
+            controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:activeDisplayId}))
         }
     }
 }
