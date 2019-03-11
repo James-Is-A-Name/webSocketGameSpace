@@ -159,7 +159,10 @@ function connectWebSocket(serverIp){
     // let serverIpAddress = "192.168.1.82"
     let serverIpAddress = "localhost"
     // serverConnection = new WebSocket(`ws://${serverIp}:43211`);
-    serverConnection = new WebSocket(`ws://${serverIp}:3000`); //now using the same port as the http server. will need to change this when deploying to something
+    // serverConnection = new WebSocket(`ws://${serverIp}:3000`); //now using the same port as the http server. will need to change this when deploying to something
+
+    //ws uses the same server so need to have a redirect.
+    serverConnection = new WebSocket(`ws://${self.location.host}`);
 
     serverConnection.onopen = ()=> {
         console.log("websocket open")

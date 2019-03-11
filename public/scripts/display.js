@@ -471,6 +471,8 @@ function addPlayerEntity(player){
         moveX:0,
         width:entitieSize/4,
         height:entitieSize,
+        // stance: 0
+        stance: Math.floor(Math.random()*3)
     }
     playerEntities[player] = newPlayer;
 
@@ -639,7 +641,7 @@ function clearOldEntities(canvas){
 }
 function drawEnteties(canvas){
 
-    canvas.beginPath();    
+    // canvas.beginPath();    
 
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
@@ -653,7 +655,7 @@ function drawEnteties(canvas){
         objectDrawFunctions.playerDismantle(element,canvas);
     });
 
-    canvas.stroke();
+    // canvas.stroke();
 }
 
 function onPlatform(player,platform){
@@ -707,7 +709,7 @@ function updateEntityStates(){
         //remove side collisions causing shifts for now
         playerObject = displaySideCollisionNoShift(playersShifted,playerObject,playerIndex)
 
-        if(portalCollisons(playersShifted,playerObject,playerIndex)) {
+        if(portalCollisons(playersShifted,playerObject,playerIndex) || checkPlayerInteractions(playerObject)) {
             playersShifted.push(playerIndex)
         }
         playerEntities[playerIndex] = playerObject;
@@ -716,6 +718,45 @@ function updateEntityStates(){
     //playerRemoval()   //could logically combine the two
     playerDeletingAction(playersShifted)
     playerDismantlingAction()
+}
+
+
+
+//very inefficient at the moment
+function checkPlayerInteractions(playerObject){
+
+    let results = Object.keys(playerEntities).filter(playerIndex => {
+        return playersFight(playerObject,playerEntities[playerIndex]) == playerEntities[playerIndex].id
+    })
+
+    return (results > 0)
+}
+
+//basically a paper scissors rock thing
+function playersFight(player1,player2){
+
+    if(((player1.x + player1.width) < player2.x) || ((player2.x + player2.width) < player1.x)){
+        return false;
+    }
+    if(((player1.y + player1.height) < player2.y) || ((player2.y + player2.height) < player1.y)){
+        return false;
+    }
+
+    if(player1.stance == player2.stance){
+        return false;
+    }
+    else if(player1.stance == 0 &&  player2.stance == 1){
+        return player1.id;
+    }
+    else if(player1.stance == 1 &&  player2.stance == 2){
+        return player1.id;
+    }
+    else if(player1.stance == 2 &&  player2.stance == 0){
+        return player1.id;
+    }
+    else{
+        return player2.id;
+    }
 }
 
 function playerMovements(playerObject){
