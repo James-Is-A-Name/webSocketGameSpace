@@ -115,13 +115,6 @@ function p2pAcceptOffer(offer,fromWho,isAController){
 
     p2pConnectionTesting = testConnection;
 
-    let send = document.getElementById("p2pSend")
-    if(send){
-        send.onclick = ()=>{
-            p2pConnectionTesting.dataChannel.send("hello from the other side")
-        }
-    }
-
     /*-------------------TESTING--------------------------*/
     let connectionIsController = isAController;
 
@@ -131,8 +124,6 @@ function p2pAcceptOffer(offer,fromWho,isAController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
         
         controllerConnections[fromWho] = p2pConnectionTesting
-
-        controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:activeDisplayId}))
     }
     else{
         //if not in portals add it
@@ -154,10 +145,6 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
     //got an offer so accept it and send an answer
     p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
 
-    let send = document.getElementById("p2pSend")
-    send.onclick = ()=>{
-        p2pConnectionTesting.dataChannel.send("hello from the other side")
-    }
 
     /*-------------------TESTING--------------------------*/
 
@@ -340,10 +327,7 @@ function swapMenuContent(show){
         p2pTarget.id = "connectionTarget";
 
         p2pTargetForm.appendChild(p2pTarget);
-        
-        let p2pSend = document.createElement("button")
-        p2pSend.innerHTML = "p2p say hello"
-        p2pSend.id = "p2pSend"
+    
         /*-------------------TESTING--------------------------*/
 
         newContent.appendChild(newButton)
@@ -351,20 +335,12 @@ function swapMenuContent(show){
         
         /*-------------------TESTING--------------------------*/
         newContent.appendChild(p2pTargetForm)
-        newContent.appendChild(p2pSend)
         /*-------------------TESTING--------------------------*/
         
         newContent.appendChild(newTitle)
 
         menuSection.replaceChild(newContent,oldContent);
 
-        
-        /*-------------------TESTING--------------------------*/
-        let send = document.getElementById("p2pSend")
-        send.onclick = ()=>{
-            p2pConnectionTesting.dataChannel.send("hello from the other side")
-        }
-        /*-------------------TESTING--------------------------*/
     }
     else{
 
@@ -723,7 +699,11 @@ function updateEntityStates(){
         playerObject = playerGroundDetectionAction(playerObject)
         
         //very similar things
-        if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
+        // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
+        //remove side collisions causing shifts for now
+        playerObject = displaySideCollisionNoShift(playersShifted,playerObject,playerIndex)
+
+        if(portalCollisons(playersShifted,playerObject,playerIndex)) {
             playersShifted.push(playerIndex)
         }
         playerEntities[playerIndex] = playerObject;
@@ -794,6 +774,16 @@ function platformCollisionsAction(platformCollisions,playerObject){
     return playerObject;
 }
 
+
+function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
+    if(playerObject.x+playerObject.width > gameWidth){
+        playerObject.x = gameWidth - playerObject.width;
+    }
+    else if(playerObject.x < 0){
+        playerObject.x = 0
+    }
+    return playerObject
+}
 function displaySideCollision(playersShifted,playerObject,playerIndex){
 
     if(playerObject.x+playerObject.width > gameWidth){
