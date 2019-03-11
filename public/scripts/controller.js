@@ -7,6 +7,8 @@ var rightPressTimer;
 
 let timerIntervalMs = 15;
 
+let displayConnectionInitalSetup = false;
+
 let controllerIdNumber;
 
 let displayConnections = {
@@ -25,6 +27,14 @@ function p2pAcceptOffer(offer,whoFrom){
     //got an offer so accept it and send an answer
     
     let testConnection = getAWebRTC();
+
+    testConnection.dataChannelSetupCallback = ()=>{
+        if(displayConnectionInitalSetup){
+            //request setting up a connection to the display
+            console.log("sending new player request")
+            testConnection.dataChannel.send(JSON.stringify({joinAsNewController:true}))
+        }
+    }
 
     console.log("accept an offer")
     testConnection.sendAnswerFunction = () =>{
@@ -67,6 +77,7 @@ function p2pAcceptOffer(offer,whoFrom){
 
     if(!displayId){
         displayId = whoFrom;
+        displayConnectionInitalSetup = true;
     }
 
     displayConnections[whoFrom] = {
@@ -99,7 +110,7 @@ function buttonPressed(pointerEvent){
 
     //iphone has issues with the event it seems
     targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
-    serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
+    // serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
 
     if(displayId && displayConnections[displayId]){
         let connection = displayConnections[displayId].connection
@@ -110,7 +121,7 @@ function buttonPressed(pointerEvent){
 }
 function buttonReleased(pointerEvent){
     targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
-    serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
+    // serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
 
     
     if(displayId && displayConnections[displayId]){
@@ -126,7 +137,7 @@ function touchStart(touchEvent){
     //iphone has issues with the event it seems
     // targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
     targetButtonValue = touchEvent.target.value
-    serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
+    // serverConnection.send(JSON.stringify({[targetButtonValue]:true}));
     
     
     if(displayId && displayConnections[displayId]){
@@ -139,7 +150,7 @@ function touchStart(touchEvent){
 function touchEnd(touchEvent){
     // targetButtonValue = pointerEvent.path.find((item)=>{return item.className == "controllerButton"}).value
     targetButtonValue = touchEvent.target.value
-    serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
+    // serverConnection.send(JSON.stringify({[targetButtonValue]:false}));
 
     if(displayId && displayConnections[displayId]){
         let connection = displayConnections[displayId].connection
@@ -149,9 +160,6 @@ function touchEnd(touchEvent){
     }
 }
 
-function testing(){
-    serverConnection.send(JSON.stringify({action1:true}));
-}
 
 function connectWebSocket(serverIp){
 
@@ -193,8 +201,8 @@ function connectWebSocket(serverIp){
         }
         /*----------------------Testing-----------------------------*/
         if(theMessage.playerDisplay){
-            let playerLocation = document.getElementById("locationText");
-            playerLocation.innerHTML = `on Display ${theMessage.playerDisplay}`;
+            // let playerLocation = document.getElementById("locationText");
+            // playerLocation.innerHTML = `on Display ${theMessage.playerDisplay}`;
         }
     }
 }
