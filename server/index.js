@@ -26,6 +26,5 @@ server.listen(port,function(){
     console.log(`Server started on port ${port}`)
     
     // let serverIp = localInfo.networkInterfaces()["Wi-Fi"][1].address;
-    
-    console.log(`the ip adress is ${serverIp}`)
+    // console.log(`the ip adress is ${serverIp}`)
 })
