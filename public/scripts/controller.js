@@ -133,7 +133,7 @@ function touchEnd(touchEvent){
     }
 }
 
-function connectWebSocket(serverIp){
+function connectWebSocket(){
 
     //ws uses the same server so need to have a redirect.
     serverConnection = new WebSocket(`ws://${self.location.host}`);
@@ -163,24 +163,5 @@ function connectWebSocket(serverIp){
 
 function startUpController(){
     setupControllerButtons();
-    getServerIp();
-}
-
-//outdated. plan on removing later
-function getServerIp(){
-    
-    fetch("/getIp").then(response => {
-
-        response.text().then((text)=>{
-            let serverIp = JSON.parse(text).serverIp;
-
-            connectWebSocket(serverIp);
-
-        }).catch((err)=>{
-            console.log("something went wrong the computer says")
-        })
-    })
-    .catch((err)=>{
-    console.log("i porbably wrote something wrong got err of ",err)
-    })
+    connectWebSocket();
 }
