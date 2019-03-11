@@ -228,12 +228,14 @@ function handleDisplayMessage(message,fromWho){
             p2pConnect(connectionId);
         })
     }
+    else if(theMessage.shiftedPlayer){
+        addPlayerEntity(theMessage.shiftedPlayer)
+    }
 }
 
 function handleControllerMessage(message,fromWho){
     //very flimsy will break if not correctly formmatted as JSON 
     let theMessage = JSON.parse(message.data)
-
 
     if(playerEntities[fromWho]){
         if(theMessage.moveRight === true){
@@ -269,6 +271,10 @@ function handleControllerMessage(message,fromWho){
         else if(theMessage.whoAreYou){
             controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:activeDisplayId}))
         }
+    }
+    else if(theMessage.joinAsNewController){
+        console.log("got request from controller to act as a player")
+        addPlayerEntity(fromWho);
     }
 }
 
@@ -413,7 +419,9 @@ function connectWebSocket(){
     serverConnection = new WebSocket(`ws://${self.location.host}`);
     
     serverConnection.onopen = ()=> {
-        console.log("websocket open")
+
+        //not sure 
+        // console.log("websocket open")
         serverConnection.send(JSON.stringify({actAsDisplay:true}));
     }
 
@@ -444,11 +452,11 @@ function connectWebSocket(){
             // updateBackground = true;
         }
         else if(theMessage.newPlayerId){
-            addPlayerEntity(theMessage.newPlayerId)
+            // addPlayerEntity(theMessage.newPlayerId)
         }
         else if(! Object.keys(playerEntities).find( (key)=> {return key == theMessage.id})){
             //This might actually be a hinderance to things having the display assume unknow player is valid
-            addPlayerEntity(theMessage.id)
+            // addPlayerEntity(theMessage.id)
         }
     }
 }
@@ -832,11 +840,11 @@ function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
 function displaySideCollision(playersShifted,playerObject,playerIndex){
 
     if(playerObject.x+playerObject.width > gameWidth){
-        serverConnection.send(JSON.stringify({shiftPlayer:playerIndex}));
+        // serverConnection.send(JSON.stringify({shiftPlayer:playerIndex}));
         return true
     }
     else if(playerObject.x < 0){
-        serverConnection.send(JSON.stringify({shiftPlayerPrevious:playerIndex}));
+        // serverConnection.send(JSON.stringify({shiftPlayerPrevious:playerIndex}));
         return true
     }
     return false
@@ -855,9 +863,13 @@ function portalCollisons(playersShifted,playerObject,playerIndex){
         //previously doing this but not a great way of doing it
         // playersShifted.push(key)
         //This should be elsewhere really
-        serverConnection.send(JSON.stringify({shiftPlayerDirect:playerIndex,targetDisplay:portalCollision.destination}));
+        // serverConnection.send(JSON.stringify({shiftPlayerDirect:playerIndex,targetDisplay:portalCollision.destination}));
         
         controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
+        
+        displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+
+        /* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
         return true
     }
@@ -877,6 +889,6 @@ function playerDismantlingAction(){
     playersDeletingKeys.forEach( (key)=>{
         if(objectDrawFunctions.isPlayerDismantled(playersDeleting[key])){
             delete playersDeleting[key];
-        }
+        }   
     })
 }

@@ -68,6 +68,10 @@ function getAWebRTC(){
         console.log("default message handle function, got ",message)
     }
 
+    connectionObject.dataChannelSetupCallback = ()=>{
+        console.log("default callback of dataChannelSetup")
+    }
+
     connectionObject.connection.ondatachannel = (event) => {
         console.log("data channel on happened",event)
         // event.channel.onmessage = (message) => {
@@ -76,6 +80,9 @@ function getAWebRTC(){
         if(connectionObject.answerCreated){
             connectionObject.dataChannel = event.channel
         }
+
+        connectionObject.dataChannelSetupCallback();
+
         connectionObject.dataChannel.onmessage = (message) => {
             // console.log("got message ",message)
             connectionObject.handleMessage(message,connectionObject.connectionId)
