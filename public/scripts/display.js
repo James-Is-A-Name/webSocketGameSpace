@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
@@ -250,6 +249,17 @@ function handleControllerMessage(message,fromWho){
         else if(theMessage.action1 === true){
             playerEntities[fromWho].moveY = -20;
         }
+        else if(theMessage.action2 === true){
+            if(playerEntities[fromWho].stance == 0){
+                playerEntities[fromWho].stance = 1;
+            }
+            else if(playerEntities[fromWho].stance == 1){
+                playerEntities[fromWho].stance = 2;
+            }
+            else{
+                playerEntities[fromWho].stance = 0;
+            }
+        }
         else if(theMessage.whoAreYou){
             controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:activeDisplayId}))
         }
@@ -380,16 +390,11 @@ function setupDisplayArea(){
     canvasDrawBackground.clearRect(0,0,gameWidth,gameHeight);
 
     refreshCanvas(canvasDraw)
-    // canvasDraw.clearRect(0,0,gameWidth,gameHeight);
-    // canvasDraw.beginPath();
-    // canvasDraw.rect(0,0,gameWidth,gameHeight);
-    // canvasDraw.stroke();
 
     connectWebSocket();
 
     startGame();
 }
-
 
 function connectWebSocket(){
     serverConnection = new WebSocket(`ws://${self.location.host}`);
@@ -736,7 +741,6 @@ function playerMovements(playerObject){
 
     return playerObject
 }
-
 
 function getPlatformCollisions(playerObject){
     return areaPlatforms.reduce( (prev,platform,i) => {
