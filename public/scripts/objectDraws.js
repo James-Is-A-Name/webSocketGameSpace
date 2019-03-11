@@ -140,5 +140,41 @@ const objectDrawFunctions = {
                 playerObject.playerDismantleState++;
             }
         }
+    },
+
+    clearPlayerObject: (playerObject,canvas) =>{
+        
+        let x = playerObject.x;
+        let y = playerObject.y;
+        let width = playerObject.width;
+        let height = playerObject.height;
+        
+        canvas.beginPath();
+        //could be better refined as these are just to 
+        if(playerObject.playerDismantleState){
+            canvas.clearRect(x-width*5, y-height/2, width*11, height*3);
+        }
+        else{
+            canvas.clearRect(x-20, y-20, width+40, height*1.4+20);
+        }
+        canvas.stroke();
+    },
+
+    drawPortal: (portal,canvas) =>{
+        canvas.beginPath();
+        canvas.arc(portal.x,portal.y,20,0,Math.PI*2);
+        canvas.font = "20px Verdana"
+        canvas.fillText(portal.destination,portal.x,portal.y);
+        canvas.stroke();
+    },
+    drawPlatform: (platform,canvas) =>{
+        canvas.beginPath();
+        canvas.rect(platform.x,platform.y,platform.width,platform.height);
+        canvas.stroke();
+    },
+    clearPlatform: (platform,canvas) => {
+        canvas.beginPath();
+        canvas.clearRect(platform.x-2,platform.y-2,platform.width+4,platform.height+4)
+        canvas.stroke();
     }
 }

@@ -5,25 +5,44 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
 
-const entitieSize = 50;
-//should not make this 
-let gameHeight = document.documentElement.clientHeight - entitieSize;
-let gameWidth = document.documentElement.clientWidth - entitieSize;
-
-
-
 // let gameThing = {
 //     serverConnection: undefined
 //     updateBackground: true,
 //     and so on
 // }
-let serverConnection;
-
-let updateBackground = true;
-
-let placePlatformsAllow = false;
 
 //CHANGE TO BE BETTER LAYED OUT
+
+/*---------------------communications----------------------*/
+let p2pConnectionTesting;
+
+let serverConnection;
+
+//store all the p2p display connections
+let displayConnections = {};
+
+//store all the p2p controller connections
+let controllerConnections = {};
+
+//will be used for determining if controller commands to this display are to be used
+let controllersOnScreen = {};
+/*---------------------communications----------------------*/
+
+
+/*---------------------setup related things----------------------*/
+let updateBackground = true;
+
+const entitieSize = 50;
+
+let playerMoveSpeed = entitieSize/10;
+
+let gameHeight = document.documentElement.clientHeight - entitieSize;
+let gameWidth = document.documentElement.clientWidth - entitieSize;
+/*---------------------setup related things----------------------*/
+
+
+
+/*---------------------Area alterations----------------------*/
 let mouseDownLocation = undefined;
 let lastMousePosition = undefined;
 let mouseUpLocation = undefined;
@@ -33,6 +52,12 @@ let previousPlatformHeight;
 let previousPlatformX;
 let previousPlatformY;
 
+let placePlatformsAllow = false;
+/*---------------------Area alterations----------------------*/
+
+
+/*---------------------game state----------------------*/
+let activeDisplayId = false;
 
 let playerEntities={};
 let playersDeleting={};
@@ -41,9 +66,211 @@ let playersDeleting={};
 let areaPlatforms = [];
 
 let portals = [];
+/*---------------------game state----------------------*/
 
-let playerMoveSpeed = entitieSize/10;
+function p2pConnect(whoTo){
 
+    //create a socket thing
+    let testConnection = getAWebRTC();
+
+    //setup how to send it off
+    testConnection.sendOfferFunction = ()=>{
+        //Hard code who to send a message for now
+        let message = {
+            p2pConnect: true,
+            target: whoTo,
+            from: activeDisplayId,
+            isADisplay: true,
+            offer: testConnection.offerToSend
+        }
+        serverConnection.send(JSON.stringify(message))
+    }
+
+    //trigger the offer that will then trigger the send
+    testConnection.createOffer()
+
+    p2pConnectionTesting = testConnection;
+}
+
+function p2pAcceptOffer(offer,fromWho,isAController){
+    //got an offer so accept it and send an answer
+    
+    let testConnection = getAWebRTC();
+
+    console.log("accept an offer")
+    testConnection.sendAnswerFunction = () =>{
+        
+        //this should have a single point of decleration so the display and controllers don't get out of sync
+        let message = {
+            p2pConnect: true,
+            target: fromWho,
+            from: activeDisplayId,
+            isADisplay: true,
+            answer: testConnection.answerToSend
+        }
+        serverConnection.send(JSON.stringify(message))
+    }
+
+    testConnection.acceptOffer(JSON.parse(offer))
+
+    p2pConnectionTesting = testConnection;
+
+    /*-------------------TESTING--------------------------*/
+    let connectionIsController = isAController;
+
+    p2pConnectionTesting.connectionId = fromWho;
+
+    if(connectionIsController){
+        p2pConnectionTesting.handleMessage = handleControllerMessage
+        
+        controllerConnections[fromWho] = p2pConnectionTesting
+    }
+    else{
+        //if not in portals add it
+        if(!portals.find( (portal) => portal.id == fromWho )){
+            addPortal(fromWho)
+            updateBackground = true;
+            
+            //should make this check if its already connected
+            displayConnections[fromWho] = p2pConnectionTesting
+        }
+
+        p2pConnectionTesting.handleMessage = handleDisplayMessage
+    }
+    /*-------------------TESTING--------------------------*/
+}
+
+function p2pAcceptAnswer(answer,fromWho,isAController){
+    console.log("accept an answer")
+    //got an offer so accept it and send an answer
+    p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
+
+
+    /*-------------------TESTING--------------------------*/
+
+    let connectionIsController = isAController;
+    // let connectionIsController = true;
+
+    p2pConnectionTesting.connectionId = fromWho;
+
+    if(connectionIsController){
+        p2pConnectionTesting.handleMessage = handleControllerMessage
+        
+        controllerConnections[fromWho] = p2pConnectionTesting
+
+        //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
+        //INTIAL TESTING HAPPENING
+        updateDisplayConnections()
+    }
+    else{        //if not in portals add it
+        if(!portals.find( (portal) => portal.id == fromWho )){
+            addPortal(fromWho)
+            updateBackground = true;
+
+            //should make this check if its already connected
+            displayConnections[fromWho] = p2pConnectionTesting
+        }
+        p2pConnectionTesting.handleMessage = handleDisplayMessage
+    }
+    /*-------------------TESTING--------------------------*/
+}
+
+
+function updateDisplayConnections(){
+
+    //send to all displays the current list of controllers
+
+    //in a more planned manner do the same with the list of displays
+        //tell one of two displays to connect. not both
+
+    let connectedControllerIds = {addControllerConnections:Object.keys(controllerConnections)}
+
+    console.log(connectedControllerIds)
+
+    broadcastToDisplays(connectedControllerIds)
+}
+
+function broadcastToDisplays(message){
+    Object.keys(displayConnections).forEach((key)=>{
+        displayConnections[key].dataChannel.send(JSON.stringify(message))
+    })
+}
+
+function handleDisplayMessage(message,fromWho){
+    let theMessage = JSON.parse(message.data)
+
+    console.log("the message is ",theMessage)
+
+    if(theMessage.addConnections){
+        let newConnections = theMessage.addConnections.filter((connectionToAdd)=>{
+            if(activeDisplayId == connectionToAdd){
+                return false;
+            }
+            return !(Object.keys(displayConnections).find((displayConnection)=>{
+                return displayConnection == connectionToAdd;
+            }))
+        })
+
+        console.log("need to add connections ",newConnections)
+        //If they all try make connections i think a race condition might occur
+            //try some sort of reduction thing
+                //tell 1 about 2,3,4,5. 2 about 3,4,5. 3 about 4,5 and 4 about 5 
+    }
+    else if(theMessage.addControllerConnections){
+        let newConnections = theMessage.addControllerConnections.filter((connectionToAdd)=>{
+            return !(Object.keys(controllerConnections).find((connectedControllerId)=>{
+                return connectedControllerId == connectionToAdd;
+            }))
+        })
+
+        newConnections.forEach((connectionId)=>{
+            console.log("connecting to ",connectionId)
+            p2pConnect(connectionId);
+        })
+    }
+}
+
+function handleControllerMessage(message,fromWho){
+    //very flimsy will break if not correctly formmatted as JSON 
+    let theMessage = JSON.parse(message.data)
+
+
+    if(playerEntities[fromWho]){
+        if(theMessage.moveRight === true){
+            playerEntities[fromWho].moveX = playerMoveSpeed;
+            playerEntities[fromWho].moveRight = theMessage.moveRight;
+        }
+        else if(theMessage.moveLeft === true){
+            playerEntities[fromWho].moveX = -playerMoveSpeed;
+            playerEntities[fromWho].moveLeft = theMessage.moveLeft;
+        }
+        else if(theMessage.moveRight === false){
+            if (playerEntities[fromWho].moveX > 0){
+                playerEntities[fromWho].moveX = 0;
+                if(playerEntities[fromWho].moveLeft){
+                    playerEntities[fromWho].moveX = -playerMoveSpeed;
+                }
+            }
+            playerEntities[fromWho].moveRight = theMessage.moveRight;
+        }
+        else if(theMessage.moveLeft === false){
+            if (playerEntities[fromWho].moveX < 0){
+                playerEntities[fromWho].moveX = 0;
+
+                if(playerEntities[fromWho].moveRight){
+                    playerEntities[fromWho].moveX = playerMoveSpeed;
+                }
+            }
+            playerEntities[fromWho].moveLeft = theMessage.moveLeft;
+        }
+        else if(theMessage.action1 === true){
+            playerEntities[fromWho].moveY = -20;
+        }
+        else if(theMessage.whoAreYou){
+            controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:activeDisplayId}))
+        }
+    }
+}
 
 function swapMenuContent(show){
     let menuSection = document.getElementById("menuSection")
@@ -53,7 +280,6 @@ function swapMenuContent(show){
         //also i screws up when formatting the html with line breaks as they are not drawn but count as text elements of a div
     let oldContent = menuSection.childNodes[0];
     
-    console.log(menuSection.childNodes)
 
     if(show){
         newContent = document.createElement("div");
@@ -89,11 +315,36 @@ function swapMenuContent(show){
             setNewPlatformDraw(!placePlatformsAllow);
         }
 
+        /*-------------------TESTING--------------------------*/
+
+        let p2pTargetForm = document.createElement("form");
+        p2pTargetForm.onsubmit = (event)=>{
+            event.preventDefault();
+
+            let value = document.getElementById("connectionTarget").value;
+            if(!isNaN(parseInt(value))){
+                p2pConnect(parseInt(value))
+            }
+        }
+        let p2pTarget = document.createElement("input");
+        p2pTarget.type = "text";
+        p2pTarget.id = "connectionTarget";
+
+        p2pTargetForm.appendChild(p2pTarget);
+    
+        /*-------------------TESTING--------------------------*/
+
         newContent.appendChild(newButton)
         newContent.appendChild(platformDrawButton)
+        
+        /*-------------------TESTING--------------------------*/
+        newContent.appendChild(p2pTargetForm)
+        /*-------------------TESTING--------------------------*/
+        
         newContent.appendChild(newTitle)
 
         menuSection.replaceChild(newContent,oldContent);
+
     }
     else{
 
@@ -146,10 +397,11 @@ function setupDisplayArea(){
 
     canvasDrawBackground.clearRect(0,0,gameWidth,gameHeight);
 
-    canvasDraw.clearRect(0,0,gameWidth,gameHeight);
-    canvasDraw.beginPath();
-    canvasDraw.rect(0,0,gameWidth,gameHeight);
-    canvasDraw.stroke();
+    refreshCanvas(canvasDraw)
+    // canvasDraw.clearRect(0,0,gameWidth,gameHeight);
+    // canvasDraw.beginPath();
+    // canvasDraw.rect(0,0,gameWidth,gameHeight);
+    // canvasDraw.stroke();
 
     connectWebSocket();
 
@@ -171,16 +423,25 @@ function connectWebSocket(){
         if(theMessage.displayId){
             let displayIdMessage = document.getElementById("displayId");
             displayIdMessage.innerHTML = theMessage.displayId;
+
+            activeDisplayId = theMessage.displayId
         }
+        /*----------------------Testing-----------------------------*/
+        else if(theMessage.p2pConnect){
+
+            if(theMessage.answer){
+                p2pAcceptAnswer(theMessage.answer,theMessage.from,!theMessage.isADisplay)
+            }
+            else if(theMessage.offer){
+                p2pAcceptOffer(theMessage.offer,theMessage.from,!theMessage.isADisplay)
+            }
+        }
+        /*----------------------Testing-----------------------------*/
         else if(theMessage.newDisplay){
 
-            //Should be put in its own function
-            portals.push({
-                    x: 100*theMessage.id,
-                    y: 100,
-                    destination: theMessage.id
-            })
-            updateBackground = true;
+            // addPortal(theMessage.id)
+
+            // updateBackground = true;
         }
         else if(theMessage.newPlayerId){
             addPlayerEntity(theMessage.newPlayerId)
@@ -189,42 +450,15 @@ function connectWebSocket(){
             //This might actually be a hinderance to things having the display assume unknow player is valid
             addPlayerEntity(theMessage.id)
         }
-        else if(theMessage.moveRight === true){
-            playerEntities[theMessage.id].moveX = playerMoveSpeed;
-
-            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        }
-        else if(theMessage.moveLeft === true){
-            playerEntities[theMessage.id].moveX = -playerMoveSpeed;
-
-            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        }
-        else if(theMessage.moveRight === false){
-            if (playerEntities[theMessage.id].moveX > 0){
-                playerEntities[theMessage.id].moveX = 0;
-                
-                if(playerEntities[theMessage.id].moveLeft){
-                    playerEntities[theMessage.id].moveX = -playerMoveSpeed;
-                }
-            }
-
-            playerEntities[theMessage.id].moveRight = theMessage.moveRight;
-        }
-        else if(theMessage.moveLeft === false){
-            if (playerEntities[theMessage.id].moveX < 0){
-                playerEntities[theMessage.id].moveX = 0;
-
-                if(playerEntities[theMessage.id].moveRight){
-                    playerEntities[theMessage.id].moveX = playerMoveSpeed;
-                }
-            }
-
-            playerEntities[theMessage.id].moveLeft = theMessage.moveLeft;
-        }
-        else if(theMessage.action1 === true){
-            playerEntities[theMessage.id].moveY = -20;
-        }
     }
+}
+
+function addPortal(displayId){
+    portals.push({
+        x: 100*(portals.length + 1),
+        y: 100,
+        destination: displayId
+    })
 }
 
 function addPlayerEntity(player){
@@ -334,13 +568,15 @@ function refreshCanvas(canvas){
     canvas.beginPath();
     canvas.rect(0,0,gameWidth,gameHeight);
     canvas.stroke();
+
+    //objectDrawFunctions.clearCanvas(width,height,canvas)
 }
 
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
 function drawVisualAdditions(canvas){
 
     if(mouseUpLocation && mouseDownLocation && placePlatformsAllow){
-        console.log("yup here")
+        
         //is straight copied from the mouse event part so very much a candidate for refactoring
         let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
         let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
@@ -353,61 +589,52 @@ function drawVisualAdditions(canvas){
         let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
         let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
 
-
         if(previousPlatformWidth){
-            canvas.clearRect(previousPlatformX-2,previousPlatformY-2,previousPlatformWidth+4,previousPlatformHeight+4)
+            // canvas.clearRect(previousPlatformX-2,previousPlatformY-2,previousPlatformWidth+4,previousPlatformHeight+4)
+            let previousPlatform = {
+                x:previousPlatformX,
+                y:previousPlatformY,
+                width:previousPlatformWidth,
+                height:previousPlatformHeight
+            }
+            objectDrawFunctions.clearPlatform(previousPlatform,canvas)
+        }
+        let platform = {
+            x:platformX,
+            y:platformY,
+            width:platformWidth,
+            height:platformHeight
         }
         previousPlatformX = platformX
         previousPlatformY = platformY
         previousPlatformWidth = platformWidth
         previousPlatformHeight = platformHeight
         
-
-        canvas.beginPath();
-        canvas.rect(platformX,platformY,platformWidth,platformHeight);
-        canvas.stroke();
+        objectDrawFunctions.drawPlatform(platform,canvas)
     }
 }
 
 function drawPlatforms(canvas){
     areaPlatforms.forEach((platform)=>{
-        canvas.beginPath();
-        canvas.rect(platform.x,platform.y,platform.width,platform.height);
-        canvas.stroke();
+        objectDrawFunctions.drawPlatform(platform,canvas)
     })
 }
 
 function drawPortals(canvas){
     portals.forEach((portal) => {
-        console.log("portal draw")
-        canvas.beginPath();
-        canvas.arc(portal.x,portal.y,20,0,Math.PI*2);
-        canvas.font = "20px Verdana"
-        canvas.fillText(portal.destination,portal.x,portal.y);
-        canvas.stroke();
+        objectDrawFunctions.drawPortal(portal,canvas)
     })
 }
 
 function clearOldEntities(canvas){
-    canvas.beginPath();    
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
-        let x = element.x;
-        let y = element.y;
-        let width = element.width;
-        let height = element.height;
-        //very loose at the moment
-        canvas.clearRect(x-20, y-20, width+40, height*1.4+20);
+        objectDrawFunctions.clearPlayerObject(element,canvas);
     });
     
     Object.keys(playersDeleting).forEach(key => {
         let element = playersDeleting[key];
-        let x = element.x;
-        let y = element.y;
-        let width = element.width;
-        let height = element.height;
-        //this is just being played by ear at the moment
-        canvas.clearRect(x-width*5, y-height/2, width*11, height*3);
+        objectDrawFunctions.clearPlayerObject(element,canvas);
     });
 }
 function drawEnteties(canvas){
@@ -476,7 +703,11 @@ function updateEntityStates(){
         playerObject = playerGroundDetectionAction(playerObject)
         
         //very similar things
-        if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
+        // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
+        //remove side collisions causing shifts for now
+        playerObject = displaySideCollisionNoShift(playersShifted,playerObject,playerIndex)
+
+        if(portalCollisons(playersShifted,playerObject,playerIndex)) {
             playersShifted.push(playerIndex)
         }
         playerEntities[playerIndex] = playerObject;
@@ -547,6 +778,16 @@ function platformCollisionsAction(platformCollisions,playerObject){
     return playerObject;
 }
 
+
+function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
+    if(playerObject.x+playerObject.width > gameWidth){
+        playerObject.x = gameWidth - playerObject.width;
+    }
+    else if(playerObject.x < 0){
+        playerObject.x = 0
+    }
+    return playerObject
+}
 function displaySideCollision(playersShifted,playerObject,playerIndex){
 
     if(playerObject.x+playerObject.width > gameWidth){
@@ -574,6 +815,8 @@ function portalCollisons(playersShifted,playerObject,playerIndex){
         // playersShifted.push(key)
         //This should be elsewhere really
         serverConnection.send(JSON.stringify({shiftPlayerDirect:playerIndex,targetDisplay:portalCollision.destination}));
+        
+        controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
 
         return true
     }
