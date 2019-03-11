@@ -157,6 +157,10 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
         
         controllerConnections[fromWho] = p2pConnectionTesting
+
+        //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
+        //INTIAL TESTING HAPPENING
+        updateDisplayConnections()
     }
     else{        //if not in portals add it
         if(!portals.find( (portal) => portal.id == fromWho )){
