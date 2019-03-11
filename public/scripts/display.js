@@ -1,7 +1,6 @@
 
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
-
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
 
@@ -18,16 +17,12 @@ let p2pConnectionTesting;
 
 let serverConnection;
 
-//store all the p2p display connections
-let displayConnections = {};
+let displayConnections = {}; //store all the p2p display connections
 
-//store all the p2p controller connections
-let controllerConnections = {};
+let controllerConnections = {}; //store all the p2p controller connections
 
-//will be used for determining if controller commands to this display are to be used
-let controllersOnScreen = {};
+let controllersOnScreen = {}; //will be used for determining if controller commands to this display are to be used
 /*---------------------communications----------------------*/
-
 
 /*---------------------setup related things----------------------*/
 let updateBackground = true;
@@ -39,8 +34,6 @@ let playerMoveSpeed = entitieSize/10;
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
 /*---------------------setup related things----------------------*/
-
-
 
 /*---------------------Area alterations----------------------*/
 let mouseDownLocation = undefined;
@@ -55,7 +48,6 @@ let previousPlatformY;
 let placePlatformsAllow = false;
 /*---------------------Area alterations----------------------*/
 
-
 /*---------------------game state----------------------*/
 let activeDisplayId = false;
 
@@ -64,7 +56,6 @@ let playersDeleting={};
 //Will want to make this an object of objects not an array
     //alter elsewher eto itterate over the keys
 let areaPlatforms = [];
-
 let portals = [];
 /*---------------------game state----------------------*/
 
@@ -92,12 +83,10 @@ function p2pConnect(whoTo){
     p2pConnectionTesting = testConnection;
 }
 
-function p2pAcceptOffer(offer,fromWho,isAController){
-    //got an offer so accept it and send an answer
+function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
     
     let testConnection = getAWebRTC();
 
-    console.log("accept an offer")
     testConnection.sendAnswerFunction = () =>{
         
         //this should have a single point of decleration so the display and controllers don't get out of sync
@@ -115,7 +104,6 @@ function p2pAcceptOffer(offer,fromWho,isAController){
 
     p2pConnectionTesting = testConnection;
 
-    /*-------------------TESTING--------------------------*/
     let connectionIsController = isAController;
 
     p2pConnectionTesting.connectionId = fromWho;
@@ -137,7 +125,6 @@ function p2pAcceptOffer(offer,fromWho,isAController){
 
         p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
-    /*-------------------TESTING--------------------------*/
 }
 
 function p2pAcceptAnswer(answer,fromWho,isAController){
@@ -145,11 +132,7 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
     //got an offer so accept it and send an answer
     p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
 
-
-    /*-------------------TESTING--------------------------*/
-
     let connectionIsController = isAController;
-    // let connectionIsController = true;
 
     p2pConnectionTesting.connectionId = fromWho;
 
@@ -172,7 +155,6 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
         }
         p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
-    /*-------------------TESTING--------------------------*/
 }
 
 
@@ -321,8 +303,6 @@ function swapMenuContent(show){
             setNewPlatformDraw(!placePlatformsAllow);
         }
 
-        /*-------------------TESTING--------------------------*/
-
         let p2pTargetForm = document.createElement("form");
         p2pTargetForm.onsubmit = (event)=>{
             event.preventDefault();
@@ -337,15 +317,11 @@ function swapMenuContent(show){
         p2pTarget.id = "connectionTarget";
 
         p2pTargetForm.appendChild(p2pTarget);
-    
-        /*-------------------TESTING--------------------------*/
 
         newContent.appendChild(newButton)
         newContent.appendChild(platformDrawButton)
         
-        /*-------------------TESTING--------------------------*/
         newContent.appendChild(p2pTargetForm)
-        /*-------------------TESTING--------------------------*/
         
         newContent.appendChild(newTitle)
 
@@ -553,7 +529,6 @@ function gameStep(){
     
     let displayElement = document.getElementById("canvasAreaFront");
     let canvasDraw = displayElement.getContext("2d");
-
     
     //Must be done before the entities are moved
     clearOldEntities(canvasDraw);
@@ -566,8 +541,6 @@ function gameStep(){
         drawPortals(canvasDrawBackground);
     }
 
-    // refreshCanvas(canvasDraw);
-    //Alter to just claer where things have been drawn rather than the whole thing
     drawEnteties(canvasDraw);
     drawVisualAdditions(canvasDraw);
 }
@@ -578,8 +551,6 @@ function refreshCanvas(canvas){
     canvas.beginPath();
     canvas.rect(0,0,gameWidth,gameHeight);
     canvas.stroke();
-
-    //objectDrawFunctions.clearCanvas(width,height,canvas)
 }
 
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
@@ -600,7 +571,7 @@ function drawVisualAdditions(canvas){
         let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
 
         if(previousPlatformWidth){
-            // canvas.clearRect(previousPlatformX-2,previousPlatformY-2,previousPlatformWidth+4,previousPlatformHeight+4)
+            
             let previousPlatform = {
                 x:previousPlatformX,
                 y:previousPlatformY,
@@ -649,12 +620,8 @@ function clearOldEntities(canvas){
 }
 function drawEnteties(canvas){
 
-    // canvas.beginPath();    
-
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
-
-        // canvas.fillText(element.id,element.x,element.y)
         objectDrawFunctions.drawPerson(element,canvas);
     });
 
@@ -662,8 +629,6 @@ function drawEnteties(canvas){
         let element = playersDeleting[key];
         objectDrawFunctions.playerDismantle(element,canvas);
     });
-
-    // canvas.stroke();
 }
 
 function onPlatform(player,platform){
@@ -709,10 +674,8 @@ function updateEntityStates(){
             playerObject = playerMovementCheck(playerObject)
         }
 
-        //seperate from the collison it sseems
         playerObject = playerGroundDetectionAction(playerObject)
         
-        //very similar things
         // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
         //remove side collisions causing shifts for now
         playerObject = displaySideCollisionNoShift(playersShifted,playerObject,playerIndex)
@@ -727,8 +690,6 @@ function updateEntityStates(){
     playerDeletingAction(playersShifted)
     playerDismantlingAction()
 }
-
-
 
 //very inefficient at the moment
 function checkPlayerInteractions(playerObject){
@@ -827,7 +788,6 @@ function platformCollisionsAction(platformCollisions,playerObject){
     return playerObject;
 }
 
-
 function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
     if(playerObject.x+playerObject.width > gameWidth){
         playerObject.x = gameWidth - playerObject.width;
@@ -839,18 +799,13 @@ function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
 }
 function displaySideCollision(playersShifted,playerObject,playerIndex){
 
-    if(playerObject.x+playerObject.width > gameWidth){
-        // serverConnection.send(JSON.stringify({shiftPlayer:playerIndex}));
-        return true
-    }
-    else if(playerObject.x < 0){
-        // serverConnection.send(JSON.stringify({shiftPlayerPrevious:playerIndex}));
-        return true
-    }
+    //TODO
+        //requires some method of asigning what the next screen along is when multiple or non are connected
     return false
 }
 
 function portalCollisons(playersShifted,playerObject,playerIndex){
+
     let portalCollision = portals.find((portal) => {
         if(( Math.abs(playerObject.x + playerObject.width/2 - portal.x) < 20) && (Math.abs(playerObject.y + playerObject.height/2 - portal.y) < 20 )){
             if(!playersShifted.find( player => player == playerIndex)){
@@ -860,16 +815,9 @@ function portalCollisons(playersShifted,playerObject,playerIndex){
     })
 
     if(portalCollision){
-        //previously doing this but not a great way of doing it
-        // playersShifted.push(key)
-        //This should be elsewhere really
-        // serverConnection.send(JSON.stringify({shiftPlayerDirect:playerIndex,targetDisplay:portalCollision.destination}));
-        
-        controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
-        
-        displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
 
-        /* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+        controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
+        displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
 
         return true
     }
