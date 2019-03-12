@@ -58,6 +58,8 @@ let areaPlatforms = [];
 let portals = [];
 /*---------------------game state----------------------*/
 
+
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pConnect(whoTo){
 
     //create a socket thing
@@ -82,6 +84,7 @@ function p2pConnect(whoTo){
     p2pConnectionTesting = testConnection;
 }
 
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
     
     let testConnection = getAWebRTC();
@@ -126,6 +129,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
     }
 }
 
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptAnswer(answer,fromWho,isAController){
     console.log("accept an answer")
     //got an offer so accept it and send an answer
@@ -156,7 +160,7 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
     }
 }
 
-
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function updateDisplayConnections(){
 
     //send to all displays the current list of controllers
@@ -171,6 +175,7 @@ function updateDisplayConnections(){
     broadcastToDisplays(connectedControllerIds)
 }
 
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function broadcastToDisplays(message){
     Object.keys(displayConnections).forEach((key)=>{
         displayConnections[key].dataChannel.send(JSON.stringify(message))
@@ -270,6 +275,7 @@ function handleControllerMessage(message,fromWho){
     }
 }
 
+/* ---------------------- sort out a better way of doing this    -------------------------------*/
 function swapMenuContent(show){
     let menuSection = document.getElementById("menuSection")
 
@@ -550,6 +556,7 @@ function gameStep(){
     drawVisualAdditions(canvasDraw);
 }
 
+/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
 function refreshCanvas(canvas){
     canvas.clearRect(0,0,gameWidth,gameHeight);
     
@@ -558,6 +565,7 @@ function refreshCanvas(canvas){
     canvas.stroke();
 }
 
+/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
 function drawVisualAdditions(canvas){
 
@@ -600,12 +608,14 @@ function drawVisualAdditions(canvas){
     }
 }
 
+/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
 function drawPlatforms(canvas){
     areaPlatforms.forEach((platform)=>{
         objectDrawFunctions.drawPlatform(platform,canvas)
     })
 }
 
+/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
 function drawPortals(canvas){
     portals.forEach((portal) => {
         objectDrawFunctions.drawPortal(portal,canvas)
@@ -696,6 +706,7 @@ function updateEntityStates(){
     playerDismantlingAction()
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 //very inefficient at the moment
 function checkPlayerInteractions(playerObject){
 
@@ -706,6 +717,7 @@ function checkPlayerInteractions(playerObject){
     return (results > 0)
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 //basically a paper scissors rock thing
 function playersFight(player1,player2){
 
@@ -733,6 +745,7 @@ function playersFight(player1,player2){
     }
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 function playerMovements(playerObject){
     playerObject.y += playerObject.moveY;
     playerObject.moveY++;
@@ -742,6 +755,7 @@ function playerMovements(playerObject){
     return playerObject
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 function getPlatformCollisions(playerObject){
     return areaPlatforms.reduce( (prev,platform,i) => {
         let result = onPlatform(playerObject,platform);
@@ -752,6 +766,7 @@ function getPlatformCollisions(playerObject){
     },[]);
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 //seperate from the collison it sseems
 function playerGroundDetectionAction(playerObject){
     if (playerObject.y > (gameHeight - entitieSize)){
@@ -762,7 +777,7 @@ function playerGroundDetectionAction(playerObject){
     }
     return playerObject;
 }
-
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 function playerMovementCheck(playerObject){
     if(playerObject.moveRight && playerObject.moveX == 0){
         playerObject.moveX = playerMoveSpeed;
@@ -773,6 +788,7 @@ function playerMovementCheck(playerObject){
     return playerObject;
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 function platformCollisionsAction(platformCollisions,playerObject){
     platformCollisions.forEach((platformCollision)=>{
         if(platformCollision.collison == "y"){
@@ -787,11 +803,13 @@ function platformCollisionsAction(platformCollisions,playerObject){
             if(playerObject.moveY < 0){
                 playerObject.moveY = 0;
             }
+            playerObject.y = platformCollision.y
         }
     })
     return playerObject;
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
     if(playerObject.x+playerObject.width > gameWidth){
         playerObject.x = gameWidth - playerObject.width;
@@ -801,6 +819,7 @@ function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
     }
     return playerObject
 }
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 function displaySideCollision(playersShifted,playerObject,playerIndex){
 
     //TODO
@@ -808,6 +827,7 @@ function displaySideCollision(playersShifted,playerObject,playerIndex){
     return false
 }
 
+/* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
 function portalCollisons(playersShifted,playerObject,playerIndex){
 
     let portalCollision = portals.find((portal) => {
