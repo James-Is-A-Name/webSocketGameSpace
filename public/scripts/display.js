@@ -646,6 +646,7 @@ function drawEnteties(canvas){
     });
 }
 
+/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
 function onPlatform(player,platform){
 
     if((player.x+player.width < platform.x) || (player.x > platform.x + platform.width) || (player.y + player.height < platform.y) || (player.y > platform.y + platform.height) ){
