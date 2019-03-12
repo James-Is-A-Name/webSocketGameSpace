@@ -7,8 +7,6 @@ class ObjectInteractions{
         //this is actually pointless
     }
 
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
-    //very inefficient at the moment
     checkPlayerInteractions(player,players){
 
         //shorted but way more obtuse
@@ -23,8 +21,6 @@ class ObjectInteractions{
         // return (results > 0)
     }
 
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
-    //basically a paper scissors rock thing
     playersFight(player1,player2){
 
         if(((player1.x + player1.width) < player2.x) || ((player2.x + player2.width) < player1.x)){
@@ -51,7 +47,6 @@ class ObjectInteractions{
         }
     }
 
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
     playerMovements(player){
         player.y += player.moveY;
         player.moveY++;
@@ -60,8 +55,17 @@ class ObjectInteractions{
 
         return player
     }
+    
+    playerMovementCheck(player,moveSpeed){
+        if(player.moveRight && player.moveX == 0){
+            player.moveX = moveSpeed;
+        }
+        else if(player.moveLeft && player.moveX == 0){
+            player.moveX = -moveSpeed;
+        }
+        return player;
+    }
 
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
     onPlatform(player,platform){
         if((player.x+player.width < platform.x) || (player.x > platform.x + platform.width) || (player.y + player.height < platform.y) || (player.y > platform.y + platform.height) ){
             return false;
@@ -85,7 +89,16 @@ class ObjectInteractions{
         }
     }
 
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
+    playerGroundDetectionAction(player,gameHeight){
+        if (player.y > (gameHeight - player.height)){
+            player.y = (gameHeight - player.height);
+            if(player.moveY > 0){
+                player.moveY = 0;
+            }
+        }
+        return player;
+    }
+
     getPlatformCollisions(player,platforms){
         return platforms.reduce( (collisions,platform) => {
             let collisonResult = this.onPlatform(player,platform);
@@ -95,17 +108,7 @@ class ObjectInteractions{
             return collisions;
         },[]);
     }
-    // function getPlatformCollisions(playerObject){
-    //     return areaPlatforms.reduce( (prev,platform,i) => {
-    //         let result = onPlatform(playerObject,platform);
-    //         if(result){
-    //             prev.push(result)
-    //         }
-    //         return prev;
-    //     },[]);
-    // }
-
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
+    
     platformCollisionsAction(platformCollisions,player){
         platformCollisions.forEach((platformCollision)=>{
             if(platformCollision.collison == "y"){
@@ -125,27 +128,7 @@ class ObjectInteractions{
         })
         return player;
     }
-    // function platformCollisionsAction(platformCollisions,playerObject){
-    //     platformCollisions.forEach((platformCollision)=>{
-    //         if(platformCollision.collison == "y"){
-    //             playerObject.y = platformCollision.y;
-    //             playerObject.moveY = 0;
-    //         }
-    //         else if(platformCollision.collison == "x"){
-    //             playerObject.x = platformCollision.x;
-    //             playerObject.moveX = 0;
-    //         }
-    //         else if(platformCollision.collison == "bellow"){
-    //             if(playerObject.moveY < 0){
-    //                 playerObject.moveY = 0;
-    //             }
-    //             playerObject.y = platformCollision.y
-    //         }
-    //     })
-    //     return playerObject;
-    // }
-
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
+    
     displaySideCollisionNoShift(player,gameWidth){
         if(player.x+player.width > gameWidth){
             player.x = gameWidth - player.width;
@@ -155,30 +138,13 @@ class ObjectInteractions{
         }
         return player
     }
-    // function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
-    //     if(playerObject.x+playerObject.width > gameWidth){
-    //         playerObject.x = gameWidth - playerObject.width;
-    //     }
-    //     else if(playerObject.x < 0){
-    //         playerObject.x = 0
-    //     }
-    //     return playerObject
-    // }
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
     displaySideCollision(player){
 
         //TODO
             //requires some method of asigning what the next screen along is when multiple or non are connected
         return false
     }
-    // function displaySideCollision(playersShifted,playerObject,playerIndex){
 
-    //     //TODO
-    //         //requires some method of asigning what the next screen along is when multiple or non are connected
-    //     return false
-    // }
-
-    /* ---------------------- MOVE TO ObjectInteractions             -------------------------------*/
     portalCollisons(player,portals){
         
         let portalCollision = portals.find((portal) => {
@@ -192,23 +158,4 @@ class ObjectInteractions{
         }
         return false
     }
-    // function portalCollisons(playersShifted,playerObject,playerIndex){
-
-    //     let portalCollision = portals.find((portal) => {
-    //         if(( Math.abs(playerObject.x + playerObject.width/2 - portal.x) < 20) && (Math.abs(playerObject.y + playerObject.height/2 - portal.y) < 20 )){
-    //             if(!playersShifted.find( player => player == playerIndex)){
-    //                 return true;
-    //             }
-    //         }
-    //     })
-
-    //     if(portalCollision){
-
-    //         controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
-    //         displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
-
-    //         return true
-    //     }
-    //     return false
-    // }
 }
