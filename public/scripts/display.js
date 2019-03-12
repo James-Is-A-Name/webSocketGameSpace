@@ -146,14 +146,19 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
 
     p2pConnectionTesting.connectionId = fromWho;
 
+    p2pConnectionTesting.dataChannelSetupCallback = ()=>{
+        //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
+        //INTIAL TESTING HAPPENING
+            //dosent seem to loop too much but might be different
+            //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
+        updateDisplayConnections()
+    }
+
     if(connectionIsController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
         
         controllerConnections[fromWho] = p2pConnectionTesting
 
-        //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
-        //INTIAL TESTING HAPPENING
-        updateDisplayConnections()
     }
     else{        //if not in portals add it
         if(!portals.find( (portal) => portal.id == fromWho )){
