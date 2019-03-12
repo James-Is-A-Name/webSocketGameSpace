@@ -145,7 +145,7 @@ class ObjectInteractions{
         return false
     }
 
-    portalCollisons(player,portals){
+    portalCollisions(player,portals){
         
         let portalCollision = portals.find((portal) => {
             if(( Math.abs(player.x + player.width/2 - portal.x) < 20) && (Math.abs(player.y + player.height/2 - portal.y) < 20 )){

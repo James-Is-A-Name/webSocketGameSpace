@@ -402,7 +402,7 @@ function setupDisplayArea(){
 
     canvasDrawBackground.clearRect(0,0,gameWidth,gameHeight);
 
-    refreshCanvas(canvasDraw)
+    objectDrawFunctions.refreshCanvas(canvasDraw,gameWidth,gameHeight)
 
     connectWebSocket();
 
@@ -554,9 +554,9 @@ function gameStep(){
 
     if(updateBackground){
         updateBackground = false;
-        refreshCanvas(canvasDrawBackground);
-        drawPlatforms(canvasDrawBackground);
-        drawPortals(canvasDrawBackground);
+        objectDrawFunctions.refreshCanvas(canvasDrawBackground,gameWidth,gameHeight);
+        objectDrawFunctions.drawPlatforms(canvasDrawBackground,areaPlatforms);
+        objectDrawFunctions.drawPortals(canvasDrawBackground,portals);
     }
 
     drawEnteties(canvasDraw);
@@ -572,7 +572,7 @@ function refreshCanvas(canvas){
     canvas.stroke();
 }
 
-/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
+/* ---------------------- maybe MOVE TO ObjectDraw       -------------------------------*/
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
 function drawVisualAdditions(canvas){
 
@@ -613,20 +613,6 @@ function drawVisualAdditions(canvas){
         
         objectDrawFunctions.drawPlatform(platform,canvas)
     }
-}
-
-/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
-function drawPlatforms(canvas){
-    areaPlatforms.forEach((platform)=>{
-        objectDrawFunctions.drawPlatform(platform,canvas)
-    })
-}
-
-/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
-function drawPortals(canvas){
-    portals.forEach((portal) => {
-        objectDrawFunctions.drawPortal(portal,canvas)
-    })
 }
 
 function clearOldEntities(canvas){
@@ -672,11 +658,22 @@ function updateEntityStates(){
 
         playerObject = physActions.playerGroundDetectionAction(playerObject,gameHeight)
         
-        // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
+        // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisions(playersShifted,playerObject,playerIndex)) {
         //remove side collisions causing shifts for now
         playerObject = physActions.displaySideCollisionNoShift(playerObject,gameWidth)
 
-        if(physActions.portalCollisons(playerObject,portals) || physActions.checkPlayerInteractions(playerObject,playerEntities)) {
+        let portalCollision = physActions.portalCollisions(playerObject,portals)
+
+        if(portalCollision){
+            //send off controller to other display
+            controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
+            displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+            
+            if(!playersShifted.find( player => player == playerObject.id)){
+                playersShifted.push(playerObject.id)
+            }
+        }
+        else if(physActions.checkPlayerInteractions(playerObject,playerEntities)) {
 
             //prevent multi adds to the players shifted as it cant handle such a case. should probably make it more ressilient
             if(!playersShifted.find( player => player == playerObject.id)){
@@ -694,6 +691,7 @@ function updateEntityStates(){
 
 function playerDeletingAction(playersShifted){
     playersShifted.forEach( (keyToDelete)=>{
+        
         playersDeleting[keyToDelete] = playerEntities[keyToDelete];
         delete playerEntities[keyToDelete];
     })
