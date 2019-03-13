@@ -14,6 +14,9 @@ const localInfo = require('os')
 
 let server = require("http").createServer();
 
+//the secure part isnt playing nice right now with the local host
+// let server = require("https").createServer();
+
 server.on('request',app)
 
 let webSocketServer = new webSocket({server: server});

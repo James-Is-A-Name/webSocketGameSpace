@@ -21,6 +21,11 @@ let displayConnections = {}; //store all the p2p display connections
 let controllerConnections = {}; //store all the p2p controller connections
 
 let controllersOnScreen = {}; //will be used for determining if controller commands to this display are to be used
+// let communitcations = {
+//     server,
+//     displays,
+//     controllers
+// }
 /*---------------------communications----------------------*/
 
 /*---------------------setup related things----------------------*/
@@ -32,6 +37,13 @@ let playerMoveSpeed = entitieSize/10;
 
 let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
+
+// let gameDetails = {
+//     entitieSize: 50,
+//     moveSpeed: 5,
+//     height:
+//     width: 
+// }
 /*---------------------setup related things----------------------*/
 
 
@@ -46,18 +58,30 @@ let mouseDownLocation = undefined;
 let lastMousePosition = undefined;
 let mouseUpLocation = undefined;
 
+// let previousPlatform = undefined
 let previousPlatformWidth;
 let previousPlatformHeight;
 let previousPlatformX;
 let previousPlatformY;
 
+//More of a menu option really
 let placePlatformsAllow = false;
 /*---------------------Area alterations----------------------*/
 
 /*---------------------game state----------------------*/
 let activeDisplayId = false;
 
-
+// let gameElelemtns = {
+//     playerElements:{
+//         playersRespawn:{},
+//         playerEntities:{},
+//         playersDeleting
+//     },
+//     enviromentElements:{
+//         areaPlatforms:{},
+//         portals:{}
+//     }
+// } 
 let playersRespawn = {}; //This is really just a temporary way of doing this. could be better acheived
 
 let playerEntities = {};
@@ -571,14 +595,6 @@ function gameStep(){
     drawVisualAdditions(canvasDraw);
 }
 
-/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
-function refreshCanvas(canvas){
-    canvas.clearRect(0,0,gameWidth,gameHeight);
-    
-    canvas.beginPath();
-    canvas.rect(0,0,gameWidth,gameHeight);
-    canvas.stroke();
-}
 
 /* ---------------------- maybe MOVE TO ObjectDraw       -------------------------------*/
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
