@@ -57,8 +57,11 @@ let placePlatformsAllow = false;
 /*---------------------game state----------------------*/
 let activeDisplayId = false;
 
-let playerEntities={};
-let playersDeleting={};
+
+let playersRespawn = {}; //This is really just a temporary way of doing this. could be better acheived
+
+let playerEntities = {};
+let playersDeleting = {};
 //Will want to make this an object of objects not an array
     //alter elsewher eto itterate over the keys
 let areaPlatforms = [];
@@ -592,6 +595,19 @@ function drawVisualAdditions(canvas){
         platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
         platformY -= displayElement.offsetTop + topDiv.offsetTop;
 
+        // let platform = {}
+        // let displayElement = document.getElementById("canvasArea");
+        // let topDiv = document.getElementById("topDiv")
+        // platform.x = ((mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft;
+        // platform.y = ((mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y) - displayElement.offsetTop + topDiv.offsetTop;
+        // platform.width = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
+        // platform.height = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+        // if(previewPlatform){
+        //     objectDrawFunctions.clearPlatform(previewPlatform,canvas)
+        // }
+        // previewPlatform = platform
+        // objectDrawFunctions.drawPlatform(platform,canvas)
+        
         let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
         let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
 
@@ -630,6 +646,11 @@ function clearOldEntities(canvas){
         let element = playersDeleting[key];
         objectDrawFunctions.clearPlayerObject(element,canvas);
     });
+    
+    Object.keys(playersRespawn).forEach(key => {
+        let element = playersRespawn[key];
+        objectDrawFunctions.clearPlayerObject(element,canvas);
+    });
 }
 function drawEnteties(canvas){
 
@@ -642,10 +663,16 @@ function drawEnteties(canvas){
         let element = playersDeleting[key];
         objectDrawFunctions.playerDismantle(element,canvas);
     });
+    
+    Object.keys(playersRespawn).forEach(key => {
+        let element = playersRespawn[key];
+        objectDrawFunctions.playerDismantle(element,canvas);
+    });
 }
 
 function updateEntityStates(){
     let playersShifted = [];
+    let playersDefeated = [];
 
     Object.keys(playerEntities).map(playerIndex => {
         let playerObject = playerEntities[playerIndex];
@@ -668,6 +695,8 @@ function updateEntityStates(){
         playerObject = physActions.displaySideCollisionNoShift(playerObject,gameWidth)
 
         let portalCollision = physActions.portalCollisions(playerObject,portals)
+        let playerBattles = physActions.checkPlayerInteractions(playerObject,playerEntities)
+        
 
         if(portalCollision){
             //send off controller to other display
@@ -678,20 +707,20 @@ function updateEntityStates(){
                 playersShifted.push(playerObject.id)
             }
         }
-        else if(physActions.checkPlayerInteractions(playerObject,playerEntities)) {
-
-            //prevent multi adds to the players shifted as it cant handle such a case. should probably make it more ressilient
-            if(!playersShifted.find( player => player == playerObject.id)){
-                playersShifted.push(playerObject.id)
-            }
-            
+        else if(playerBattles) {
+            console.log("player "+playerObject.id+" defeated");
+            playersDefeated.push(playerObject.id)
         }
+
         playerEntities[playerIndex] = playerObject;
     });
 
     //playerRemoval()   //could logically combine the two
     playerDeletingAction(playersShifted)
     playerDismantlingAction()
+
+    playerDefeatedSwitch(playersDefeated)
+    playerDefeatedAnimate()
 }
 
 function playerDeletingAction(playersShifted){
@@ -708,6 +737,24 @@ function playerDismantlingAction(){
     playersDeletingKeys.forEach( (key)=>{
         if(objectDrawFunctions.isPlayerDismantled(playersDeleting[key])){
             delete playersDeleting[key];
+        }   
+    })
+}
+
+function playerDefeatedSwitch(playersDefeated){
+    //Alternative is to give the objects a 
+    playersDefeated.forEach( (keyToMove)=>{
+        playersRespawn[keyToMove] = playerEntities[keyToMove];
+        delete playerEntities[keyToMove];
+    })
+}
+
+function playerDefeatedAnimate(){
+    let playersRespawningKeys = Object.keys(playersRespawn)
+    playersRespawningKeys.forEach( (key)=>{
+        if(objectDrawFunctions.isPlayerDismantled(playersRespawn[key])){
+            addPlayerEntity(key)
+            delete playersRespawn[key];
         }   
     })
 }
