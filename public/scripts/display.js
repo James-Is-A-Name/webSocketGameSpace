@@ -1,6 +1,4 @@
-
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
-
 
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
 //VERY EASY FOR THIS TO TURN UGLY
@@ -18,16 +16,12 @@ let p2pConnectionTesting;
 
 let serverConnection;
 
-//store all the p2p display connections
-let displayConnections = {};
+let displayConnections = {}; //store all the p2p display connections
 
-//store all the p2p controller connections
-let controllerConnections = {};
+let controllerConnections = {}; //store all the p2p controller connections
 
-//will be used for determining if controller commands to this display are to be used
-let controllersOnScreen = {};
+let controllersOnScreen = {}; //will be used for determining if controller commands to this display are to be used
 /*---------------------communications----------------------*/
-
 
 /*---------------------setup related things----------------------*/
 let updateBackground = true;
@@ -40,6 +34,11 @@ let gameHeight = document.documentElement.clientHeight - entitieSize;
 let gameWidth = document.documentElement.clientWidth - entitieSize;
 /*---------------------setup related things----------------------*/
 
+
+
+/*---------------------interaction engine----------------------*/
+const physActions = new ObjectInteractions()
+/*---------------------interaction engine----------------------*/
 
 
 /*---------------------Area alterations----------------------*/
@@ -55,19 +54,22 @@ let previousPlatformY;
 let placePlatformsAllow = false;
 /*---------------------Area alterations----------------------*/
 
-
 /*---------------------game state----------------------*/
 let activeDisplayId = false;
 
-let playerEntities={};
-let playersDeleting={};
+
+let playersRespawn = {}; //This is really just a temporary way of doing this. could be better acheived
+
+let playerEntities = {};
+let playersDeleting = {};
 //Will want to make this an object of objects not an array
     //alter elsewher eto itterate over the keys
 let areaPlatforms = [];
-
 let portals = [];
 /*---------------------game state----------------------*/
 
+
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pConnect(whoTo){
 
     //create a socket thing
@@ -92,12 +94,11 @@ function p2pConnect(whoTo){
     p2pConnectionTesting = testConnection;
 }
 
-function p2pAcceptOffer(offer,fromWho,isAController){
-    //got an offer so accept it and send an answer
+/* ---------------------- MOVE TO connections             -------------------------------*/
+function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
     
     let testConnection = getAWebRTC();
 
-    console.log("accept an offer")
     testConnection.sendAnswerFunction = () =>{
         
         //this should have a single point of decleration so the display and controllers don't get out of sync
@@ -115,7 +116,6 @@ function p2pAcceptOffer(offer,fromWho,isAController){
 
     p2pConnectionTesting = testConnection;
 
-    /*-------------------TESTING--------------------------*/
     let connectionIsController = isAController;
 
     p2pConnectionTesting.connectionId = fromWho;
@@ -137,30 +137,31 @@ function p2pAcceptOffer(offer,fromWho,isAController){
 
         p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
-    /*-------------------TESTING--------------------------*/
 }
 
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptAnswer(answer,fromWho,isAController){
     console.log("accept an answer")
     //got an offer so accept it and send an answer
     p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
 
-
-    /*-------------------TESTING--------------------------*/
-
     let connectionIsController = isAController;
-    // let connectionIsController = true;
 
     p2pConnectionTesting.connectionId = fromWho;
+
+    p2pConnectionTesting.dataChannelSetupCallback = ()=>{
+        //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
+        //INTIAL TESTING HAPPENING
+            //dosent seem to loop too much but might be different
+            //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
+        updateDisplayConnections()
+    }
 
     if(connectionIsController){
         p2pConnectionTesting.handleMessage = handleControllerMessage
         
         controllerConnections[fromWho] = p2pConnectionTesting
 
-        //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
-        //INTIAL TESTING HAPPENING
-        updateDisplayConnections()
     }
     else{        //if not in portals add it
         if(!portals.find( (portal) => portal.id == fromWho )){
@@ -172,10 +173,9 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
         }
         p2pConnectionTesting.handleMessage = handleDisplayMessage
     }
-    /*-------------------TESTING--------------------------*/
 }
 
-
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function updateDisplayConnections(){
 
     //send to all displays the current list of controllers
@@ -190,6 +190,7 @@ function updateDisplayConnections(){
     broadcastToDisplays(connectedControllerIds)
 }
 
+/* ---------------------- MOVE TO connections             -------------------------------*/
 function broadcastToDisplays(message){
     Object.keys(displayConnections).forEach((key)=>{
         displayConnections[key].dataChannel.send(JSON.stringify(message))
@@ -268,6 +269,17 @@ function handleControllerMessage(message,fromWho){
         else if(theMessage.action1 === true){
             playerEntities[fromWho].moveY = -20;
         }
+        else if(theMessage.action2 === true){
+            if(playerEntities[fromWho].stance == 0){
+                playerEntities[fromWho].stance = 1;
+            }
+            else if(playerEntities[fromWho].stance == 1){
+                playerEntities[fromWho].stance = 2;
+            }
+            else{
+                playerEntities[fromWho].stance = 0;
+            }
+        }
         else if(theMessage.whoAreYou){
             controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:activeDisplayId}))
         }
@@ -278,6 +290,7 @@ function handleControllerMessage(message,fromWho){
     }
 }
 
+/* ---------------------- sort out a better way of doing this    -------------------------------*/
 function swapMenuContent(show){
     let menuSection = document.getElementById("menuSection")
 
@@ -321,8 +334,6 @@ function swapMenuContent(show){
             setNewPlatformDraw(!placePlatformsAllow);
         }
 
-        /*-------------------TESTING--------------------------*/
-
         let p2pTargetForm = document.createElement("form");
         p2pTargetForm.onsubmit = (event)=>{
             event.preventDefault();
@@ -337,15 +348,11 @@ function swapMenuContent(show){
         p2pTarget.id = "connectionTarget";
 
         p2pTargetForm.appendChild(p2pTarget);
-    
-        /*-------------------TESTING--------------------------*/
 
         newContent.appendChild(newButton)
         newContent.appendChild(platformDrawButton)
         
-        /*-------------------TESTING--------------------------*/
         newContent.appendChild(p2pTargetForm)
-        /*-------------------TESTING--------------------------*/
         
         newContent.appendChild(newTitle)
 
@@ -403,17 +410,12 @@ function setupDisplayArea(){
 
     canvasDrawBackground.clearRect(0,0,gameWidth,gameHeight);
 
-    refreshCanvas(canvasDraw)
-    // canvasDraw.clearRect(0,0,gameWidth,gameHeight);
-    // canvasDraw.beginPath();
-    // canvasDraw.rect(0,0,gameWidth,gameHeight);
-    // canvasDraw.stroke();
+    objectDrawFunctions.refreshCanvas(canvasDraw,gameWidth,gameHeight)
 
     connectWebSocket();
 
     startGame();
 }
-
 
 function connectWebSocket(){
     serverConnection = new WebSocket(`ws://${self.location.host}`);
@@ -553,7 +555,6 @@ function gameStep(){
     
     let displayElement = document.getElementById("canvasAreaFront");
     let canvasDraw = displayElement.getContext("2d");
-
     
     //Must be done before the entities are moved
     clearOldEntities(canvasDraw);
@@ -561,27 +562,25 @@ function gameStep(){
 
     if(updateBackground){
         updateBackground = false;
-        refreshCanvas(canvasDrawBackground);
-        drawPlatforms(canvasDrawBackground);
-        drawPortals(canvasDrawBackground);
+        objectDrawFunctions.refreshCanvas(canvasDrawBackground,gameWidth,gameHeight);
+        objectDrawFunctions.drawPlatforms(canvasDrawBackground,areaPlatforms);
+        objectDrawFunctions.drawPortals(canvasDrawBackground,portals);
     }
 
-    // refreshCanvas(canvasDraw);
-    //Alter to just claer where things have been drawn rather than the whole thing
     drawEnteties(canvasDraw);
     drawVisualAdditions(canvasDraw);
 }
 
+/* ---------------------- MOVE TO ObjectDraw             -------------------------------*/
 function refreshCanvas(canvas){
     canvas.clearRect(0,0,gameWidth,gameHeight);
     
     canvas.beginPath();
     canvas.rect(0,0,gameWidth,gameHeight);
     canvas.stroke();
-
-    //objectDrawFunctions.clearCanvas(width,height,canvas)
 }
 
+/* ---------------------- maybe MOVE TO ObjectDraw       -------------------------------*/
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
 function drawVisualAdditions(canvas){
 
@@ -596,11 +595,24 @@ function drawVisualAdditions(canvas){
         platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
         platformY -= displayElement.offsetTop + topDiv.offsetTop;
 
+        // let platform = {}
+        // let displayElement = document.getElementById("canvasArea");
+        // let topDiv = document.getElementById("topDiv")
+        // platform.x = ((mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft;
+        // platform.y = ((mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y) - displayElement.offsetTop + topDiv.offsetTop;
+        // platform.width = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
+        // platform.height = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+        // if(previewPlatform){
+        //     objectDrawFunctions.clearPlatform(previewPlatform,canvas)
+        // }
+        // previewPlatform = platform
+        // objectDrawFunctions.drawPlatform(platform,canvas)
+        
         let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
         let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
 
         if(previousPlatformWidth){
-            // canvas.clearRect(previousPlatformX-2,previousPlatformY-2,previousPlatformWidth+4,previousPlatformHeight+4)
+            
             let previousPlatform = {
                 x:previousPlatformX,
                 y:previousPlatformY,
@@ -624,18 +636,6 @@ function drawVisualAdditions(canvas){
     }
 }
 
-function drawPlatforms(canvas){
-    areaPlatforms.forEach((platform)=>{
-        objectDrawFunctions.drawPlatform(platform,canvas)
-    })
-}
-
-function drawPortals(canvas){
-    portals.forEach((portal) => {
-        objectDrawFunctions.drawPortal(portal,canvas)
-    })
-}
-
 function clearOldEntities(canvas){
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
@@ -646,15 +646,16 @@ function clearOldEntities(canvas){
         let element = playersDeleting[key];
         objectDrawFunctions.clearPlayerObject(element,canvas);
     });
+    
+    Object.keys(playersRespawn).forEach(key => {
+        let element = playersRespawn[key];
+        objectDrawFunctions.clearPlayerObject(element,canvas);
+    });
 }
 function drawEnteties(canvas){
 
-    // canvas.beginPath();    
-
     Object.keys(playerEntities).forEach(key => {
         let element = playerEntities[key];
-
-        // canvas.fillText(element.id,element.x,element.y)
         objectDrawFunctions.drawPerson(element,canvas);
     });
 
@@ -662,222 +663,69 @@ function drawEnteties(canvas){
         let element = playersDeleting[key];
         objectDrawFunctions.playerDismantle(element,canvas);
     });
-
-    // canvas.stroke();
-}
-
-function onPlatform(player,platform){
-
-    if((player.x+player.width < platform.x) || (player.x > platform.x + platform.width) || (player.y + player.height < platform.y) || (player.y > platform.y + platform.height) ){
-        return false;
-    }
-
-    let basePoint = {x:player.width/2+player.x, y:player.y+player.height}
-
-    if(basePoint.y <= platform.y){
-        return {x:player.x,y: platform.y-player.height,collison:"y"}
-    }
-    else if(basePoint.x < platform.x){   //left side
-        return {x:platform.x - player.width,y: player.y,collison:"x"}
-    }
-    else if(basePoint.x > platform.x + platform.width){  //right side
-        return {x:platform.x + platform.width,y: player.y,collison:"x"}
-    }
-    else if(basePoint.y < platform.y + platform.height){ //catch it inside the block
-        return {x:player.x,y: platform.y-player.height,collison:"y"}
-    }
-    else{   //hit from below we shall say
-        let newY = (player.y > platform.y+platform.height) ? player.y : platform.y+platform.height;
-        return {x:player.x,y:newY,collison:"bellow"}
-    }
+    
+    Object.keys(playersRespawn).forEach(key => {
+        let element = playersRespawn[key];
+        objectDrawFunctions.playerDismantle(element,canvas);
+    });
 }
 
 function updateEntityStates(){
     let playersShifted = [];
+    let playersDefeated = [];
 
     Object.keys(playerEntities).map(playerIndex => {
         let playerObject = playerEntities[playerIndex];
 
-        playerObject = playerMovements(playerObject);
+        playerObject = physActions.playerMovements(playerObject);
 
-        let platformCollisions = getPlatformCollisions(playerObject);
+        let platformCollisions = physActions.getPlatformCollisions(playerObject,areaPlatforms);
             
         if(platformCollisions.length > 0){
-            playerObject = platformCollisionsAction(platformCollisions,playerObject)
+            playerObject = physActions.platformCollisionsAction(platformCollisions,playerObject)
         }
         else{
-            playerObject = playerMovementCheck(playerObject)
+            playerObject = physActions.playerMovementCheck(playerObject,playerMoveSpeed)
         }
 
-        //seperate from the collison it sseems
-        playerObject = playerGroundDetectionAction(playerObject)
+        playerObject = physActions.playerGroundDetectionAction(playerObject,gameHeight)
         
-        //very similar things
-        // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisons(playersShifted,playerObject,playerIndex)) {
+        // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisions(playersShifted,playerObject,playerIndex)) {
         //remove side collisions causing shifts for now
-        playerObject = displaySideCollisionNoShift(playersShifted,playerObject,playerIndex)
+        playerObject = physActions.displaySideCollisionNoShift(playerObject,gameWidth)
 
-        if(portalCollisons(playersShifted,playerObject,playerIndex) || checkPlayerInteractions(playerObject)) {
-            playersShifted.push(playerIndex)
+        let portalCollision = physActions.portalCollisions(playerObject,portals)
+        let playerBattles = physActions.checkPlayerInteractions(playerObject,playerEntities)
+        
+
+        if(portalCollision){
+            //send off controller to other display
+            controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
+            displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+            
+            if(!playersShifted.find( player => player == playerObject.id)){
+                playersShifted.push(playerObject.id)
+            }
         }
+        else if(playerBattles) {
+            console.log("player "+playerObject.id+" defeated");
+            playersDefeated.push(playerObject.id)
+        }
+
         playerEntities[playerIndex] = playerObject;
     });
 
     //playerRemoval()   //could logically combine the two
     playerDeletingAction(playersShifted)
     playerDismantlingAction()
-}
 
-
-
-//very inefficient at the moment
-function checkPlayerInteractions(playerObject){
-
-    let results = Object.keys(playerEntities).filter(playerIndex => {
-        return playersFight(playerObject,playerEntities[playerIndex]) == playerEntities[playerIndex].id
-    })
-
-    return (results > 0)
-}
-
-//basically a paper scissors rock thing
-function playersFight(player1,player2){
-
-    if(((player1.x + player1.width) < player2.x) || ((player2.x + player2.width) < player1.x)){
-        return false;
-    }
-    if(((player1.y + player1.height) < player2.y) || ((player2.y + player2.height) < player1.y)){
-        return false;
-    }
-
-    if(player1.stance == player2.stance){
-        return false;
-    }
-    else if(player1.stance == 0 &&  player2.stance == 1){
-        return player1.id;
-    }
-    else if(player1.stance == 1 &&  player2.stance == 2){
-        return player1.id;
-    }
-    else if(player1.stance == 2 &&  player2.stance == 0){
-        return player1.id;
-    }
-    else{
-        return player2.id;
-    }
-}
-
-function playerMovements(playerObject){
-    playerObject.y += playerObject.moveY;
-    playerObject.moveY++;
-    
-    playerObject.x += playerObject.moveX;
-
-    return playerObject
-}
-
-
-function getPlatformCollisions(playerObject){
-    return areaPlatforms.reduce( (prev,platform,i) => {
-        let result = onPlatform(playerObject,platform);
-        if(result){
-            prev.push(result)
-        }
-        return prev;
-    },[]);
-}
-
-//seperate from the collison it sseems
-function playerGroundDetectionAction(playerObject){
-    if (playerObject.y > (gameHeight - entitieSize)){
-        playerObject.y = (gameHeight - entitieSize);
-        if(playerObject.moveY > 0){
-            playerObject.moveY = 0;
-        }
-    }
-    return playerObject;
-}
-
-function playerMovementCheck(playerObject){
-    if(playerObject.moveRight && playerObject.moveX == 0){
-        playerObject.moveX = playerMoveSpeed;
-    }
-    else if(playerObject.moveLeft && playerObject.moveX == 0){
-        playerObject.moveX = -playerMoveSpeed;
-    }
-    return playerObject;
-}
-
-function platformCollisionsAction(platformCollisions,playerObject){
-    platformCollisions.forEach((platformCollision)=>{
-        if(platformCollision.collison == "y"){
-            playerObject.y = platformCollision.y;
-            playerObject.moveY = 0;
-        }
-        else if(platformCollision.collison == "x"){
-            playerObject.x = platformCollision.x;
-            playerObject.moveX = 0;
-        }
-        else if(platformCollision.collison == "bellow"){
-            if(playerObject.moveY < 0){
-                playerObject.moveY = 0;
-            }
-        }
-    })
-    return playerObject;
-}
-
-
-function displaySideCollisionNoShift(playersShifted,playerObject,playerIndex){
-    if(playerObject.x+playerObject.width > gameWidth){
-        playerObject.x = gameWidth - playerObject.width;
-    }
-    else if(playerObject.x < 0){
-        playerObject.x = 0
-    }
-    return playerObject
-}
-function displaySideCollision(playersShifted,playerObject,playerIndex){
-
-    if(playerObject.x+playerObject.width > gameWidth){
-        // serverConnection.send(JSON.stringify({shiftPlayer:playerIndex}));
-        return true
-    }
-    else if(playerObject.x < 0){
-        // serverConnection.send(JSON.stringify({shiftPlayerPrevious:playerIndex}));
-        return true
-    }
-    return false
-}
-
-function portalCollisons(playersShifted,playerObject,playerIndex){
-    let portalCollision = portals.find((portal) => {
-        if(( Math.abs(playerObject.x + playerObject.width/2 - portal.x) < 20) && (Math.abs(playerObject.y + playerObject.height/2 - portal.y) < 20 )){
-            if(!playersShifted.find( player => player == playerIndex)){
-                return true;
-            }
-        }
-    })
-
-    if(portalCollision){
-        //previously doing this but not a great way of doing it
-        // playersShifted.push(key)
-        //This should be elsewhere really
-        // serverConnection.send(JSON.stringify({shiftPlayerDirect:playerIndex,targetDisplay:portalCollision.destination}));
-        
-        controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
-        
-        displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
-
-        /* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-
-        return true
-    }
-    return false
+    playerDefeatedSwitch(playersDefeated)
+    playerDefeatedAnimate()
 }
 
 function playerDeletingAction(playersShifted){
     playersShifted.forEach( (keyToDelete)=>{
+        
         playersDeleting[keyToDelete] = playerEntities[keyToDelete];
         delete playerEntities[keyToDelete];
     })
@@ -889,6 +737,24 @@ function playerDismantlingAction(){
     playersDeletingKeys.forEach( (key)=>{
         if(objectDrawFunctions.isPlayerDismantled(playersDeleting[key])){
             delete playersDeleting[key];
+        }   
+    })
+}
+
+function playerDefeatedSwitch(playersDefeated){
+    //Alternative is to give the objects a 
+    playersDefeated.forEach( (keyToMove)=>{
+        playersRespawn[keyToMove] = playerEntities[keyToMove];
+        delete playerEntities[keyToMove];
+    })
+}
+
+function playerDefeatedAnimate(){
+    let playersRespawningKeys = Object.keys(playersRespawn)
+    playersRespawningKeys.forEach( (key)=>{
+        if(objectDrawFunctions.isPlayerDismantled(playersRespawn[key])){
+            addPlayerEntity(key)
+            delete playersRespawn[key];
         }   
     })
 }

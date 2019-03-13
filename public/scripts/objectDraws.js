@@ -5,6 +5,14 @@
     //will want to make it a class at somepoint
 const objectDrawFunctions = {
 
+    refreshCanvas:(canvas,gameWidth,gameHeight)=>{
+        canvas.clearRect(0,0,gameWidth,gameHeight);
+        
+        canvas.beginPath();
+        canvas.rect(0,0,gameWidth,gameHeight);
+        canvas.stroke();
+    },
+
     drawPerson: (playerObject,canvas) =>{
 
         if(!(playerObject.stepState > 0)) {playerObject.stepState = 1}
@@ -201,11 +209,27 @@ const objectDrawFunctions = {
         canvas.fillText(portal.destination,portal.x,portal.y);
         canvas.stroke();
     },
+
+    drawPortals: (canvas,portals) =>{
+        portals.forEach((portal) => {
+            // objectDrawFunctions.drawPortal(portal,canvas)
+            //This feels icky
+            objectDrawFunctions.drawPortal(portal,canvas)
+        })
+    },
+
     drawPlatform: (platform,canvas) =>{
         canvas.beginPath();
         canvas.rect(platform.x,platform.y,platform.width,platform.height);
         canvas.stroke();
     },
+    
+    drawPlatforms: (canvas,platforms) =>{
+        platforms.forEach((platform)=>{
+            objectDrawFunctions.drawPlatform(platform,canvas)
+        })
+    },
+
     clearPlatform: (platform,canvas) => {
         canvas.beginPath();
         canvas.clearRect(platform.x-2,platform.y-2,platform.width+4,platform.height+4)
