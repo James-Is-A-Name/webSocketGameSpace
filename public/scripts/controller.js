@@ -136,7 +136,7 @@ function touchEnd(touchEvent){
 function connectWebSocket(){
 
     //ws uses the same server so need to have a redirect.
-    serverConnection = new WebSocket(`ws://${self.location.host}`);
+    serverConnection = new WebSocket(`wss://${self.location.host}`);
 
     serverConnection.onopen = ()=> {
         console.log("websocket open")
