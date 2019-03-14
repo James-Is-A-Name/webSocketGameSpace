@@ -36,10 +36,21 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
         // webSocketsConnected.push(theWebsocket);
         webSocketsConnected[id] = theWebsocket;
 
-        ws.on('open',()=>{
-            console.log(`socket ${theWebsocket.id} state is open`)
-        })
-        
+        console.log(`socket ${theWebsocket.id} state is open`)
+
+        let countdown = 5
+        let heartbeat = setInterval(()=>{
+
+            console.log(`socket ${theWebsocket.id} heartbeat`)
+            webSocket.ws.send(JSON.stringify({nothing:"hearbeat message from server"}))
+
+            countdown--;
+            if(countdown < 1){
+                clearInterval(heartbeat)
+            }
+
+        },30000)
+
         ws.on("close",()=>{
             console.log(`socket ${theWebsocket.id} state is closed`)
             theWebsocket.ended = true;
