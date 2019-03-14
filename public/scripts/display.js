@@ -442,7 +442,7 @@ function setupDisplayArea(){
 }
 
 function connectWebSocket(){
-    serverConnection = new WebSocket(`ws://${self.location.host}`);
+    serverConnection = new WebSocket(`wss://${self.location.host}`);
     
     serverConnection.onopen = ()=> {
 
