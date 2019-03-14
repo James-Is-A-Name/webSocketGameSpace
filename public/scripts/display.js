@@ -370,8 +370,17 @@ function swapMenuContent(show){
         let p2pTarget = document.createElement("input");
         p2pTarget.type = "text";
         p2pTarget.id = "connectionTarget";
+        
+        let p2pSubmit = document.createElement("input");
+        p2pSubmit.type = "Submit";
+        p2pSubmit.id = "connectToPeer";
+        p2pSubmit.value = "connect to peer";
 
+        
+        let menuLineBreak = document.createElement("br");
+        p2pTargetForm.appendChild(menuLineBreak);
         p2pTargetForm.appendChild(p2pTarget);
+        p2pTargetForm.appendChild(p2pSubmit);
 
         newContent.appendChild(newButton)
         newContent.appendChild(platformDrawButton)
