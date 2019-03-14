@@ -36,6 +36,10 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
         // webSocketsConnected.push(theWebsocket);
         webSocketsConnected[id] = theWebsocket;
 
+        ws.on('open',()=>{
+            console.log(`socket ${theWebsocket.id} state is open`)
+        })
+        
         ws.on("close",()=>{
             console.log(`socket ${theWebsocket.id} state is closed`)
             theWebsocket.ended = true;
