@@ -12,7 +12,7 @@ app.use(express.static(__dirname+"/../public"))
 
 const localInfo = require('os')
 
-let server = require("https").createServer();
+let server = require("http").createServer();
 
 //the secure part isnt playing nice right now with the local host
 // let server = require("https").createServer();
