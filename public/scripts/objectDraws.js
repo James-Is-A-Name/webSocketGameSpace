@@ -31,17 +31,6 @@ const objectDrawFunctions = {
 
         canvas.beginPath();
 
-        let previousColor = canvas.strokeStyle;
-
-        if(playerObject.stance == 0){
-            canvas.strokeStyle = "rgb(255,0,0)"
-        }
-        else if(playerObject.stance == 1){
-            canvas.strokeStyle = "rgb(0,255,0)"
-        }
-        else{
-            canvas.strokeStyle = "rgb(0,0,255)"
-        }
 
         canvas.moveTo(xCenter+size,y+size);
         canvas.arc(xCenter,y+size,size,0,Math.PI*2);
@@ -50,11 +39,15 @@ const objectDrawFunctions = {
 
         let playerWalking = false;
         let playerStanding = false;
+        let playerFacingLeft = false;
 
         // if(y > gameHeight - height*1.2){
         if(playerObject.moveY < 1.1 && playerObject.moveY > -1.1){
             if(playerObject.moveX > 0 || playerObject.moveX < 0){
                 playerWalking = true;
+                if(playerObject.moveX < 0){
+                    playerFacingLeft = true;
+                }
             }
             else{
                 playerStanding = true;
@@ -82,13 +75,87 @@ const objectDrawFunctions = {
             canvas.lineTo(xCenter-size,y+height*0.9);
             canvas.lineTo(xCenter-size,y+height*1.2);
         }
+
         canvas.stroke()
         
+        let previousColor = canvas.strokeStyle;
+
+        if(playerObject.stance == 0){
+            canvas.strokeStyle = "rgb(255,0,0)"
+        }
+        else if(playerObject.stance == 1){
+            canvas.strokeStyle = "rgb(0,255,0)"
+        }
+        else{
+            canvas.strokeStyle = "rgb(0,0,255)"
+        }
+
+        canvas.beginPath();
+
+        // if(playerObject.moveX != 0){
+        //     if(playerFacingLeft){
+                
+        //         //arm
+        //         canvas.moveTo(xCenter,y+height/3);
+        //         canvas.lineTo(xCenter-width,y+height/3);
+        //         //Sword
+        //         canvas.moveTo(xCenter-width+3,y+height/3+3);
+        //         canvas.lineTo(xCenter-width-10,y+height/3-10);
+
+        //     }
+        //     else{
+        //         //arm
+        //         canvas.moveTo(xCenter,y+height/3);
+        //         canvas.lineTo(xCenter+width,y+height/3);
+        //         //shield
+        //         canvas.moveTo(xCenter+width,y+height/3);
+        //         canvas.arc(xCenter-width,y+height/3,2*width,-Math.PI/5,Math.PI/5);
+        //     }
+        // }
+        // else{
+        //     //arm
+        //     canvas.moveTo(xCenter,y+height/3);
+        //     canvas.lineTo(xCenter+width,y+height/3);
+        //     //bow
+        //     canvas.moveTo(xCenter-width/2,y+height/3);
+        //     canvas.arc(xCenter-width*2,y+height/3,3*width,-Math.PI/8,Math.PI/8);
+        //     canvas.lineTo(xCenter-width/2,y+height/3);
+        // }
+        objectDrawFunctions.drawWeapon(canvas,playerFacingLeft,playerObject.stance,xCenter,y+height/3,width)
+
+        canvas.stroke()
+
         canvas.strokeStyle = previousColor;
 
         playerObject.stepState ++
         if(playerObject.stepState > 10){
             playerObject.stepState = 1
+        }
+    },
+
+    drawWeapon: (canvas,direction,stance,xCenter,yCenter,width)=>{
+        let polarity = direction? -1 : 1;
+
+        canvas.moveTo(xCenter,yCenter);
+        canvas.lineTo(xCenter+polarity*width,yCenter);
+
+        if(stance == 0){
+            //sword
+            canvas.moveTo(xCenter+polarity*(width-3),yCenter+3);
+            canvas.lineTo(xCenter+polarity*(width+10),yCenter-10);
+        }
+        else if(stance == 1){
+            //shield
+            canvas.moveTo(xCenter+polarity*width,yCenter);
+            let arcBase = Math.PI/2 - polarity*Math.PI/2 
+            canvas.arc(xCenter-polarity*width,yCenter,2*width,arcBase-Math.PI/5,arcBase+Math.PI/5);
+        }
+        else{
+            //bow
+            canvas.moveTo(xCenter-polarity*width/2,yCenter);
+            let arcBase = Math.PI/2 - polarity*Math.PI/2
+            canvas.arc(xCenter-polarity*width*2,yCenter,3*width,arcBase-Math.PI/8,arcBase+Math.PI/8);
+            canvas.lineTo(xCenter-polarity*width/2,yCenter);
         }
     },
 
