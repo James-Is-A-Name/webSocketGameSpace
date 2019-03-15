@@ -459,6 +459,15 @@ function connectWebSocket(){
         //not sure 
         // console.log("websocket open")
         serverConnection.send(JSON.stringify({actAsDisplay:true}));
+
+        let connectionMessage = document.getElementById("serverConnectionState");
+        
+        connectionMessage.innerHTML = "server connected"
+    }
+    serverConnection.onclose = ()=>{
+        let connectionMessage = document.getElementById("serverConnectionState");
+        
+        connectionMessage.innerHTML = "server disconnected"
     }
 
     serverConnection.onmessage = (message) =>{
