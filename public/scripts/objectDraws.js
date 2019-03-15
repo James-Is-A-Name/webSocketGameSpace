@@ -39,15 +39,11 @@ const objectDrawFunctions = {
 
         let playerWalking = false;
         let playerStanding = false;
-        let playerFacingLeft = false;
 
         // if(y > gameHeight - height*1.2){
         if(playerObject.moveY < 1.1 && playerObject.moveY > -1.1){
             if(playerObject.moveX > 0 || playerObject.moveX < 0){
                 playerWalking = true;
-                if(playerObject.moveX < 0){
-                    playerFacingLeft = true;
-                }
             }
             else{
                 playerStanding = true;
@@ -92,35 +88,10 @@ const objectDrawFunctions = {
 
         canvas.beginPath();
 
-        // if(playerObject.moveX != 0){
-        //     if(playerFacingLeft){
-                
-        //         //arm
-        //         canvas.moveTo(xCenter,y+height/3);
-        //         canvas.lineTo(xCenter-width,y+height/3);
-        //         //Sword
-        //         canvas.moveTo(xCenter-width+3,y+height/3+3);
-        //         canvas.lineTo(xCenter-width-10,y+height/3-10);
-
-        //     }
-        //     else{
-        //         //arm
-        //         canvas.moveTo(xCenter,y+height/3);
-        //         canvas.lineTo(xCenter+width,y+height/3);
-        //         //shield
-        //         canvas.moveTo(xCenter+width,y+height/3);
-        //         canvas.arc(xCenter-width,y+height/3,2*width,-Math.PI/5,Math.PI/5);
-        //     }
-        // }
-        // else{
-        //     //arm
-        //     canvas.moveTo(xCenter,y+height/3);
-        //     canvas.lineTo(xCenter+width,y+height/3);
-        //     //bow
-        //     canvas.moveTo(xCenter-width/2,y+height/3);
-        //     canvas.arc(xCenter-width*2,y+height/3,3*width,-Math.PI/8,Math.PI/8);
-        //     canvas.lineTo(xCenter-width/2,y+height/3);
-        // }
+        let playerFacingLeft = false;
+        if(playerObject.moveX < 0){
+            playerFacingLeft = true;
+        }
         objectDrawFunctions.drawWeapon(canvas,playerFacingLeft,playerObject.stance,xCenter,y+height/3,width)
 
         canvas.stroke()
