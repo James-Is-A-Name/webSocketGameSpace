@@ -41,8 +41,10 @@ function webSocketSetup(portNum, webSocketServer, completedCallback){
         let countdown = 5
         let heartbeat = setInterval(()=>{
 
-            console.log(`socket ${theWebsocket.id} heartbeat`)
-            ws.send(JSON.stringify({nothing:"hearbeat message from server"}))
+            if(ws.readyState == 1){
+                console.log(`socket ${theWebsocket.id} heartbeat`)
+                ws.send(JSON.stringify({nothing:"hearbeat message from server"}))
+            }
 
             countdown--;
             if(countdown < 1){
