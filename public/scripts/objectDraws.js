@@ -183,8 +183,6 @@ const objectDrawFunctions = {
             canvas.lineTo(xCenter,y+height*0.7);
 
             if(y > gameHeight - height*1.2){
-
-
                 canvas.moveTo(xCenter+size-offset,gameHeight-offset);
                 canvas.lineTo(xCenter+size-offset,gameHeight-(height*0.3)-offset);
 
@@ -196,8 +194,6 @@ const objectDrawFunctions = {
                 
                 canvas.moveTo(xCenter-size,gameHeight-(height*0.3)-offset);
                 canvas.lineTo(xCenter-size,gameHeight-offset);
-                // canvas.moveTo(xCenter-size,gameHeight);
-
             }
             else{
                 canvas.moveTo(xCenter+size,y+height*1.2);
