@@ -714,6 +714,14 @@ function updateEntityStates(){
 
         playerObject = physActions.playerMovements(playerObject);
 
+        if(playerObject.moveX < 0){
+            playerObject.facingLeft = true;
+        }
+        else if(playerObject.moveX > 0){
+            playerObject.facingLeft = false;
+        }
+        
+
         let platformCollisions = physActions.getPlatformCollisions(playerObject,areaPlatforms);
             
         if(platformCollisions.length > 0){

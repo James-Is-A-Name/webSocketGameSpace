@@ -88,11 +88,7 @@ const objectDrawFunctions = {
 
         canvas.beginPath();
 
-        let playerFacingLeft = false;
-        if(playerObject.moveX < 0){
-            playerFacingLeft = true;
-        }
-        objectDrawFunctions.drawWeapon(canvas,playerFacingLeft,playerObject.stance,xCenter,y+height/3,width)
+        objectDrawFunctions.drawWeapon(canvas,playerObject.facingLeft,playerObject.stance,xCenter,y+height/3,width)
 
         canvas.stroke()
 
