@@ -110,12 +110,20 @@ const objectDrawFunctions = {
             //sword
             canvas.moveTo(xCenter+polarity*(width-3),yCenter+3);
             canvas.lineTo(xCenter+polarity*(width+10),yCenter-10);
+            
+            //has another arm holding the sword
+            canvas.moveTo(xCenter,yCenter);
+            canvas.lineTo(xCenter+polarity*(width-3),yCenter+3);
         }
         else if(stance == 1){
             //shield
             canvas.moveTo(xCenter+polarity*width,yCenter);
             let arcBase = Math.PI/2 - polarity*Math.PI/2 
             canvas.arc(xCenter-polarity*width,yCenter,2*width,arcBase-Math.PI/5,arcBase+Math.PI/5);
+            
+            //an arm hanging in the opposite direction
+            canvas.moveTo(xCenter,yCenter);
+            canvas.lineTo(xCenter-polarity*width/2,yCenter+10);
         }
         else{
             //bow

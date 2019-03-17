@@ -26,6 +26,9 @@ let controllersOnScreen = {}; //will be used for determining if controller comma
 //     displays,
 //     controllers
 // }
+
+let leftDisplay = undefined;
+let rightDisplay = undefined;
 /*---------------------communications----------------------*/
 
 /*---------------------setup related things----------------------*/
@@ -165,7 +168,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptAnswer(answer,fromWho,isAController){
-    console.log("accept an answer")
+    console.log("accept an answer from ",fromWho)
     //got an offer so accept it and send an answer
     p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
 
@@ -224,7 +227,7 @@ function broadcastToDisplays(message){
 function handleDisplayMessage(message,fromWho){
     let theMessage = JSON.parse(message.data)
 
-    console.log("the message is ",theMessage)
+    // console.log("the message is ",theMessage)
 
     if(theMessage.addConnections){
         let newConnections = theMessage.addConnections.filter((connectionToAdd)=>{
@@ -376,18 +379,92 @@ function swapMenuContent(show){
         p2pSubmit.id = "connectToPeer";
         p2pSubmit.value = "connect to peer";
 
+
+
+
+
+
+        let leftSideDestination = document.createElement("select");
+        leftSideDestination.id = "leftSideDestination"
+
+        leftSideDestination.onchange = (e)=>{
+            console.log("something selected for the left side",e.target.value)
+            leftDisplay = e.target.value
+        }
+        
+        let displayOption = document.createElement("option");
+        displayOption.value = leftDisplay ? leftDisplay : undefined;
+        displayOption.innerHTML = leftDisplay ? leftDisplay : "none";
+        leftSideDestination.appendChild(displayOption);
+
+        //show the list of options
+        Object.keys(displayConnections).forEach((key)=>{
+            displayOption = document.createElement("option");
+            displayOption.value = key;
+            displayOption.innerHTML = key;
+            leftSideDestination.appendChild(displayOption);
+        })
+        leftSideDestination.value = leftDisplay;
+        
+
+        let rightSideDestination = document.createElement("select");
+        rightSideDestination.id = "rightSideDestination"
+
+        rightSideDestination.onchange = (e)=>{
+            console.log("something selected for the right side",e.target.value)
+            rightDisplay = e.target.value
+        }
+        
+        displayOption = document.createElement("option");
+        displayOption.value = rightDisplay ? rightDisplay : undefined;
+        displayOption.innerHTML = rightDisplay ? rightDisplay : "none";
+        rightSideDestination.appendChild(displayOption);
+
+        //show the list of options
+        Object.keys(displayConnections).forEach((key)=>{
+            displayOption = document.createElement("option");
+            displayOption.value = key;
+            displayOption.innerHTML = key;
+            rightSideDestination.appendChild(displayOption);
+        })
+        rightSideDestination.value = rightDisplay;
+
+
+
+
         
         let menuLineBreak = document.createElement("br");
         p2pTargetForm.appendChild(menuLineBreak);
         p2pTargetForm.appendChild(p2pTarget);
         p2pTargetForm.appendChild(p2pSubmit);
 
-        newContent.appendChild(newButton)
-        newContent.appendChild(platformDrawButton)
+        newContent.appendChild(newButton);
+        newContent.appendChild(platformDrawButton);
         
-        newContent.appendChild(p2pTargetForm)
+        newContent.appendChild(p2pTargetForm);
         
-        newContent.appendChild(newTitle)
+
+
+
+        
+        let leftDisplayState = document.createElement("span");
+        leftDisplayState.innerHTML = "left side destination"
+        newContent.appendChild(leftDisplayState)
+        newContent.appendChild(leftSideDestination);
+        
+        p2pTargetForm.appendChild(menuLineBreak);
+
+        let rightDisplayState = document.createElement("span");
+        rightDisplayState.innerHTML = "right side destination"
+        newContent.appendChild(rightDisplayState)
+        newContent.appendChild(rightSideDestination);
+
+
+
+
+
+
+        // newContent.appendChild(newTitle);
 
         menuSection.replaceChild(newContent,oldContent);
 
@@ -451,8 +528,8 @@ function setupDisplayArea(){
 }
 
 function connectWebSocket(){
-    serverConnection = new WebSocket(`wss://${self.location.host}`);
-    // serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
+    // serverConnection = new WebSocket(`wss://${self.location.host}`);
+    serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
     
     serverConnection.onopen = ()=> {
 
@@ -479,7 +556,6 @@ function connectWebSocket(){
 
             activeDisplayId = theMessage.displayId
         }
-        /*----------------------Testing-----------------------------*/
         else if(theMessage.p2pConnect){
 
             if(theMessage.answer){
@@ -488,20 +564,6 @@ function connectWebSocket(){
             else if(theMessage.offer){
                 p2pAcceptOffer(theMessage.offer,theMessage.from,!theMessage.isADisplay)
             }
-        }
-        /*----------------------Testing-----------------------------*/
-        else if(theMessage.newDisplay){
-
-            // addPortal(theMessage.id)
-
-            // updateBackground = true;
-        }
-        else if(theMessage.newPlayerId){
-            // addPlayerEntity(theMessage.newPlayerId)
-        }
-        else if(! Object.keys(playerEntities).find( (key)=> {return key == theMessage.id})){
-            //This might actually be a hinderance to things having the display assume unknow player is valid
-            // addPlayerEntity(theMessage.id)
         }
     }
 }
@@ -543,14 +605,10 @@ function startGame(){
 function setupMouseClicks(){
     
     let displayElement = document.getElementById("canvasAreaFront");
-    //displayElement.addEventListener("mousedown",mouseDownHandle)
-    //displayElement.addEventListener("mousemove",mouseMoveHandle)
-    //displayElement.addEventListener("mouseup",mouseUpHandle)
-
+    
     displayElement.addEventListener("mousedown",(evt)=>{
         mouseDownLocation = {x:evt.clientX,y:evt.clientY}
     })
-    //
     displayElement.addEventListener("mousemove",(evt)=>{
 
         //use this to draw a demo square        
@@ -735,7 +793,31 @@ function updateEntityStates(){
         
         // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisions(playersShifted,playerObject,playerIndex)) {
         //remove side collisions causing shifts for now
-        playerObject = physActions.displaySideCollisionNoShift(playerObject,gameWidth)
+        // playerObject = physActions.displaySideCollisionNoShift(playerObject,gameWidth)
+
+        let sideCollision = physActions.displaySideCollision(playerObject,gameWidth);
+
+        if(sideCollision.collision){
+            playerObject.x = sideCollision.x;
+
+            if(sideCollision.left && leftDisplay){
+                controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:leftDisplay}))
+                displayConnections[leftDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+                if(!playersShifted.find( player => player == playerObject.id)){
+                    playersShifted.push(playerObject.id)
+                }
+            }
+            else if(sideCollision.right && rightDisplay){
+                controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:rightDisplay}))
+                displayConnections[rightDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+                if(!playersShifted.find( player => player == playerObject.id)){
+                    playersShifted.push(playerObject.id)
+                }
+            }
+
+            
+        }
+
 
         let portalCollision = physActions.portalCollisions(playerObject,portals)
         let playerBattles = physActions.checkPlayerInteractions(playerObject,playerEntities)

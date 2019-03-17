@@ -138,11 +138,21 @@ class ObjectInteractions{
         }
         return player
     }
-    displaySideCollision(player){
+    displaySideCollision(player,gameWidth){
 
-        //TODO
-            //requires some method of asigning what the next screen along is when multiple or non are connected
-        return false
+        let response = {}
+
+        if(player.x+player.width > gameWidth){
+            response.collision = true;
+            response.x = gameWidth - player.width;
+            response.right = true;
+        }
+        else if(player.x < 0){
+            response.collision = true;
+            response.x = 0;
+            response.left = true;
+        }
+        return response
     }
 
     portalCollisions(player,portals){
