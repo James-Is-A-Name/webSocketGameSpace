@@ -1,0 +1,33 @@
+
+
+
+
+.menuShowingSection{
+    z-index: 100;
+    position: absolute;
+    width: 30%;
+    left: 35%;
+    height: 30%;
+
+    text-align: center;
+
+    background-color: yellow;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+}
+
+.menuHidingSection{
+    z-index: 100;
+    position: absolute;
+    width: 6%;
+    left: 47%;
+    height: 5%;
+
+    text-align: center;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+}

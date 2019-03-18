@@ -38,8 +38,10 @@ const entitieSize = 50;
 
 let playerMoveSpeed = entitieSize/10;
 
-let gameHeight = document.documentElement.clientHeight - entitieSize;
-let gameWidth = document.documentElement.clientWidth - entitieSize;
+// let gameHeight = document.documentElement.clientHeight;
+// let gameWidth = document.documentElement.clientWidth;
+let gameHeight;
+let gameWidth;
 
 // let gameDetails = {
 //     entitieSize: 50,
@@ -143,6 +145,15 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
 
     p2pConnectionTesting = testConnection;
 
+    
+    p2pConnectionTesting.dataChannelSetupCallback = ()=>{
+        //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
+        //INTIAL TESTING HAPPENING
+            //dosent seem to loop too much but might be different
+            //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
+        updateDisplayConnections()
+    }
+
     let connectionIsController = isAController;
 
     p2pConnectionTesting.connectionId = fromWho;
@@ -227,8 +238,6 @@ function broadcastToDisplays(message){
 function handleDisplayMessage(message,fromWho){
     let theMessage = JSON.parse(message.data)
 
-    // console.log("the message is ",theMessage)
-
     if(theMessage.addConnections){
         let newConnections = theMessage.addConnections.filter((connectionToAdd)=>{
             if(activeDisplayId == connectionToAdd){
@@ -252,6 +261,8 @@ function handleDisplayMessage(message,fromWho){
         })
 
         newConnections.forEach((connectionId)=>{
+            //not the best way but will check if it stops double ups
+            controllerConnections[connectionId] = {inProgress: true}
             console.log("connecting to ",connectionId)
             p2pConnect(connectionId);
         })
@@ -321,26 +332,28 @@ function handleControllerMessage(message,fromWho){
 function swapMenuContent(show){
     let menuSection = document.getElementById("menuSection")
 
-    let newContent = undefined;
-    //I dont like this magic number use here. feels icky
-        //also i screws up when formatting the html with line breaks as they are not drawn but count as text elements of a div
-    let oldContent = menuSection.childNodes[0];
+    let menuSectionContents = []
+    menuSection.childNodes.forEach( (element)=>{
+        menuSectionContents.push(element);
+    })
+
+    menuSectionContents.forEach((element)=>{
+        menuSection.removeChild(element)
+    })
     
 
     if(show){
-        newContent = document.createElement("div");
         
         let newButton = document.createElement("button");
         newButton.title = "Hide Menu";
         newButton.innerHTML = newButton.title;
         newButton.onclick = () => {swapMenuContent(false)};
-        newButton.style.width = "50%"
-        newButton.style.height = "100%"
-
-        let newTitle = document.createElement("h1")
-        newTitle.innerHTML = "MENU STUFF"
+        newButton.style.gridColumn = "2";
+        newButton.style.gridRow = "1";
 
         let platformDrawButton = document.createElement("button")
+        platformDrawButton.style.gridColumn = "1";
+        platformDrawButton.style.gridRow = "2";
         
         if(placePlatformsAllow){
             platformDrawButton.innerHTML = "platform draw enabled"
@@ -350,7 +363,6 @@ function swapMenuContent(show){
         }
 
         platformDrawButton.onclick = () => {
-
             //As it will be toggled
             if(!placePlatformsAllow){
                 platformDrawButton.innerHTML = "platform draw enabled"
@@ -379,16 +391,13 @@ function swapMenuContent(show){
         p2pSubmit.id = "connectToPeer";
         p2pSubmit.value = "connect to peer";
 
-
-
-
-
+        p2pTargetForm.style.gridColumn = "3";
+        p2pTargetForm.style.gridRow = "2";
 
         let leftSideDestination = document.createElement("select");
         leftSideDestination.id = "leftSideDestination"
 
         leftSideDestination.onchange = (e)=>{
-            console.log("something selected for the left side",e.target.value)
             leftDisplay = e.target.value
         }
         
@@ -406,12 +415,10 @@ function swapMenuContent(show){
         })
         leftSideDestination.value = leftDisplay;
         
-
         let rightSideDestination = document.createElement("select");
         rightSideDestination.id = "rightSideDestination"
 
         rightSideDestination.onchange = (e)=>{
-            console.log("something selected for the right side",e.target.value)
             rightDisplay = e.target.value
         }
         
@@ -429,44 +436,38 @@ function swapMenuContent(show){
         })
         rightSideDestination.value = rightDisplay;
 
-
-
-
-        
         let menuLineBreak = document.createElement("br");
         p2pTargetForm.appendChild(menuLineBreak);
         p2pTargetForm.appendChild(p2pTarget);
         p2pTargetForm.appendChild(p2pSubmit);
 
-        newContent.appendChild(newButton);
-        newContent.appendChild(platformDrawButton);
-        
-        newContent.appendChild(p2pTargetForm);
-        
-
-
-
+        menuSection.appendChild(newButton);
+        menuSection.appendChild(platformDrawButton);
+        menuSection.appendChild(p2pTargetForm);
         
         let leftDisplayState = document.createElement("span");
-        leftDisplayState.innerHTML = "left side destination"
-        newContent.appendChild(leftDisplayState)
-        newContent.appendChild(leftSideDestination);
+        leftDisplayState.innerHTML = "left side destination";
+        let leftBlock = document.createElement("div");
+        leftBlock.appendChild(leftDisplayState);
+        leftBlock.appendChild(leftSideDestination);
+        
+        leftBlock.style.gridColumn = "1";
+        leftBlock.style.gridRow = "3";
+        menuSection.appendChild(leftBlock);
         
         p2pTargetForm.appendChild(menuLineBreak);
 
         let rightDisplayState = document.createElement("span");
         rightDisplayState.innerHTML = "right side destination"
-        newContent.appendChild(rightDisplayState)
-        newContent.appendChild(rightSideDestination);
-
-
-
-
-
-
-        // newContent.appendChild(newTitle);
-
-        menuSection.replaceChild(newContent,oldContent);
+        let rightBlock = document.createElement("div");
+        rightBlock.appendChild(rightDisplayState)
+        rightBlock.appendChild(rightSideDestination);
+        
+        rightBlock.style.gridColumn = "3";
+        rightBlock.style.gridRow = "3";
+        menuSection.appendChild(rightBlock)
+        
+        menuSection.className = "menuShowingSection"
 
     }
     else{
@@ -475,10 +476,10 @@ function swapMenuContent(show){
         newButton.title = "Options menu";
         newButton.innerHTML = newButton.title;
         newButton.onclick = () => {swapMenuContent(true)};
-        newButton.style.width = "50%"
-        newButton.style.height = "100%"
 
-        menuSection.replaceChild(newButton,oldContent);
+        menuSection.className = "menuHidingSection"
+
+        menuSection.appendChild(newButton);
     }
 }
 
@@ -504,8 +505,8 @@ function addNewPlatform(x,y,width,height){
 
 function setupDisplayArea(){
     
-    gameHeight = document.documentElement.clientHeight - 50;
-    gameWidth = document.documentElement.clientWidth - 50;
+    gameHeight = document.documentElement.clientHeight;
+    gameWidth = document.documentElement.clientWidth;
     
     let displayElementBackground = document.getElementById("canvasArea");
     let canvasDrawBackground = displayElementBackground.getContext("2d");
@@ -533,8 +534,6 @@ function connectWebSocket(){
     
     serverConnection.onopen = ()=> {
 
-        //not sure 
-        // console.log("websocket open")
         serverConnection.send(JSON.stringify({actAsDisplay:true}));
 
         let connectionMessage = document.getElementById("serverConnectionState");
