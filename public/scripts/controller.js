@@ -52,10 +52,6 @@ function p2pAcceptOffer(offer,whoFrom){
 
     testConnection.handleMessage = (message)=>{
 
-        
-        let info = document.getElementById("locationText");
-        info.innerHTML = message.data
-
         let shiftedDisplay = JSON.parse(message.data).shiftDisplay
 
         if(shiftedDisplay){

@@ -31,7 +31,7 @@ const objectDrawFunctions = {
 
         canvas.beginPath();
 
-        canvas.font = "20px arial"
+        canvas.font = "15px arial"
         canvas.fillText(playerObject.id,x-10,y-10);
 
         canvas.moveTo(xCenter+size,y+size);
@@ -242,6 +242,7 @@ const objectDrawFunctions = {
         canvas.stroke();
     },
 
+    //Should porbably be consistent on the canvas being the first argument for draw functions
     drawPortal: (portal,canvas) =>{
         canvas.beginPath();
         canvas.arc(portal.x,portal.y,20,0,Math.PI*2);

@@ -72,6 +72,8 @@ let previewPlatform;
 
 //More of a menu option really
 let placePlatformsAllow = false;
+let portalMoveAllow = false;
+let portalToMove = -1;
 /*---------------------Area alterations----------------------*/
 
 /*---------------------game state----------------------*/
@@ -362,16 +364,42 @@ function swapMenuContent(show){
         else{
             platformDrawButton.innerHTML = "platform draw disabled"
         }
-
+        
         platformDrawButton.onclick = () => {
             //As it will be toggled
             if(!placePlatformsAllow){
                 platformDrawButton.innerHTML = "platform draw enabled"
+                portalMoveButton.innerHTML = "portal move disabled"
             }
             else{
                 platformDrawButton.innerHTML = "platform draw disabled"
+                portalMoveButton.innerHTML = "portal move disabled"
             }
             setNewPlatformDraw(!placePlatformsAllow);
+        }
+
+        let portalMoveButton = document.createElement("button")
+        portalMoveButton.style.gridColumn = "2";
+        portalMoveButton.style.gridRow = "2";
+        
+        if(portalMoveAllow){
+            portalMoveButton.innerHTML = "portal move enabled"
+        }
+        else{
+            portalMoveButton.innerHTML = "portal move disabled"
+        }
+        
+        portalMoveButton.onclick = () => {
+            //As it will be toggled
+            if(!portalMoveAllow){
+                portalMoveButton.innerHTML = "portal move enabled"
+                platformDrawButton.innerHTML = "platform draw disabled"
+            }
+            else{
+                portalMoveButton.innerHTML = "portal move disabled"
+                platformDrawButton.innerHTML = "platform draw disabled"
+            }
+            setPortalMovemDraw(!portalMoveAllow);
         }
 
         let p2pTargetForm = document.createElement("form");
@@ -386,6 +414,7 @@ function swapMenuContent(show){
         let p2pTarget = document.createElement("input");
         p2pTarget.type = "text";
         p2pTarget.id = "connectionTarget";
+        p2pTarget.style.width = "100%";
         
         let p2pSubmit = document.createElement("input");
         p2pSubmit.type = "Submit";
@@ -444,6 +473,7 @@ function swapMenuContent(show){
 
         menuSection.appendChild(newButton);
         menuSection.appendChild(platformDrawButton);
+        menuSection.appendChild(portalMoveButton);
         menuSection.appendChild(p2pTargetForm);
         
         let leftDisplayState = document.createElement("span");
@@ -488,6 +518,13 @@ function setNewPlatformDraw(allow){
     //the == true is to enforce true or false incase a non boolean option is given
         //at least that is the intention
     placePlatformsAllow = (allow == true);
+    portalMoveAllow = false;
+}
+function setPortalMovemDraw(allow){
+    //the == true is to enforce true or false incase a non boolean option is given
+        //at least that is the intention
+    portalMoveAllow = (allow == true);
+    placePlatformsAllow = false;
 }
 function addNewPlatform(x,y,width,height){
     if(placePlatformsAllow){
@@ -608,6 +645,16 @@ function setupMouseClicks(){
     
     displayElement.addEventListener("mousedown",(evt)=>{
         mouseDownLocation = {x:evt.clientX,y:evt.clientY}
+
+        if(portalMoveAllow){
+            portals.forEach((portal,index)=>{
+                if((portal.x + entitieSize > mouseDownLocation.x) && (portal.x - entitieSize < mouseDownLocation.x)){
+                    if((portal.y + entitieSize > mouseDownLocation.y) && (portal.y - entitieSize < mouseDownLocation.y)){
+                        portalToMove = portals[index].destination;
+                    }
+                }
+            })
+        }
     })
     displayElement.addEventListener("mousemove",(evt)=>{
 
@@ -619,7 +666,7 @@ function setupMouseClicks(){
         //if screenX is used it grabs the location in relation to the monitor
         mouseUpLocation = {x:evt.clientX,y:evt.clientY}
 
-        if(mouseDownLocation != undefined){
+        if(mouseDownLocation != undefined && placePlatformsAllow){
 
             let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
             let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
@@ -647,6 +694,26 @@ function setupMouseClicks(){
             addNewPlatform(newPlatform.x,newPlatform.y,newPlatform.width,newPlatform.height);
             // areaPlatforms.push(newPlatform);
         }
+        else if(portalToMove > -1 && portalMoveAllow){
+            console.log("attempt to move portal")
+            //place the portal in the new position
+            let portalMove = portals.reduce((indexOfMatch,portal,index)=> {
+                if(portal.destination == portalToMove){
+                    return index;
+                }
+                return indexOfMatch;
+            },-1)
+            if(portalMove > -1){
+                
+                portals[portalMove].x = mouseUpLocation.x;
+                portals[portalMove].y = mouseUpLocation.y;
+
+                updateBackground = true;
+                portalToMove = -1;
+            }
+        }
+
+        previewPlatform = undefined
     })
 }
 
@@ -691,6 +758,34 @@ function drawVisualAdditions(canvas){
         }
         previewPlatform = platform
         objectDrawFunctions.drawPlatform(platform,canvas)
+    }
+    else if(portalMoveAllow && portalToMove > -1){
+
+        console.log("portal being moved")
+
+        let tempPortal = {
+            x:mouseUpLocation.x,
+            y:mouseUpLocation.y,
+            destination:portalToMove
+        }
+        
+        //for a quick and simple test just using the platform redraw stuff
+        let platform = {}
+        let displayElement = document.getElementById("canvasArea");
+        let topDiv = document.getElementById("topDiv")
+        platform.x = (mouseUpLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft - 50;
+        platform.y = (mouseUpLocation.y) - displayElement.offsetTop + topDiv.offsetTop -50;
+        platform.width = 100;
+        platform.height = 100;
+        if(previewPlatform){
+            objectDrawFunctions.clearPlatform(previewPlatform,canvas)
+        }
+        previewPlatform = platform
+        /*-----------------------------------TEMP CODE-----------------------------------------------*/
+
+        objectDrawFunctions.drawPortal(tempPortal,canvas)
+        
+        //draw the portal in the current mouse position
     }
 }
 
