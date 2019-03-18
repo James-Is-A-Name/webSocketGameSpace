@@ -530,8 +530,8 @@ function setupDisplayArea(){
 }
 
 function connectWebSocket(){
-    // serverConnection = new WebSocket(`wss://${self.location.host}`);
-    serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
+    serverConnection = new WebSocket(`wss://${self.location.host}`);
+    // serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
     
     serverConnection.onopen = ()=> {
 
