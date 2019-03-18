@@ -679,15 +679,6 @@ function drawVisualAdditions(canvas){
 
     if(mouseUpLocation && mouseDownLocation && placePlatformsAllow){
         
-        //is straight copied from the mouse event part so very much a candidate for refactoring
-        // let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
-        // let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
-
-        // let displayElement = document.getElementById("canvasArea");
-        // let topDiv = document.getElementById("topDiv")
-        // platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
-        // platformY -= displayElement.offsetTop + topDiv.offsetTop;
-
         let platform = {}
         let displayElement = document.getElementById("canvasArea");
         let topDiv = document.getElementById("topDiv")
@@ -700,32 +691,6 @@ function drawVisualAdditions(canvas){
         }
         previewPlatform = platform
         objectDrawFunctions.drawPlatform(platform,canvas)
-        
-        // let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
-        // let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
-
-        // if(previousPlatformWidth){
-            
-        //     let previousPlatform = {
-        //         x:previousPlatformX,
-        //         y:previousPlatformY,
-        //         width:previousPlatformWidth,
-        //         height:previousPlatformHeight
-        //     }
-        //     objectDrawFunctions.clearPlatform(previousPlatform,canvas)
-        // }
-        // let platform = {
-        //     x:platformX,
-        //     y:platformY,
-        //     width:platformWidth,
-        //     height:platformHeight
-        // }
-        // previousPlatformX = platformX
-        // previousPlatformY = platformY
-        // previousPlatformWidth = platformWidth
-        // previousPlatformHeight = platformHeight
-        
-        // objectDrawFunctions.drawPlatform(platform,canvas)
     }
 }
 

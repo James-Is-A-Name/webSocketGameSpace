@@ -31,6 +31,8 @@ const objectDrawFunctions = {
 
         canvas.beginPath();
 
+        canvas.font = "20px arial"
+        canvas.fillText(playerObject.id,x-10,y-10);
 
         canvas.moveTo(xCenter+size,y+size);
         canvas.arc(xCenter,y+size,size,0,Math.PI*2);
@@ -235,7 +237,7 @@ const objectDrawFunctions = {
             canvas.clearRect(x-width*5, y-height/2, width*11, height*3);
         }
         else{
-            canvas.clearRect(x-20, y-20, width+40, height*1.4+20);
+            canvas.clearRect(x-20, y-30, width+40, height*1.4+30);
         }
         canvas.stroke();
     },
