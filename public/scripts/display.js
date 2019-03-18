@@ -64,10 +64,11 @@ let lastMousePosition = undefined;
 let mouseUpLocation = undefined;
 
 // let previousPlatform = undefined
-let previousPlatformWidth;
-let previousPlatformHeight;
-let previousPlatformX;
-let previousPlatformY;
+// let previousPlatformWidth;
+// let previousPlatformHeight;
+// let previousPlatformX;
+// let previousPlatformY;
+let previewPlatform;
 
 //More of a menu option really
 let placePlatformsAllow = false;
@@ -679,52 +680,52 @@ function drawVisualAdditions(canvas){
     if(mouseUpLocation && mouseDownLocation && placePlatformsAllow){
         
         //is straight copied from the mouse event part so very much a candidate for refactoring
-        let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
-        let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
+        // let platformX = (mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x;
+        // let platformY = (mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y;
 
-        let displayElement = document.getElementById("canvasArea");
-        let topDiv = document.getElementById("topDiv")
-        platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
-        platformY -= displayElement.offsetTop + topDiv.offsetTop;
-
-        // let platform = {}
         // let displayElement = document.getElementById("canvasArea");
         // let topDiv = document.getElementById("topDiv")
-        // platform.x = ((mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft;
-        // platform.y = ((mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y) - displayElement.offsetTop + topDiv.offsetTop;
-        // platform.width = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
-        // platform.height = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
-        // if(previewPlatform){
-        //     objectDrawFunctions.clearPlatform(previewPlatform,canvas)
-        // }
-        // previewPlatform = platform
-        // objectDrawFunctions.drawPlatform(platform,canvas)
-        
-        let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
-        let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+        // platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
+        // platformY -= displayElement.offsetTop + topDiv.offsetTop;
 
-        if(previousPlatformWidth){
-            
-            let previousPlatform = {
-                x:previousPlatformX,
-                y:previousPlatformY,
-                width:previousPlatformWidth,
-                height:previousPlatformHeight
-            }
-            objectDrawFunctions.clearPlatform(previousPlatform,canvas)
+        let platform = {}
+        let displayElement = document.getElementById("canvasArea");
+        let topDiv = document.getElementById("topDiv")
+        platform.x = ((mouseDownLocation.x < mouseUpLocation.x) ? mouseDownLocation.x : mouseUpLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft;
+        platform.y = ((mouseDownLocation.y < mouseUpLocation.y) ? mouseDownLocation.y : mouseUpLocation.y) - displayElement.offsetTop + topDiv.offsetTop;
+        platform.width = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
+        platform.height = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+        if(previewPlatform){
+            objectDrawFunctions.clearPlatform(previewPlatform,canvas)
         }
-        let platform = {
-            x:platformX,
-            y:platformY,
-            width:platformWidth,
-            height:platformHeight
-        }
-        previousPlatformX = platformX
-        previousPlatformY = platformY
-        previousPlatformWidth = platformWidth
-        previousPlatformHeight = platformHeight
-        
+        previewPlatform = platform
         objectDrawFunctions.drawPlatform(platform,canvas)
+        
+        // let platformWidth = Math.abs(mouseDownLocation.x - mouseUpLocation.x);
+        // let platformHeight = Math.abs(mouseDownLocation.y - mouseUpLocation.y);
+
+        // if(previousPlatformWidth){
+            
+        //     let previousPlatform = {
+        //         x:previousPlatformX,
+        //         y:previousPlatformY,
+        //         width:previousPlatformWidth,
+        //         height:previousPlatformHeight
+        //     }
+        //     objectDrawFunctions.clearPlatform(previousPlatform,canvas)
+        // }
+        // let platform = {
+        //     x:platformX,
+        //     y:platformY,
+        //     width:platformWidth,
+        //     height:platformHeight
+        // }
+        // previousPlatformX = platformX
+        // previousPlatformY = platformY
+        // previousPlatformWidth = platformWidth
+        // previousPlatformHeight = platformHeight
+        
+        // objectDrawFunctions.drawPlatform(platform,canvas)
     }
 }
 
