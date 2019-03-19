@@ -28,11 +28,22 @@ function p2pAcceptOffer(offer,whoFrom){
     //got an offer so accept it and send an answer    
     let testConnection = getAWebRTC();
 
+
+    //iphone seems to have issues with the datachannel here
     testConnection.dataChannelSetupCallback = ()=>{
+        
         if(!displayConnectionInitalSetup && displayConnectionSetupAttempt){
+            
             displayConnectionInitalSetup = true;
-            //request setting up a connection to the display when not caonnected to any
-            testConnection.dataChannel.send(JSON.stringify({joinAsNewController:true}))
+            
+            //iphones appera to not like refering to parts of the test connection
+            setTimeout(()=>{
+                displayConnections[displayId].connection.dataChannel.send(JSON.stringify({joinAsNewController:true}))
+            },500) //a delay of 1 has also worked but i thought 500 might allow for any timing issues that might arrise
+            // displayConnections[displayId].connection.dataChannel.send(JSON.stringify({joinAsNewController:true}))
+            
+            // testConnection.dataChannel.send(JSON.stringify({joinAsNewController:true}))
+        
         }
     }
 
