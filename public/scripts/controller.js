@@ -7,7 +7,8 @@ var rightPressTimer;
 
 let timerIntervalMs = 15;
 
-let displayConnectionInitalSetup = false;
+let displayConnectionInitalSetup = false;//if it hasnt sorted itself out yet then it is requiring an inital setup
+let displayConnectionSetupAttempt = false;
 
 let controllerIdNumber;
 
@@ -28,7 +29,8 @@ function p2pAcceptOffer(offer,whoFrom){
     let testConnection = getAWebRTC();
 
     testConnection.dataChannelSetupCallback = ()=>{
-        if(displayConnectionInitalSetup){
+        if(!displayConnectionInitalSetup && displayConnectionSetupAttempt){
+            displayConnectionInitalSetup = true;
             //request setting up a connection to the display when not caonnected to any
             testConnection.dataChannel.send(JSON.stringify({joinAsNewController:true}))
         }
@@ -56,6 +58,11 @@ function p2pAcceptOffer(offer,whoFrom){
 
         if(shiftedDisplay){
             displayId = shiftedDisplay;
+            
+            let displayLocation = document.getElementById("locationText")
+
+            //this feels a bit open to manipulation
+            displayLocation.innerHTML = `on display ${displayId}`
         }
         
         let connectionDisplayId = JSON.parse(message.data).displayId
@@ -66,7 +73,7 @@ function p2pAcceptOffer(offer,whoFrom){
 
     if(!displayId){
         displayId = whoFrom;
-        displayConnectionInitalSetup = true;
+        displayConnectionSetupAttempt = true;
     }
 
     displayConnections[whoFrom] = {
@@ -136,8 +143,8 @@ function touchEnd(touchEvent){
 function connectWebSocket(){
 
     //ws uses the same server so need to have a redirect.
-    serverConnection = new WebSocket(`wss://${self.location.host}`);
-    // serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
+    // serverConnection = new WebSocket(`wss://${self.location.host}`);
+    serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
 
     serverConnection.onopen = ()=> {
         console.log("websocket open")
