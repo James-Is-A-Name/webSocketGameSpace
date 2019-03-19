@@ -737,7 +737,7 @@ function setupMouseClicks(){
             // areaPlatforms.push(newPlatform);
         }
         else if(portalToMove > -1 && portalMoveAllow){
-            console.log("attempt to move portal")
+            
             //place the portal in the new position
             let portalMove = portals.reduce((indexOfMatch,portal,index)=> {
                 if(portal.destination == portalToMove){
@@ -749,6 +749,15 @@ function setupMouseClicks(){
                 
                 portals[portalMove].x = mouseUpLocation.x;
                 portals[portalMove].y = mouseUpLocation.y;
+
+                //clear the portal on the front canvas
+                let topDiv = document.getElementById("topDiv")
+                let clearX = mouseUpLocation.x - displayElement.offsetLeft - topDiv.offsetLeft - 50
+                let clearY = mouseUpLocation.y - displayElement.offsetTop - topDiv.offsetTop - 50
+                
+                let frontCanvas = document.getElementById("canvasAreaFront").getContext("2d");
+                objectDrawFunctions.clearPlatform({x:clearX,y:clearY,width:100,height:100},frontCanvas)
+
 
                 updateBackground = true;
                 portalToMove = -1;
@@ -803,8 +812,6 @@ function drawVisualAdditions(canvas){
     }
     else if(portalMoveAllow && portalToMove > -1){
 
-        console.log("portal being moved")
-
         let tempPortal = {
             x:mouseUpLocation.x,
             y:mouseUpLocation.y,
@@ -826,7 +833,6 @@ function drawVisualAdditions(canvas){
         /*-----------------------------------TEMP CODE-----------------------------------------------*/
 
         objectDrawFunctions.drawPortal(tempPortal,canvas)
-        
         //draw the portal in the current mouse position
     }
 }
@@ -881,7 +887,6 @@ function updateEntityStates(){
             playerObject.facingLeft = false;
         }
         
-
         let platformCollisions = physActions.getPlatformCollisions(playerObject,areaPlatforms);
             
         if(platformCollisions.length > 0){
@@ -893,10 +898,6 @@ function updateEntityStates(){
 
         playerObject = physActions.playerGroundDetectionAction(playerObject,gameHeight)
         
-        // if(displaySideCollision(playersShifted,playerObject,playerIndex) || portalCollisions(playersShifted,playerObject,playerIndex)) {
-        //remove side collisions causing shifts for now
-        // playerObject = physActions.displaySideCollisionNoShift(playerObject,gameWidth)
-
         let sideCollision = physActions.displaySideCollision(playerObject,gameWidth);
 
         if(sideCollision.collision){
