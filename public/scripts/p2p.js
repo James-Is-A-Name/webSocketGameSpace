@@ -11,7 +11,7 @@ function getAWebRTC(){
     connectionObject.connection = new RTCPeerConnection();
     
     //this might not be the best
-    connectionObject.dataChannel = connectionObject.connection.createDataChannel("datachannel");
+    connectionObject.dataChannel = connectionObject.connection.createDataChannel("commsThing");
 
     connectionObject.connection.onicecandidate = (data) => {
 
@@ -73,10 +73,7 @@ function getAWebRTC(){
     }
 
     connectionObject.connection.ondatachannel = (event) => {
-        console.log("data channel on happened",event)
-        // event.channel.onmessage = (message) => {
-        //     console.log("got message ",message)
-        // }
+
         if(connectionObject.answerCreated){
             connectionObject.dataChannel = event.channel
         }
@@ -84,9 +81,7 @@ function getAWebRTC(){
         connectionObject.dataChannelSetupCallback();
 
         connectionObject.dataChannel.onmessage = (message) => {
-            // console.log("got message ",message)
             connectionObject.handleMessage(message,connectionObject.connectionId)
-            //should put in some sort of callback here
         }
     }
 
