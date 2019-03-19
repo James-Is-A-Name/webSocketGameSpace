@@ -9,6 +9,48 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 //     and so on
 // }
 
+//v1
+
+
+/*
+class gameDisplay{
+    constructor(){
+
+        this.comms = {
+            serverConnection:
+            displayCOnnections:
+            controllerConnections
+        }
+
+        this.game = {
+            playerEntities:
+            portals:
+            platforms:
+        }
+
+        this.displayDetails = {
+            entitySize:
+            playerSpeed:
+            displayWidth:
+            displayHeight:
+
+            leftSideDestination:
+            rightSideDestination:
+        }
+
+        this.rendering = {
+            updateBackground:
+        }
+
+        this.playerInteractions = {
+            mouseDownLocation:
+            mouseUpLocation:
+
+        }
+    }
+}
+*/
+
 //CHANGE TO BE BETTER LAYED OUT
 
 /*---------------------communications----------------------*/
