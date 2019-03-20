@@ -1,3 +1,7 @@
+
+
+//Alter this to call a seperate function that sets a global object of the gamestate
+    //or have this done in the top file and have it decide the draw and inter objects interations code
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
 //THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
@@ -11,11 +15,17 @@ class gameDisplay{
         //drawEngine = //same as ^
 
 
+        let canvasBackElement = document.getElementById("canvasArea");
+        let canvasBack = canvasBackElement.getContext("2d");
+
+        let canvasFrontElement = document.getElementById("canvasAreaFront");
+        let canvasFront = canvasFrontElement.getContext("2d");
         //might be better than constantly re referening the same thing that shouldn't really be swapped out for a different one
-        this.displayCanvas = {
-            // frontCanvas: undefined,
-            // backCanvas: undefined
+        this.canvas = {
+            front: canvasFront,
+            back: canvasBack
         }
+        
 
         this.comms = {
             
@@ -81,7 +91,8 @@ class gameDisplay{
 const physActions = new ObjectInteractions()
 /*---------------------interaction engine----------------------*/
 
-let g = new gameDisplay()
+//needs to sort stuff out else where
+let g;
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pConnect(whoTo){
@@ -525,23 +536,23 @@ function addNewPlatform(x,y,width,height){
 
 function setupDisplayArea(){
     
+    g = new gameDisplay();
+
     g.gameConstansts.gameHeight = document.documentElement.clientHeight;
     g.gameConstansts.gameWidth = document.documentElement.clientWidth;
     
     let displayElementBackground = document.getElementById("canvasArea");
-    let canvasDrawBackground = displayElementBackground.getContext("2d");
 
     let displayElement = document.getElementById("canvasAreaFront");
-    let canvasDraw = displayElement.getContext("2d");
 
     displayElementBackground.setAttribute("width",g.gameConstansts.gameWidth);
     displayElementBackground.setAttribute("height",g.gameConstansts.gameHeight);
     displayElement.setAttribute("width",g.gameConstansts.gameWidth);
     displayElement.setAttribute("height",g.gameConstansts.gameHeight);
 
-    canvasDrawBackground.clearRect(0,0,g.gameConstansts.gameWidth,g.gameConstansts.gameHeight);
+    g.canvas.back.clearRect(0,0,g.gameConstansts.gameWidth,g.gameConstansts.gameHeight);
 
-    objectDrawFunctions.refreshCanvas(canvasDraw,g.gameConstansts.gameWidth,g.gameConstansts.gameHeight)
+    objectDrawFunctions.refreshCanvas(g.canvas.front,g.gameConstansts.gameWidth,g.gameConstansts.gameHeight)
 
     connectWebSocket();
 
@@ -695,8 +706,7 @@ function setupMouseClicks(){
                 let clearX = g.mouse.upLocation.x - displayElement.offsetLeft - topDiv.offsetLeft - 50
                 let clearY = g.mouse.upLocation.y - displayElement.offsetTop - topDiv.offsetTop - 50
                 
-                let frontCanvas = document.getElementById("canvasAreaFront").getContext("2d");
-                objectDrawFunctions.clearPlatform({x:clearX,y:clearY,width:100,height:100},frontCanvas)
+                objectDrawFunctions.clearPlatform({x:clearX,y:clearY,width:100,height:100},g.canvas.front)
 
 
                 g.rendering.updateBackground = true;
@@ -709,25 +719,21 @@ function setupMouseClicks(){
 }
 
 function gameStep(){
-    let displayElementBackground = document.getElementById("canvasArea");
-    let canvasDrawBackground = displayElementBackground.getContext("2d");
     
-    let displayElement = document.getElementById("canvasAreaFront");
-    let canvasDraw = displayElement.getContext("2d");
     
     //Must be done before the entities are moved
-    clearOldEntities(canvasDraw);
+    clearOldEntities(g.canvas.front);
     updateEntityStates();
 
     if(g.rendering.updateBackground){
         g.rendering.updateBackground = false;
-        objectDrawFunctions.refreshCanvas(canvasDrawBackground,g.gameConstansts.gameWidth,g.gameConstansts.gameHeight);
-        objectDrawFunctions.drawPlatforms(canvasDrawBackground,g.game.areaPlatforms);
-        objectDrawFunctions.drawPortals(canvasDrawBackground,g.game.portals);
+        objectDrawFunctions.refreshCanvas(g.canvas.back,g.gameConstansts.gameWidth,g.gameConstansts.gameHeight);
+        objectDrawFunctions.drawPlatforms(g.canvas.back,g.game.areaPlatforms);
+        objectDrawFunctions.drawPortals(g.canvas.back,g.game.portals);
     }
 
-    drawEnteties(canvasDraw);
-    drawVisualAdditions(canvasDraw);
+    drawEnteties(g.canvas.front);
+    drawVisualAdditions(g.canvas.front);
 }
 
 
