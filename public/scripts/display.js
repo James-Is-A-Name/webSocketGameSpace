@@ -58,10 +58,14 @@ class gameDisplay{
             updateBackground: true,
         }
 
-        this.playerInteractions = {
-            mouseDownLocation : undefined,
-            lastMousePosition : undefined,
-            mouseUpLocation : undefined,
+        this.mouse = {
+
+            downLocation : undefined,
+            lastPosition : undefined,
+            upLocation : undefined,
+        }
+
+        this.menuOptions = {
 
             previewPlatform : undefined,
 
@@ -336,7 +340,7 @@ function swapMenuContent(show){
         platformDrawButton.style.gridColumn = "1";
         platformDrawButton.style.gridRow = "2";
         
-        if(g.playerInteractions.placePlatformsAllow){
+        if(g.menuOptions.placePlatformsAllow){
             platformDrawButton.innerHTML = "platform draw enabled"
         }
         else{
@@ -345,7 +349,7 @@ function swapMenuContent(show){
         
         platformDrawButton.onclick = () => {
             //As it will be toggled
-            if(!g.playerInteractions.placePlatformsAllow){
+            if(!g.menuOptions.placePlatformsAllow){
                 platformDrawButton.innerHTML = "platform draw enabled"
                 portalMoveButton.innerHTML = "portal move disabled"
             }
@@ -353,14 +357,14 @@ function swapMenuContent(show){
                 platformDrawButton.innerHTML = "platform draw disabled"
                 portalMoveButton.innerHTML = "portal move disabled"
             }
-            setNewPlatformDraw(!g.playerInteractions.placePlatformsAllow);
+            setNewPlatformDraw(!g.menuOptions.placePlatformsAllow);
         }
 
         let portalMoveButton = document.createElement("button")
         portalMoveButton.style.gridColumn = "2";
         portalMoveButton.style.gridRow = "2";
         
-        if(g.playerInteractions.portalMoveAllow){
+        if(g.menuOptions.portalMoveAllow){
             portalMoveButton.innerHTML = "portal move enabled"
         }
         else{
@@ -369,7 +373,7 @@ function swapMenuContent(show){
         
         portalMoveButton.onclick = () => {
             //As it will be toggled
-            if(!g.playerInteractions.portalMoveAllow){
+            if(!g.menuOptions.portalMoveAllow){
                 portalMoveButton.innerHTML = "portal move enabled"
                 platformDrawButton.innerHTML = "platform draw disabled"
             }
@@ -377,7 +381,7 @@ function swapMenuContent(show){
                 portalMoveButton.innerHTML = "portal move disabled"
                 platformDrawButton.innerHTML = "platform draw disabled"
             }
-            setPortalMovemDraw(!g.playerInteractions.portalMoveAllow);
+            setPortalMovemDraw(!g.menuOptions.portalMoveAllow);
         }
 
         let p2pTargetForm = document.createElement("form");
@@ -495,17 +499,17 @@ function swapMenuContent(show){
 function setNewPlatformDraw(allow){
     //the == true is to enforce true or false incase a non boolean option is given
         //at least that is the intention
-    g.playerInteractions.placePlatformsAllow = (allow == true);
-    g.playerInteractions.portalMoveAllow = false;
+    g.menuOptions.placePlatformsAllow = (allow == true);
+    g.menuOptions.portalMoveAllow = false;
 }
 function setPortalMovemDraw(allow){
     //the == true is to enforce true or false incase a non boolean option is given
         //at least that is the intention
-    g.playerInteractions.portalMoveAllow = (allow == true);
-    g.playerInteractions.placePlatformsAllow = false;
+    g.menuOptions.portalMoveAllow = (allow == true);
+    g.menuOptions.placePlatformsAllow = false;
 }
 function addNewPlatform(x,y,width,height){
-    if(g.playerInteractions.placePlatformsAllow){
+    if(g.menuOptions.placePlatformsAllow){
 
         //Should proabaly verify the values as being valid
         g.game.areaPlatforms.push({
@@ -622,13 +626,13 @@ function setupMouseClicks(){
     let displayElement = document.getElementById("canvasAreaFront");
     
     displayElement.addEventListener("mousedown",(evt)=>{
-        g.playerInteractions.mouseDownLocation = {x:evt.clientX,y:evt.clientY}
+        g.mouse.downLocation = {x:evt.clientX,y:evt.clientY}
 
-        if(g.playerInteractions.portalMoveAllow){
+        if(g.menuOptions.portalMoveAllow){
             g.game.portals.forEach((portal,index)=>{
-                if((portal.x + g.gameConstansts.entitySize > g.playerInteractions.mouseDownLocation.x) && (portal.x - g.gameConstansts.entitySize < g.playerInteractions.mouseDownLocation.x)){
-                    if((portal.y + g.gameConstansts.entitySize > g.playerInteractions.mouseDownLocation.y) && (portal.y - g.gameConstansts.entitySize < g.playerInteractions.mouseDownLocation.y)){
-                        g.playerInteractions.portalToMove = g.game.portals[index].destination;
+                if((portal.x + g.gameConstansts.entitySize > g.mouse.downLocation.x) && (portal.x - g.gameConstansts.entitySize < g.mouse.downLocation.x)){
+                    if((portal.y + g.gameConstansts.entitySize > g.mouse.downLocation.y) && (portal.y - g.gameConstansts.entitySize < g.mouse.downLocation.y)){
+                        g.menuOptions.portalToMove = g.game.portals[index].destination;
                     }
                 }
             })
@@ -637,17 +641,17 @@ function setupMouseClicks(){
     displayElement.addEventListener("mousemove",(evt)=>{
 
         //use this to draw a demo square        
-        g.playerInteractions.mouseUpLocation = {x:evt.clientX,y:evt.clientY}
+        g.mouse.upLocation = {x:evt.clientX,y:evt.clientY}
     })
     displayElement.addEventListener("mouseup",(evt)=>{
         
         //if screenX is used it grabs the location in relation to the monitor
-        g.playerInteractions.mouseUpLocation = {x:evt.clientX,y:evt.clientY}
+        g.mouse.upLocation = {x:evt.clientX,y:evt.clientY}
 
-        if(g.playerInteractions.mouseDownLocation != undefined && g.playerInteractions.placePlatformsAllow){
+        if(g.mouse.downLocation != undefined && g.menuOptions.placePlatformsAllow){
 
-            let platformX = (g.playerInteractions.mouseDownLocation.x < g.playerInteractions.mouseUpLocation.x) ? g.playerInteractions.mouseDownLocation.x : g.playerInteractions.mouseUpLocation.x;
-            let platformY = (g.playerInteractions.mouseDownLocation.y < g.playerInteractions.mouseUpLocation.y) ? g.playerInteractions.mouseDownLocation.y : g.playerInteractions.mouseUpLocation.y;
+            let platformX = (g.mouse.downLocation.x < g.mouse.upLocation.x) ? g.mouse.downLocation.x : g.mouse.upLocation.x;
+            let platformY = (g.mouse.downLocation.y < g.mouse.upLocation.y) ? g.mouse.downLocation.y : g.mouse.upLocation.y;
 
             //Need to figure out proper offset. this isnt quite right
                 //Got it. needs the whole hirachy of the dom to the canvas object. its offset is relative to its parent. click is based on the overall location on the window
@@ -655,8 +659,8 @@ function setupMouseClicks(){
             platformX -= displayElement.offsetLeft + topDiv.offsetLeft;
             platformY -= displayElement.offsetTop + topDiv.offsetTop;
 
-            let platformWidth = Math.abs(g.playerInteractions.mouseDownLocation.x - g.playerInteractions.mouseUpLocation.x);
-            let platformHeight = Math.abs(g.playerInteractions.mouseDownLocation.y - g.playerInteractions.mouseUpLocation.y);
+            let platformWidth = Math.abs(g.mouse.downLocation.x - g.mouse.upLocation.x);
+            let platformHeight = Math.abs(g.mouse.downLocation.y - g.mouse.upLocation.y);
 
             let newPlatform = {
                 x:platformX,
@@ -665,42 +669,42 @@ function setupMouseClicks(){
                 height:platformHeight,
             }
             
-            g.playerInteractions.mouseDownLocation = undefined
-            g.playerInteractions.mouseUpLocation = undefined
+            g.mouse.downLocation = undefined
+            g.mouse.upLocation = undefined
             
             //probably easier to just pass the object really. but already done this
             addNewPlatform(newPlatform.x,newPlatform.y,newPlatform.width,newPlatform.height);
             // areaPlatforms.push(newPlatform);
         }
-        else if(g.playerInteractions.portalToMove > -1 && g.playerInteractions.portalMoveAllow){
+        else if(g.menuOptions.portalToMove > -1 && g.menuOptions.portalMoveAllow){
             
             //place the portal in the new position
             let portalMove = g.game.portals.reduce((indexOfMatch,portal,index)=> {
-                if(portal.destination == g.playerInteractions.portalToMove){
+                if(portal.destination == g.menuOptions.portalToMove){
                     return index;
                 }
                 return indexOfMatch;
             },-1)
             if(portalMove > -1){
                 
-                g.game.portals[portalMove].x = g.playerInteractions.mouseUpLocation.x;
-                g.game.portals[portalMove].y = g.playerInteractions.mouseUpLocation.y;
+                g.game.portals[portalMove].x = g.mouse.upLocation.x;
+                g.game.portals[portalMove].y = g.mouse.upLocation.y;
 
                 //clear the portal on the front canvas
                 let topDiv = document.getElementById("topDiv")
-                let clearX = g.playerInteractions.mouseUpLocation.x - displayElement.offsetLeft - topDiv.offsetLeft - 50
-                let clearY = g.playerInteractions.mouseUpLocation.y - displayElement.offsetTop - topDiv.offsetTop - 50
+                let clearX = g.mouse.upLocation.x - displayElement.offsetLeft - topDiv.offsetLeft - 50
+                let clearY = g.mouse.upLocation.y - displayElement.offsetTop - topDiv.offsetTop - 50
                 
                 let frontCanvas = document.getElementById("canvasAreaFront").getContext("2d");
                 objectDrawFunctions.clearPlatform({x:clearX,y:clearY,width:100,height:100},frontCanvas)
 
 
                 g.rendering.updateBackground = true;
-                g.playerInteractions.portalToMove = -1;
+                g.menuOptions.portalToMove = -1;
             }
         }
 
-        g.playerInteractions.previewPlatform = undefined
+        g.menuOptions.previewPlatform = undefined
     })
 }
 
@@ -731,41 +735,41 @@ function gameStep(){
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
 function drawVisualAdditions(canvas){
 
-    if(g.playerInteractions.mouseUpLocation && g.playerInteractions.mouseDownLocation && g.playerInteractions.placePlatformsAllow){
+    if(g.mouse.upLocation && g.mouse.downLocation && g.menuOptions.placePlatformsAllow){
         
         let platform = {}
         let displayElement = document.getElementById("canvasArea");
         let topDiv = document.getElementById("topDiv")
-        platform.x = ((g.playerInteractions.mouseDownLocation.x < g.playerInteractions.mouseUpLocation.x) ? g.playerInteractions.mouseDownLocation.x : g.playerInteractions.mouseUpLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft;
-        platform.y = ((g.playerInteractions.mouseDownLocation.y < g.playerInteractions.mouseUpLocation.y) ? g.playerInteractions.mouseDownLocation.y : g.playerInteractions.mouseUpLocation.y) - displayElement.offsetTop + topDiv.offsetTop;
-        platform.width = Math.abs(g.playerInteractions.mouseDownLocation.x - g.playerInteractions.mouseUpLocation.x);
-        platform.height = Math.abs(g.playerInteractions.mouseDownLocation.y - g.playerInteractions.mouseUpLocation.y);
-        if(g.playerInteractions.previewPlatform){
-            objectDrawFunctions.clearPlatform(g.playerInteractions.previewPlatform,canvas)
+        platform.x = ((g.mouse.downLocation.x < g.mouse.upLocation.x) ? g.mouse.downLocation.x : g.mouse.upLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft;
+        platform.y = ((g.mouse.downLocation.y < g.mouse.upLocation.y) ? g.mouse.downLocation.y : g.mouse.upLocation.y) - displayElement.offsetTop + topDiv.offsetTop;
+        platform.width = Math.abs(g.mouse.downLocation.x - g.mouse.upLocation.x);
+        platform.height = Math.abs(g.mouse.downLocation.y - g.mouse.upLocation.y);
+        if(g.menuOptions.previewPlatform){
+            objectDrawFunctions.clearPlatform(g.menuOptions.previewPlatform,canvas)
         }
-        g.playerInteractions.previewPlatform = platform
+        g.menuOptions.previewPlatform = platform
         objectDrawFunctions.drawPlatform(platform,canvas)
     }
-    else if(g.playerInteractions.portalMoveAllow && g.playerInteractions.portalToMove > -1){
+    else if(g.menuOptions.portalMoveAllow && g.menuOptions.portalToMove > -1){
 
         let tempPortal = {
-            x:g.playerInteractions.mouseUpLocation.x,
-            y:g.playerInteractions.mouseUpLocation.y,
-            destination:g.playerInteractions.portalToMove
+            x:g.mouse.upLocation.x,
+            y:g.mouse.upLocation.y,
+            destination:g.menuOptions.portalToMove
         }
         
         //for a quick and simple test just using the platform redraw stuff
         let platform = {}
         let displayElement = document.getElementById("canvasArea");
         let topDiv = document.getElementById("topDiv")
-        platform.x = (g.playerInteractions.mouseUpLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft - 50;
-        platform.y = (g.playerInteractions.mouseUpLocation.y) - displayElement.offsetTop + topDiv.offsetTop -50;
+        platform.x = (g.mouse.upLocation.x) - displayElement.offsetLeft + topDiv.offsetLeft - 50;
+        platform.y = (g.mouse.upLocation.y) - displayElement.offsetTop + topDiv.offsetTop -50;
         platform.width = 100;
         platform.height = 100;
-        if(g.playerInteractions.previewPlatform){
-            objectDrawFunctions.clearPlatform(g.playerInteractions.previewPlatform,canvas)
+        if(g.menuOptions.previewPlatform){
+            objectDrawFunctions.clearPlatform(g.menuOptions.previewPlatform,canvas)
         }
-        g.playerInteractions.previewPlatform = platform
+        g.menuOptions.previewPlatform = platform
         /*-----------------------------------TEMP CODE-----------------------------------------------*/
 
         objectDrawFunctions.drawPortal(tempPortal,canvas)
