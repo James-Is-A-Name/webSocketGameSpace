@@ -143,7 +143,7 @@ const objectDrawFunctions = {
         return playerObject.playerDismantleState >= totalNumFrames
     },
 
-    playerDismantle: (playerObject,canvas)=>{
+    playerDismantle: (playerObject,canvas,gameHeight)=>{
 
         //this will hopefullt catch null and undefined as well
         if(playerObject.playerDismantleState > 0){

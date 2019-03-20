@@ -34,6 +34,7 @@ class gameDisplay{
             serverConnection: {},
             displayConnections: {},
             controllerConnections: {},
+            pendingConnections: {},
         }
 
         this.game = {
@@ -84,7 +85,6 @@ class gameDisplay{
     }
 }
 
-
 //it was still working without this being declared globaly somehow
 let p2pConnectionTesting = null;
 
@@ -99,33 +99,35 @@ let g;
 function p2pConnect(whoTo){
 
     //create a socket thing
-    let testConnection = getAWebRTC();
+    let connection = getAWebRTC();
 
     //setup how to send it off
-    testConnection.sendOfferFunction = ()=>{
+    connection.sendOfferFunction = ()=>{
         //Hard code who to send a message for now
         let message = {
             p2pConnect: true,
             target: whoTo,
             from: g.game.activeDisplayId,
             isADisplay: true,
-            offer: testConnection.offerToSend
+            offer: connection.offerToSend
         }
         g.comms.serverConnection.send(JSON.stringify(message))
     }
 
     //trigger the offer that will then trigger the send
-    testConnection.createOffer()
+    connection.createOffer()
 
-    p2pConnectionTesting = testConnection;
+    // p2pConnectionTesting = testConnection;
+    // return connection;
+    g.comms.pendingConnections[whoTo] = connection;
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
     
-    let testConnection = getAWebRTC();
+    let connection = getAWebRTC();
 
-    testConnection.sendAnswerFunction = () =>{
+    connection.sendAnswerFunction = () =>{
         
         //this should have a single point of decleration so the display and controllers don't get out of sync
         let message = {
@@ -133,17 +135,14 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
             target: fromWho,
             from: g.game.activeDisplayId,
             isADisplay: true,
-            answer: testConnection.answerToSend
+            answer: connection.answerToSend
         }
         g.comms.serverConnection.send(JSON.stringify(message))
     }
 
-    testConnection.acceptOffer(JSON.parse(offer))
-
-    p2pConnectionTesting = testConnection;
-
+    connection.acceptOffer(JSON.parse(offer))
     
-    p2pConnectionTesting.dataChannelSetupCallback = ()=>{
+    connection.dataChannelSetupCallback = ()=>{
         //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
@@ -153,12 +152,12 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
 
     let connectionIsController = isAController;
 
-    p2pConnectionTesting.connectionId = fromWho;
+    connection.connectionId = fromWho;
 
     if(connectionIsController){
-        p2pConnectionTesting.handleMessage = handleControllerMessage
+        connection.handleMessage = handleControllerMessage
         
-        g.comms.controllerConnections[fromWho] = p2pConnectionTesting
+        g.comms.controllerConnections[fromWho] = connection
     }
     else{
         //if not in portals add it
@@ -167,24 +166,33 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
             g.rendering.updateBackground = true;
             
             //should make this check if its already connected
-            g.comms.displayConnections[fromWho] = p2pConnectionTesting
+            g.comms.displayConnections[fromWho] = connection
         }
 
-        p2pConnectionTesting.handleMessage = handleDisplayMessage
+        connection.handleMessage = handleDisplayMessage
     }
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptAnswer(answer,fromWho,isAController){
+
     console.log("accept an answer from ",fromWho)
     //got an offer so accept it and send an answer
-    p2pConnectionTesting.acceptAnswer(JSON.parse(answer))
+
+    
+    let connectionInstance = g.comms.pendingConnections[fromWho]
+    //quick check to confirm connection exists 
+    if(!connectionInstance){
+        return;
+    }
+
+    connectionInstance.acceptAnswer(JSON.parse(answer))
 
     let connectionIsController = isAController;
 
-    p2pConnectionTesting.connectionId = fromWho;
+    connectionInstance.connectionId = fromWho;
 
-    p2pConnectionTesting.dataChannelSetupCallback = ()=>{
+    connectionInstance.dataChannelSetupCallback = ()=>{
         //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
@@ -193,9 +201,9 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
     }
 
     if(connectionIsController){
-        p2pConnectionTesting.handleMessage = handleControllerMessage
+        connectionInstance.handleMessage = handleControllerMessage
         
-        g.comms.controllerConnections[fromWho] = p2pConnectionTesting
+        g.comms.controllerConnections[fromWho] = connectionInstance
 
     }
     else{        //if not in portals add it
@@ -204,9 +212,9 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
             g.rendering.updateBackground = true;
 
             //should make this check if its already connected
-            g.comms.displayConnections[fromWho] = p2pConnectionTesting
+            g.comms.displayConnections[fromWho] = connectionInstance
         }
-        p2pConnectionTesting.handleMessage = handleDisplayMessage
+        connectionInstance.handleMessage = handleDisplayMessage
     }
 }
 
@@ -660,7 +668,7 @@ function setupMouseClicks(){
         //if screenX is used it grabs the location in relation to the monitor
         g.mouse.upLocation = {x:evt.clientX,y:evt.clientY}
 
-        if(g.mouse.downLocation != null && g.menuOptions.placePlatformsAllow){
+        if(g.mouse.downLocation !== null && g.menuOptions.placePlatformsAllow){
 
             let platformX = (g.mouse.downLocation.x < g.mouse.upLocation.x) ? g.mouse.downLocation.x : g.mouse.upLocation.x;
             let platformY = (g.mouse.downLocation.y < g.mouse.upLocation.y) ? g.mouse.downLocation.y : g.mouse.upLocation.y;
@@ -737,7 +745,6 @@ function gameStep(){
     drawVisualAdditions(g.canvas.front);
 }
 
-
 /* ---------------------- maybe MOVE TO ObjectDraw       -------------------------------*/
 //For drawing things that ddont interact like the example platform square or drag and drop location of things
 function drawVisualAdditions(canvas){
@@ -809,7 +816,7 @@ function drawEnteties(canvas){
 
     Object.keys(g.game.playersDeleting).forEach(key => {
         let element = g.game.playersDeleting[key];
-        objectDrawFunctions.playerDismantle(element,canvas);
+        objectDrawFunctions.playerDismantle(element,canvas,g.gameConstansts.gameHeight);
     });
     
     Object.keys(g.game.playersRespawn).forEach(key => {
