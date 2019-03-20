@@ -60,8 +60,8 @@ class gameDisplay{
         }
 
         this.displayDetails = {
-            leftDisplay: undefined,
-            rightDisplay: undefined,
+            leftDisplay: null,
+            rightDisplay: null,
         }
 
         this.rendering = {
@@ -70,22 +70,23 @@ class gameDisplay{
 
         this.mouse = {
 
-            downLocation : undefined,
-            lastPosition : undefined,
-            upLocation : undefined,
+            downLocation : null,
+            lastPosition : null,
+            upLocation : null,
         }
 
         this.menuOptions = {
-
-            previewPlatform : undefined,
-
-            //More of a menu option really
+            previewPlatform : null,
             placePlatformsAllow : false,
             portalMoveAllow : false,
             portalToMove : -1,
         }
     }
 }
+
+
+//it was still working without this being declared globaly somehow
+let p2pConnectionTesting = null;
 
 /*---------------------interaction engine----------------------*/
 const physActions = new ObjectInteractions()
@@ -425,7 +426,7 @@ function swapMenuContent(show){
         }
         
         let displayOption = document.createElement("option");
-        displayOption.value = g.displayDetails.leftDisplay ? g.displayDetails.leftDisplay : undefined;
+        displayOption.value = g.displayDetails.leftDisplay ? g.displayDetails.leftDisplay : null;
         displayOption.innerHTML = g.displayDetails.leftDisplay ? g.displayDetails.leftDisplay : "none";
         leftSideDestination.appendChild(displayOption);
 
@@ -446,7 +447,7 @@ function swapMenuContent(show){
         }
         
         displayOption = document.createElement("option");
-        displayOption.value = g.displayDetails.rightDisplay ? g.displayDetails.rightDisplay : undefined;
+        displayOption.value = g.displayDetails.rightDisplay ? g.displayDetails.rightDisplay : null;
         displayOption.innerHTML = g.displayDetails.rightDisplay ? g.displayDetails.rightDisplay : "none";
         rightSideDestination.appendChild(displayOption);
 
@@ -659,7 +660,7 @@ function setupMouseClicks(){
         //if screenX is used it grabs the location in relation to the monitor
         g.mouse.upLocation = {x:evt.clientX,y:evt.clientY}
 
-        if(g.mouse.downLocation != undefined && g.menuOptions.placePlatformsAllow){
+        if(g.mouse.downLocation != null && g.menuOptions.placePlatformsAllow){
 
             let platformX = (g.mouse.downLocation.x < g.mouse.upLocation.x) ? g.mouse.downLocation.x : g.mouse.upLocation.x;
             let platformY = (g.mouse.downLocation.y < g.mouse.upLocation.y) ? g.mouse.downLocation.y : g.mouse.upLocation.y;
@@ -680,8 +681,8 @@ function setupMouseClicks(){
                 height:platformHeight,
             }
             
-            g.mouse.downLocation = undefined
-            g.mouse.upLocation = undefined
+            g.mouse.downLocation = null
+            g.mouse.upLocation = null
             
             //probably easier to just pass the object really. but already done this
             addNewPlatform(newPlatform.x,newPlatform.y,newPlatform.width,newPlatform.height);
@@ -714,7 +715,7 @@ function setupMouseClicks(){
             }
         }
 
-        g.menuOptions.previewPlatform = undefined
+        g.menuOptions.previewPlatform = null
     })
 }
 
