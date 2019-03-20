@@ -15,6 +15,17 @@ document.addEventListener("DOMContentLoaded",setupDisplayArea);
 /*
 class gameDisplay{
     constructor(){
+ 
+        //Have some sort on inclusion of the phys and draw JS file things
+        //physEngine = //possibly passed into the constructor from the main html so the logic of joining things can be sorted in a singular top place
+        //drawEngine = //same as ^
+
+
+        //might be better than constantly re referening the same thing that shouldn't really be swapped out for a different one
+        this.displayCanvas{
+            frontCanvas
+            backCanvas
+        }
 
         this.comms = {
             serverConnection:
@@ -24,15 +35,26 @@ class gameDisplay{
 
         this.game = {
             playerEntities:
-            portals:
-            platforms:
+            //Possibly another one for all the connections not just the current ones
+
+            dismantlingEnteties:
+            respawningEntities:
+
+             portals:
+             platforms:
+
+            playerScores
+        }
+
+        this.gameConstansts = {
+             entitySize:
+             playerSpeed:
+             displayWidth:
+             displayHeight:
         }
 
         this.displayDetails = {
-            entitySize:
-            playerSpeed:
-            displayWidth:
-            displayHeight:
+            displayId:   //maybe put this in the comms part?
 
             leftSideDestination:
             rightSideDestination:
@@ -54,7 +76,7 @@ class gameDisplay{
 //CHANGE TO BE BETTER LAYED OUT
 
 /*---------------------communications----------------------*/
-let p2pConnectionTesting;
+let p2pConnectionTesting; //is really not actually required. could probably be removed with minimal effort
 
 let serverConnection;
 
@@ -63,11 +85,6 @@ let displayConnections = {}; //store all the p2p display connections
 let controllerConnections = {}; //store all the p2p controller connections
 
 let controllersOnScreen = {}; //will be used for determining if controller commands to this display are to be used
-// let communitcations = {
-//     server,
-//     displays,
-//     controllers
-// }
 
 let leftDisplay = undefined;
 let rightDisplay = undefined;
@@ -80,17 +97,9 @@ const entitieSize = 50;
 
 let playerMoveSpeed = entitieSize/10;
 
-// let gameHeight = document.documentElement.clientHeight;
-// let gameWidth = document.documentElement.clientWidth;
 let gameHeight;
 let gameWidth;
 
-// let gameDetails = {
-//     entitieSize: 50,
-//     moveSpeed: 5,
-//     height:
-//     width: 
-// }
 /*---------------------setup related things----------------------*/
 
 
@@ -105,11 +114,6 @@ let mouseDownLocation = undefined;
 let lastMousePosition = undefined;
 let mouseUpLocation = undefined;
 
-// let previousPlatform = undefined
-// let previousPlatformWidth;
-// let previousPlatformHeight;
-// let previousPlatformX;
-// let previousPlatformY;
 let previewPlatform;
 
 //More of a menu option really
@@ -121,17 +125,6 @@ let portalToMove = -1;
 /*---------------------game state----------------------*/
 let activeDisplayId = false;
 
-// let gameElelemtns = {
-//     playerElements:{
-//         playersRespawn:{},
-//         playerEntities:{},
-//         playersDeleting
-//     },
-//     enviromentElements:{
-//         areaPlatforms:{},
-//         portals:{}
-//     }
-// } 
 let playersRespawn = {}; //This is really just a temporary way of doing this. could be better acheived
 
 let playerEntities = {};
