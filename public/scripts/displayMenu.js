@@ -3,16 +3,16 @@
 
 
 
-function swapMenuContent(show,menuElement){
-    let menuSection = document.getElementById("menuSection")
+function swapMenuContent(show,menuElement,portals,serverComs){
+    // let menuElement = document.getElementById("menuElement")
 
-    let menuSectionContents = []
-    menuSection.childNodes.forEach( (element)=>{
-        menuSectionContents.push(element);
+    let menuElementContents = []
+    menuElement.childNodes.forEach( (element)=>{
+        menuElementContents.push(element);
     })
 
-    menuSectionContents.forEach((element)=>{
-        menuSection.removeChild(element)
+    menuElementContents.forEach((element)=>{
+        menuElement.removeChild(element)
     })
     
 
@@ -142,10 +142,10 @@ function swapMenuContent(show,menuElement){
         p2pTargetForm.appendChild(p2pTarget);
         p2pTargetForm.appendChild(p2pSubmit);
 
-        menuSection.appendChild(newButton);
-        menuSection.appendChild(platformDrawButton);
-        menuSection.appendChild(portalMoveButton);
-        menuSection.appendChild(p2pTargetForm);
+        menuElement.appendChild(newButton);
+        menuElement.appendChild(platformDrawButton);
+        menuElement.appendChild(portalMoveButton);
+        menuElement.appendChild(p2pTargetForm);
         
         let leftDisplayState = document.createElement("span");
         leftDisplayState.innerHTML = "left side destination";
@@ -155,7 +155,7 @@ function swapMenuContent(show,menuElement){
         
         leftBlock.style.gridColumn = "1";
         leftBlock.style.gridRow = "3";
-        menuSection.appendChild(leftBlock);
+        menuElement.appendChild(leftBlock);
         
         p2pTargetForm.appendChild(menuLineBreak);
 
@@ -167,9 +167,9 @@ function swapMenuContent(show,menuElement){
         
         rightBlock.style.gridColumn = "3";
         rightBlock.style.gridRow = "3";
-        menuSection.appendChild(rightBlock)
+        menuElement.appendChild(rightBlock)
         
-        menuSection.className = "menuShowingSection"
+        menuElement.className = "menuShowingSection"
 
     }
     else{
@@ -179,8 +179,8 @@ function swapMenuContent(show,menuElement){
         newButton.innerHTML = newButton.title;
         newButton.onclick = () => {swapMenuContent(true)};
 
-        menuSection.className = "menuHidingSection"
+        menuElement.className = "menuHidingSection"
 
-        menuSection.appendChild(newButton);
+        menuElement.appendChild(newButton);
     }
 }
