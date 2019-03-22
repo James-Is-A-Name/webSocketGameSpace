@@ -96,7 +96,7 @@ const physActions = new ObjectInteractions()
 let g;
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
-function p2pConnect(whoTo){
+function p2pConnect(whoTo,displayId,serverConnection){
 
     //create a socket thing
     let connection = getAWebRTC();
@@ -107,23 +107,22 @@ function p2pConnect(whoTo){
         let message = {
             p2pConnect: true,
             target: whoTo,
-            from: g.game.activeDisplayId,
+            from: displayId,
             isADisplay: true,
             offer: connection.offerToSend
         }
-        g.comms.serverConnection.send(JSON.stringify(message))
+        serverConnection.send(JSON.stringify(message))
     }
 
     //trigger the offer that will then trigger the send
     connection.createOffer()
 
-    // p2pConnectionTesting = testConnection;
-    // return connection;
-    g.comms.pendingConnections[whoTo] = connection;
+    return connection;
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
+    // function p2pAcceptOffer(offer,fromWho,isAController,displayId,serverConnection){
     
     let connection = getAWebRTC();
 
@@ -269,7 +268,8 @@ function handleDisplayMessage(message,fromWho){
             //not the best way but will check if it stops double ups
             g.comms.controllerConnections[connectionId] = {inProgress: true}
             console.log("connecting to ",connectionId)
-            p2pConnect(connectionId);
+
+            g.comms.pendingConnections[connectionId] = p2pConnect(connectionId,g.game.activeDisplayId,g.comms.serverConnection);
         })
     }
     else if(theMessage.shiftedPlayer){
@@ -410,7 +410,9 @@ function swapMenuContent(show){
 
             let value = document.getElementById("connectionTarget").value;
             if(!isNaN(parseInt(value))){
-                p2pConnect(parseInt(value))
+                // p2pConnect(parseInt(value))
+                let whoTo = parseInt(value)
+                g.comms.pendingConnections[whoTo] = p2pConnect(whoTo,g.game.activeDisplayId,g.comms.serverConnection);
             }
         }
         let p2pTarget = document.createElement("input");
