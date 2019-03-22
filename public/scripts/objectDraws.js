@@ -143,7 +143,7 @@ const objectDrawFunctions = {
         return playerObject.playerDismantleState >= totalNumFrames
     },
 
-    playerDismantle: (playerObject,canvas)=>{
+    playerDismantle: (playerObject,canvas,gameHeight)=>{
 
         //this will hopefullt catch null and undefined as well
         if(playerObject.playerDismantleState > 0){
@@ -170,7 +170,7 @@ const objectDrawFunctions = {
         
             canvas.beginPath();
 
-            let previousColor = canvas.strokeStyle;
+            // let previousColor = canvas.strokeStyle;
 
             if(playerObject.stance == 0){
                 canvas.strokeStyle = "rgb(255,0,0)"
@@ -216,7 +216,9 @@ const objectDrawFunctions = {
             }
             canvas.stroke()
         
-            canvas.strokeStyle = previousColor;
+            //enforce base colour draw
+            canvas.strokeStyle = "rgb(0,0,0)";
+            // canvas.strokeStyle = previousColor;
 
             if(playerObject.playerDismantleState < totalNumFrames){
                 playerObject.playerDismantleState++;
