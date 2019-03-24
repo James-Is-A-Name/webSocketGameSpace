@@ -31,6 +31,15 @@ class gameDisplay{
             
             //controllersOnScreen = {}, //could be used for determining if controller commands to this display are to be used.
             
+            p2pConnections = {}, //Have all connections in one object but have them flag what they are after connecting
+            // {
+            //     status: "connected"; // or pending or disconnected
+            //     connection: null; //the connection object
+            //     type: "pending"; //the type of thing it is e.g. controller, display, other? pending for not yet known, might have it as null instead
+            // }
+            //Will require the message handling to be the same for all then determine things based off what the connection type is
+
+            //Will be replaced with functions that obtain these from the main list
             serverConnection: {},
             displayConnections: {},
             controllerConnections: {},
@@ -157,6 +166,10 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
         connection.handleMessage = handleControllerMessage
         
         g.comms.controllerConnections[fromWho] = connection
+
+        //will change to this then move it out of the function
+        g.comms.p2pConnections[fromWho].connection = connection;
+        g.comms.p2pConnections[fromWho].type = "controller";
     }
     else{
         //if not in portals add it
@@ -166,6 +179,11 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
             
             //should make this check if its already connected
             g.comms.displayConnections[fromWho] = connection
+
+            
+            //will change to this then move it out of the function
+            g.comms.p2pConnections[fromWho].connection = connection;
+            g.comms.p2pConnections[fromWho].type = "display";
         }
 
         connection.handleMessage = handleDisplayMessage
