@@ -4,16 +4,11 @@
     //or have this done in the top file and have it decide the draw and inter objects interations code
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
 
-//THIS WHOLE THING SHOULD BE MOVED INTO A SINGLE OBJECT OR SOMETHING TO AVOID CLUTTERING UP THE GLOBAL REFERENCES
-//VERY EASY FOR THIS TO TURN UGLY
-
 class gameDisplay{
     constructor(){
- 
         //Have some sort on inclusion of the phys and draw JS file things
         //physEngine = //possibly passed into the constructor from the main html so the logic of joining things can be sorted in a singular top place
         //drawEngine = //same as ^
-
 
         let canvasBackElement = document.getElementById("canvasArea");
         let canvasBack = canvasBackElement.getContext("2d");
@@ -25,24 +20,15 @@ class gameDisplay{
             front: canvasFront,
             back: canvasBack
         }
-        
 
         this.comms = {
-            
             //controllersOnScreen = {}, //could be used for determining if controller commands to this display are to be used.
-            
+
             p2pConnections : {}, //Have all connections in one object but have them flag what they are after connecting
-            // {
-            //     status: "connected"; // or pending or disconnected
-            //     connection: null; //the connection object
-            //     type: "pending"; //the type of thing it is e.g. controller, display, other? pending for not yet known, might have it as null instead
-            // }
             //Will require the message handling to be the same for all then determine things based off what the connection type is
 
             //Will be replaced with functions that obtain these from the main list
             serverConnection: {},
-            // displayConnections: {},
-            // controllerConnections: {},
             pendingConnections: {},
         }
 
@@ -53,7 +39,7 @@ class gameDisplay{
 
             playerEntities : {},
             playersDeleting : {},
-            
+
             //should probably make these objects like the others
             areaPlatforms : [],
             portals : [],
@@ -104,8 +90,6 @@ const physActions = new ObjectInteractions()
 //needs to sort stuff out else where
 let g;
 
-
-
 /*---------------------Connection refining actions----------------------*/
 function getDisplayConnections(){
 
@@ -117,8 +101,7 @@ function getDisplayConnections(){
         connectionsObject[key] = g.comms.p2pConnections[key].connection
         return connectionsObject;
     },{})
-
-    console.log("display connections object is",displayConnections)
+    
     return displayConnections
 }
 
@@ -133,12 +116,9 @@ function getControllerConnections(){
         connectionsObject[key] =  g.comms.p2pConnections[key].connection
         return connectionsObject
     },{})
-
-    console.log("controller connections object is",controllerConnections)
+    
     return controllerConnections
 }
-
-
 /*---------------------Connection refining actions----------------------*/
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
@@ -158,12 +138,11 @@ function p2pConnect(whoTo,displayId,serverConnection){
             offer: connection.offerToSend
         }
         serverConnection.send(JSON.stringify(message))
-        
+
     }
 
     //trigger the offer that will then trigger the send
     connection.createOffer()
-
 
     //first need to make it an object so properties can be added
     g.comms.p2pConnections[whoTo] = {}
@@ -180,11 +159,11 @@ function p2pConnect(whoTo,displayId,serverConnection){
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
     // function p2pAcceptOffer(offer,fromWho,isAController,displayId,serverConnection){
-    
+
     let connection = getAWebRTC();
 
     connection.sendAnswerFunction = () =>{
-        
+
         //this should have a single point of decleration so the display and controllers don't get out of sync
         let message = {
             p2pConnect: true,
@@ -197,7 +176,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
     }
 
     connection.acceptOffer(JSON.parse(offer))
-    
+
     connection.dataChannelSetupCallback = ()=>{
         //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
         //INTIAL TESTING HAPPENING
@@ -213,7 +192,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
 
     if(connectionIsController){
         connection.handleMessage = handleControllerMessage
-        
+
         // g.comms.controllerConnections[fromWho] = connection
         g.comms.p2pConnections[fromWho] = {}
         //will change to this then move it out of the function
@@ -226,11 +205,8 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
         if(!g.game.portals.find( (portal) => portal.id == fromWho )){
             addPortal(fromWho)
             g.rendering.updateBackground = true;
-            
-            //should make this check if its already connected
-            // g.comms.displayConnections[fromWho] = connection
-            
 
+            //might want to make this check if its already connected to avoid a possible miss alignment
             g.comms.p2pConnections[fromWho] = {}
             //will change to this then move it out of the function
             g.comms.p2pConnections[fromWho].connection = connection;
@@ -248,9 +224,8 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
     console.log("accept an answer from ",fromWho)
     //got an offer so accept it and send an answer
 
-    
     let connection = g.comms.pendingConnections[fromWho]
-    //quick check to confirm connection exists 
+    //quick check to confirm connection exists
     if(!connection){
         return;
     }
@@ -272,9 +247,7 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
 
     if(connectionIsController){
         connection.handleMessage = handleControllerMessage
-        
-        // g.comms.controllerConnections[fromWho] = connectionInstance
-        
+
         g.comms.p2pConnections[fromWho].connection = connection;
         g.comms.p2pConnections[fromWho].type = "controller";
         g.comms.p2pConnections[fromWho].status = "pending";
@@ -285,9 +258,7 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
             addPortal(fromWho)
             g.rendering.updateBackground = true;
 
-            //should make this check if its already connected
-            // g.comms.displayConnections[fromWho] = connectionInstance
-
+            //might want to make this check if its already connected to avoid a possible miss alignment
             g.comms.p2pConnections[fromWho] = {}
 
             g.comms.p2pConnections[fromWho].connection = connection;
@@ -306,34 +277,20 @@ function updateDisplayConnections(){
     //in a more planned manner do the same with the list of displays
         //tell one of two displays to connect. not both
 
-    // let connectedControllerIds = {addControllerConnections:Object.keys(g.comms.controllerConnections)}
     let connectedControllerIds = {addControllerConnections:Object.keys(getControllerConnections())}
-
-    console.log(connectedControllerIds)
 
     broadcastToDisplays(connectedControllerIds)
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function broadcastToDisplays(message){
-
-    // let dusplayConnections = Object.keys(g.comms.p2pConnections).filter((connectionInfo)=>{
-    //     return connectionInfo.type == "display" && connectionInfo.status == "connected";
-    // })
-
-    // dusplayConnections.forEach((key)=>{
-    //     g.comms.p2pConnections[key].channel.dataChannel.send(JSON.stringify(message))
-    // })
-
-
     let displayConnections = getDisplayConnections();
     Object.keys(displayConnections).forEach((key)=>{
+
+        //THIS SHOULD BE ALTERED TO BE A SEND MESSAGE FUNCTION like sendMessage(whoTo,message)
+
         displayConnections[key].dataChannel.send(JSON.stringify(message))
     })
-
-    // Object.keys(g.comms.displayConnections).forEach((key)=>{
-    //     g.comms.displayConnections[key].dataChannel.send(JSON.stringify(message))
-    // })
 }
 
 function handleDisplayMessage(message,fromWho){
@@ -347,20 +304,16 @@ function handleDisplayMessage(message,fromWho){
 
 
             return !(Object.keys(g.comms.p2pConnections).filter((con)=>(con.type == "display" && con.status == "connected"))
-            .find((displayConnection)=>{return displayConnection == connectionToAdd;
-            // return !(Object.keys(g.comms.displayConnections).find((displayConnection)=>{
-                // return displayConnection == connectionToAdd;
-            }))
+            .find((displayConnection)=> displayConnection == connectionToAdd))
         })
 
         console.log("need to add connections ",newConnections)
         //If they all try make connections i think a race condition might occur
             //try some sort of reduction thing
-                //tell 1 about 2,3,4,5. 2 about 3,4,5. 3 about 4,5 and 4 about 5 
+                //tell 1 about 2,3,4,5. 2 about 3,4,5. 3 about 4,5 and 4 about 5
     }
     else if(theMessage.addControllerConnections){
         let newConnections = theMessage.addControllerConnections.filter((connectionToAdd)=>{
-            // return !(Object.keys(g.comms.controllerConnections).find((connectedControllerId)=>{
             return !(Object.keys(getControllerConnections()).find((connectedControllerId)=>{
                 return connectedControllerId == connectionToAdd;
             }))
@@ -370,7 +323,6 @@ function handleDisplayMessage(message,fromWho){
             //not the best way but will check if it stops double ups
             //not sure this was actually used and dont want to remove it completly incase it was actually quite important
             // g.comms.controllerConnections[connectionId] = {inProgress: true}
-            console.log("connecting to ",connectionId)
 
             g.comms.pendingConnections[connectionId] = p2pConnect(connectionId,g.game.activeDisplayId,g.comms.serverConnection);
         })
@@ -381,7 +333,7 @@ function handleDisplayMessage(message,fromWho){
 }
 
 function handleControllerMessage(message,fromWho){
-    //very flimsy will break if not correctly formmatted as JSON 
+    //very flimsy will break if not correctly formmatted as JSON
     let theMessage = JSON.parse(message.data)
 
     if(g.game.playerEntities[fromWho]){
@@ -428,7 +380,6 @@ function handleControllerMessage(message,fromWho){
         }
         else if(theMessage.whoAreYou){
             getControllerConnections()[fromWho].dataChannel.send(JSON.stringify({displayId:g.game.activeDisplayId}))
-            // g.comms.controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:g.game.activeDisplayId}))
         }
     }
     else if(theMessage.joinAsNewController){
@@ -449,10 +400,10 @@ function swapMenuContent(show){
     menuSectionContents.forEach((element)=>{
         menuSection.removeChild(element)
     })
-    
+
 
     if(show){
-        
+
         let newButton = document.createElement("button");
         newButton.title = "Hide Menu";
         newButton.innerHTML = newButton.title;
@@ -463,14 +414,14 @@ function swapMenuContent(show){
         let platformDrawButton = document.createElement("button")
         platformDrawButton.style.gridColumn = "1";
         platformDrawButton.style.gridRow = "2";
-        
+
         if(g.menuOptions.placePlatformsAllow){
             platformDrawButton.innerHTML = "platform draw enabled"
         }
         else{
             platformDrawButton.innerHTML = "platform draw disabled"
         }
-        
+
         platformDrawButton.onclick = () => {
             //As it will be toggled
             if(!g.menuOptions.placePlatformsAllow){
@@ -487,14 +438,14 @@ function swapMenuContent(show){
         let portalMoveButton = document.createElement("button")
         portalMoveButton.style.gridColumn = "2";
         portalMoveButton.style.gridRow = "2";
-        
+
         if(g.menuOptions.portalMoveAllow){
             portalMoveButton.innerHTML = "portal move enabled"
         }
         else{
             portalMoveButton.innerHTML = "portal move disabled"
         }
-        
+
         portalMoveButton.onclick = () => {
             //As it will be toggled
             if(!g.menuOptions.portalMoveAllow){
@@ -514,7 +465,6 @@ function swapMenuContent(show){
 
             let value = document.getElementById("connectionTarget").value;
             if(!isNaN(parseInt(value))){
-                // p2pConnect(parseInt(value))
                 let whoTo = parseInt(value)
                 g.comms.pendingConnections[whoTo] = p2pConnect(whoTo,g.game.activeDisplayId,g.comms.serverConnection);
             }
@@ -523,7 +473,7 @@ function swapMenuContent(show){
         p2pTarget.type = "text";
         p2pTarget.id = "connectionTarget";
         p2pTarget.style.width = "100%";
-        
+
         let p2pSubmit = document.createElement("input");
         p2pSubmit.type = "Submit";
         p2pSubmit.id = "connectToPeer";
@@ -538,14 +488,13 @@ function swapMenuContent(show){
         leftSideDestination.onchange = (e)=>{
             g.displayDetails.leftDisplay = e.target.value
         }
-        
+
         let displayOption = document.createElement("option");
         displayOption.value = g.displayDetails.leftDisplay ? g.displayDetails.leftDisplay : null;
         displayOption.innerHTML = g.displayDetails.leftDisplay ? g.displayDetails.leftDisplay : "none";
         leftSideDestination.appendChild(displayOption);
 
         //show the list of options
-        // Object.keys(g.comms.displayConnections).forEach((key)=>{
         Object.keys(getDisplayConnections()).forEach((key)=>{
             displayOption = document.createElement("option");
             displayOption.value = key;
@@ -553,21 +502,20 @@ function swapMenuContent(show){
             leftSideDestination.appendChild(displayOption);
         })
         leftSideDestination.value = g.displayDetails.leftDisplay;
-        
+
         let rightSideDestination = document.createElement("select");
         rightSideDestination.id = "rightSideDestination"
 
         rightSideDestination.onchange = (e)=>{
             g.displayDetails.rightDisplay = e.target.value
         }
-        
+
         displayOption = document.createElement("option");
         displayOption.value = g.displayDetails.rightDisplay ? g.displayDetails.rightDisplay : null;
         displayOption.innerHTML = g.displayDetails.rightDisplay ? g.displayDetails.rightDisplay : "none";
         rightSideDestination.appendChild(displayOption);
 
         //show the list of options
-        // Object.keys(g.comms.displayConnections).forEach((key)=>{
         Object.keys(getDisplayConnections()).forEach((key)=>{
             displayOption = document.createElement("option");
             displayOption.value = key;
@@ -585,17 +533,17 @@ function swapMenuContent(show){
         menuSection.appendChild(platformDrawButton);
         menuSection.appendChild(portalMoveButton);
         menuSection.appendChild(p2pTargetForm);
-        
+
         let leftDisplayState = document.createElement("span");
         leftDisplayState.innerHTML = "left side destination";
         let leftBlock = document.createElement("div");
         leftBlock.appendChild(leftDisplayState);
         leftBlock.appendChild(leftSideDestination);
-        
+
         leftBlock.style.gridColumn = "1";
         leftBlock.style.gridRow = "3";
         menuSection.appendChild(leftBlock);
-        
+
         p2pTargetForm.appendChild(menuLineBreak);
 
         let rightDisplayState = document.createElement("span");
@@ -603,11 +551,11 @@ function swapMenuContent(show){
         let rightBlock = document.createElement("div");
         rightBlock.appendChild(rightDisplayState)
         rightBlock.appendChild(rightSideDestination);
-        
+
         rightBlock.style.gridColumn = "3";
         rightBlock.style.gridRow = "3";
         menuSection.appendChild(rightBlock)
-        
+
         menuSection.className = "menuShowingSection"
 
     }
@@ -645,19 +593,19 @@ function addNewPlatform(x,y,width,height){
             y,
             width,
             height
-        }); 
-        
+        });
+
         g.rendering.updateBackground = true;
     }
 }
 
 function setupDisplayArea(){
-    
+
     g = new gameDisplay();
 
     g.gameConstansts.gameHeight = document.documentElement.clientHeight;
     g.gameConstansts.gameWidth = document.documentElement.clientWidth;
-    
+
     let displayElementBackground = document.getElementById("canvasArea");
 
     let displayElement = document.getElementById("canvasAreaFront");
@@ -677,7 +625,7 @@ function setupDisplayArea(){
 }
 
 function connectWebSocket(){
-    
+
     if(self.location.host == "basically-rock-paper-scissors.herokuapp.com"){
         g.comms.serverConnection = new WebSocket(`wss://${self.location.host}`);
     }
@@ -690,12 +638,12 @@ function connectWebSocket(){
         g.comms.serverConnection.send(JSON.stringify({actAsDisplay:true}));
 
         let connectionMessage = document.getElementById("serverConnectionState");
-        
+
         connectionMessage.innerHTML = "server connected"
     }
     g.comms.serverConnection.onclose = ()=>{
         let connectionMessage = document.getElementById("serverConnectionState");
-        
+
         connectionMessage.innerHTML = "server disconnected"
     }
 
@@ -755,9 +703,9 @@ function startGame(){
 //This wont work on mobiles. consider using pointer up down events.
     //ios might require touchstart/touchStop
 function setupMouseClicks(){
-    
+
     let displayElement = document.getElementById("canvasAreaFront");
-    
+
     displayElement.addEventListener("mousedown",(evt)=>{
         g.mouse.downLocation = {x:evt.clientX,y:evt.clientY}
 
@@ -773,11 +721,11 @@ function setupMouseClicks(){
     })
     displayElement.addEventListener("mousemove",(evt)=>{
 
-        //use this to draw a demo square        
+        //use this to draw a demo square
         g.mouse.upLocation = {x:evt.clientX,y:evt.clientY}
     })
     displayElement.addEventListener("mouseup",(evt)=>{
-        
+
         //if screenX is used it grabs the location in relation to the monitor
         g.mouse.upLocation = {x:evt.clientX,y:evt.clientY}
 
@@ -801,16 +749,16 @@ function setupMouseClicks(){
                 width:platformWidth,
                 height:platformHeight,
             }
-            
+
             g.mouse.downLocation = null
             g.mouse.upLocation = null
-            
+
             //probably easier to just pass the object really. but already done this
             addNewPlatform(newPlatform.x,newPlatform.y,newPlatform.width,newPlatform.height);
             // areaPlatforms.push(newPlatform);
         }
         else if(g.menuOptions.portalToMove > -1 && g.menuOptions.portalMoveAllow){
-            
+
             //place the portal in the new position
             let portalMove = g.game.portals.reduce((indexOfMatch,portal,index)=> {
                 if(portal.destination == g.menuOptions.portalToMove){
@@ -819,7 +767,7 @@ function setupMouseClicks(){
                 return indexOfMatch;
             },-1)
             if(portalMove > -1){
-                
+
                 g.game.portals[portalMove].x = g.mouse.upLocation.x;
                 g.game.portals[portalMove].y = g.mouse.upLocation.y;
 
@@ -827,7 +775,7 @@ function setupMouseClicks(){
                 let topDiv = document.getElementById("topDiv")
                 let clearX = g.mouse.upLocation.x - displayElement.offsetLeft - topDiv.offsetLeft - 50
                 let clearY = g.mouse.upLocation.y - displayElement.offsetTop - topDiv.offsetTop - 50
-                
+
                 objectDrawFunctions.clearPlatform({x:clearX,y:clearY,width:100,height:100},g.canvas.front)
 
 
@@ -841,8 +789,8 @@ function setupMouseClicks(){
 }
 
 function gameStep(){
-    
-    
+
+
     //Must be done before the entities are moved
     clearOldEntities(g.canvas.front);
     updateEntityStates();
@@ -863,7 +811,7 @@ function gameStep(){
 function drawVisualAdditions(canvas){
 
     if(g.mouse.upLocation && g.mouse.downLocation && g.menuOptions.placePlatformsAllow){
-        
+
         let platform = {}
         let displayElement = document.getElementById("canvasArea");
         let topDiv = document.getElementById("topDiv")
@@ -884,7 +832,7 @@ function drawVisualAdditions(canvas){
             y:g.mouse.upLocation.y,
             destination:g.menuOptions.portalToMove
         }
-        
+
         //for a quick and simple test just using the platform redraw stuff
         let platform = {}
         let displayElement = document.getElementById("canvasArea");
@@ -909,12 +857,12 @@ function clearOldEntities(canvas){
         let element = g.game.playerEntities[key];
         objectDrawFunctions.clearPlayerObject(element,canvas);
     });
-    
+
     Object.keys(g.game.playersDeleting).forEach(key => {
         let element = g.game.playersDeleting[key];
         objectDrawFunctions.clearPlayerObject(element,canvas);
     });
-    
+
     Object.keys(g.game.playersRespawn).forEach(key => {
         let element = g.game.playersRespawn[key];
         objectDrawFunctions.clearPlayerObject(element,canvas);
@@ -931,7 +879,7 @@ function drawEnteties(canvas){
         let element = g.game.playersDeleting[key];
         objectDrawFunctions.playerDismantle(element,canvas,g.gameConstansts.gameHeight);
     });
-    
+
     Object.keys(g.game.playersRespawn).forEach(key => {
         let element = g.game.playersRespawn[key];
         objectDrawFunctions.playerDismantle(element,canvas);
@@ -953,9 +901,9 @@ function updateEntityStates(){
         else if(playerObject.moveX > 0){
             playerObject.facingLeft = false;
         }
-        
+
         let platformCollisions = physActions.getPlatformCollisions(playerObject,g.game.areaPlatforms);
-            
+
         if(platformCollisions.length > 0){
             playerObject = physActions.platformCollisionsAction(platformCollisions,playerObject)
         }
@@ -964,38 +912,34 @@ function updateEntityStates(){
         }
 
         playerObject = physActions.playerGroundDetectionAction(playerObject,g.gameConstansts.gameHeight)
-        
+
         let sideCollision = physActions.displaySideCollision(playerObject,g.gameConstansts.gameWidth);
 
         if(sideCollision.collision){
             playerObject.x = sideCollision.x;
 
             if(sideCollision.left && g.displayDetails.leftDisplay){
-                // g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.leftDisplay}))
                 getControllerConnections()[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.leftDisplay}))
-                // g.comms.displayConnections[g.displayDetails.leftDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
                 getDisplayConnections()[g.displayDetails.leftDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
                 if(!playersShifted.find( player => player == playerObject.id)){
                     playersShifted.push(playerObject.id)
                 }
             }
             else if(sideCollision.right && g.displayDetails.rightDisplay){
-                // g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.rightDisplay}))
                 getControllerConnections()[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.rightDisplay}))
-                // g.comms.displayConnections[g.displayDetails.rightDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
                 getDisplayConnections()[g.displayDetails.rightDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
                 if(!playersShifted.find( player => player == playerObject.id)){
                     playersShifted.push(playerObject.id)
                 }
             }
 
-            
+
         }
 
 
         let portalCollision = physActions.portalCollisions(playerObject,g.game.portals)
         let playerBattles = physActions.checkPlayerInteractions(playerObject,g.game.playerEntities)
-        
+
 
         if(portalCollision){
             //send off controller to other display
@@ -1003,7 +947,7 @@ function updateEntityStates(){
             getControllerConnections()[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
             // g.comms.displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
             getDisplayConnections()[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
-            
+
             if(!playersShifted.find( player => player == playerObject.id)){
                 playersShifted.push(playerObject.id)
             }
@@ -1026,7 +970,7 @@ function updateEntityStates(){
 
 function playerDeletingAction(playersShifted){
     playersShifted.forEach( (keyToDelete)=>{
-        
+
         g.game.playersDeleting[keyToDelete] = g.game.playerEntities[keyToDelete];
         delete g.game.playerEntities[keyToDelete];
     })
@@ -1038,12 +982,12 @@ function playerDismantlingAction(){
     playersDeletingKeys.forEach( (key)=>{
         if(objectDrawFunctions.isPlayerDismantled(g.game.playersDeleting[key])){
             delete g.game.playersDeleting[key];
-        }   
+        }
     })
 }
 
 function playerDefeatedSwitch(playersDefeated){
-    //Alternative is to give the objects a 
+    //Alternative is to give the objects a
     playersDefeated.forEach( (keyToMove)=>{
         g.game.playersRespawn[keyToMove] = g.game.playerEntities[keyToMove];
         delete g.game.playerEntities[keyToMove];
@@ -1056,6 +1000,6 @@ function playerDefeatedAnimate(){
         if(objectDrawFunctions.isPlayerDismantled(g.game.playersRespawn[key])){
             addPlayerEntity(key)
             delete g.game.playersRespawn[key];
-        }   
+        }
     })
 }
