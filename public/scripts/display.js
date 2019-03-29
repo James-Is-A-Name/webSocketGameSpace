@@ -614,9 +614,14 @@ function setupDisplayArea(){
 }
 
 function connectWebSocket(){
-    // serverConnection = new WebSocket(`wss://${self.location.host}`);
-    g.comms.serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
     
+    if(self.location.host == "basically-rock-paper-scissors.herokuapp.com"){
+        g.comms.serverConnection = new WebSocket(`wss://${self.location.host}`);
+    }
+    else{
+        g.comms.serverConnection = new WebSocket(`ws://${self.location.host}`); //for localhost testing changeing it to non secure websockets as i have been a bit lazy in using openssl to create a self assinged certificate
+    }
+
     g.comms.serverConnection.onopen = ()=> {
 
         g.comms.serverConnection.send(JSON.stringify({actAsDisplay:true}));
