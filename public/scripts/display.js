@@ -121,10 +121,17 @@ function p2pConnect(whoTo,displayId,serverConnection){
             offer: connection.offerToSend
         }
         serverConnection.send(JSON.stringify(message))
+        
     }
 
     //trigger the offer that will then trigger the send
     connection.createOffer()
+
+    //This will probably just be removed
+    //will change to this then move it out of the function
+    g.comms.p2pConnections[whoTo].connection = connection;
+    g.comms.p2pConnections[whoTo].type = "pending";
+    g.comms.p2pConnections[whoTo].status = "pending";
 
     return connection;
 }
@@ -170,6 +177,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
         //will change to this then move it out of the function
         g.comms.p2pConnections[fromWho].connection = connection;
         g.comms.p2pConnections[fromWho].type = "controller";
+        g.comms.p2pConnections[fromWho].status = "pending";
     }
     else{
         //if not in portals add it
@@ -184,6 +192,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
             //will change to this then move it out of the function
             g.comms.p2pConnections[fromWho].connection = connection;
             g.comms.p2pConnections[fromWho].type = "display";
+            g.comms.p2pConnections[fromWho].status = "pending";
         }
 
         connection.handleMessage = handleDisplayMessage
@@ -230,6 +239,10 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
 
             //should make this check if its already connected
             g.comms.displayConnections[fromWho] = connectionInstance
+
+            g.comms.p2pConnections[fromWho].connection = connection;
+            g.comms.p2pConnections[fromWho].type = "display";
+            g.comms.p2pConnections[fromWho].status = "pending";
         }
         connectionInstance.handleMessage = handleDisplayMessage
     }
@@ -252,9 +265,17 @@ function updateDisplayConnections(){
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function broadcastToDisplays(message){
-    Object.keys(g.comms.displayConnections).forEach((key)=>{
-        g.comms.displayConnections[key].dataChannel.send(JSON.stringify(message))
+
+    let dusplayConnections = Object.keys(g.comms.p2pConnections).filter((connectionInfo)=>{
+        return connectionInfo.type == "display" && connectionInfo.status == "connected";
     })
+
+    dusplayConnections.forEach((key)=>{
+        g.comms.p2pConnections[key].channel.dataChannel.send(JSON.stringify(message))
+    })
+    // Object.keys(g.comms.displayConnections).forEach((key)=>{
+    //     g.comms.displayConnections[key].dataChannel.send(JSON.stringify(message))
+    // })
 }
 
 function handleDisplayMessage(message,fromWho){
@@ -265,8 +286,12 @@ function handleDisplayMessage(message,fromWho){
             if(g.game.activeDisplayId == connectionToAdd){
                 return false;
             }
-            return !(Object.keys(g.comms.displayConnections).find((displayConnection)=>{
-                return displayConnection == connectionToAdd;
+
+
+            return !(Object.keys(g.comms.p2pConnections).filter((con)=>(con.type == "display" && con.status == "connected"))
+            .find((displayConnection)=>{return displayConnection == connectionToAdd;
+            // return !(Object.keys(g.comms.displayConnections).find((displayConnection)=>{
+                // return displayConnection == connectionToAdd;
             }))
         })
 
