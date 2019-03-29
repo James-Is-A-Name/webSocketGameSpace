@@ -31,7 +31,7 @@ class gameDisplay{
             
             //controllersOnScreen = {}, //could be used for determining if controller commands to this display are to be used.
             
-            p2pConnections = {}, //Have all connections in one object but have them flag what they are after connecting
+            p2pConnections : {}, //Have all connections in one object but have them flag what they are after connecting
             // {
             //     status: "connected"; // or pending or disconnected
             //     connection: null; //the connection object
@@ -41,8 +41,8 @@ class gameDisplay{
 
             //Will be replaced with functions that obtain these from the main list
             serverConnection: {},
-            displayConnections: {},
-            controllerConnections: {},
+            // displayConnections: {},
+            // controllerConnections: {},
             pendingConnections: {},
         }
 
@@ -104,6 +104,43 @@ const physActions = new ObjectInteractions()
 //needs to sort stuff out else where
 let g;
 
+
+
+/*---------------------Connection refining actions----------------------*/
+function getDisplayConnections(){
+
+    let displayConnectionsKeys = Object.keys(g.comms.p2pConnections).filter((key)=>{
+        return g.comms.p2pConnections[key].type == "display" && g.comms.p2pConnections[key].status == "connected"
+    })
+
+    let displayConnections = displayConnectionsKeys.reduce((connectionsObject,key)=>{
+        connectionsObject[key] = g.comms.p2pConnections[key].connection
+        return connectionsObject;
+    },{})
+
+    console.log("display connections object is",displayConnections)
+    return displayConnections
+}
+
+function getControllerConnections(){
+
+    let controllerConnectionsKeys = Object.keys(g.comms.p2pConnections).filter((key)=>{
+        return g.comms.p2pConnections[key].type == "controller" && g.comms.p2pConnections[key].status == "connected"
+    })
+
+    let controllerConnections = controllerConnectionsKeys.reduce((connectionsObject,key)=>{
+
+        connectionsObject[key] =  g.comms.p2pConnections[key].connection
+        return connectionsObject
+    },{})
+
+    console.log("controller connections object is",controllerConnections)
+    return controllerConnections
+}
+
+
+/*---------------------Connection refining actions----------------------*/
+
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pConnect(whoTo,displayId,serverConnection){
 
@@ -126,6 +163,10 @@ function p2pConnect(whoTo,displayId,serverConnection){
 
     //trigger the offer that will then trigger the send
     connection.createOffer()
+
+
+    //first need to make it an object so properties can be added
+    g.comms.p2pConnections[whoTo] = {}
 
     //This will probably just be removed
     //will change to this then move it out of the function
@@ -162,6 +203,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
             //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
+        g.comms.p2pConnections[fromWho].status = "connected"
         updateDisplayConnections()
     }
 
@@ -172,8 +214,8 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
     if(connectionIsController){
         connection.handleMessage = handleControllerMessage
         
-        g.comms.controllerConnections[fromWho] = connection
-
+        // g.comms.controllerConnections[fromWho] = connection
+        g.comms.p2pConnections[fromWho] = {}
         //will change to this then move it out of the function
         g.comms.p2pConnections[fromWho].connection = connection;
         g.comms.p2pConnections[fromWho].type = "controller";
@@ -186,9 +228,10 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
             g.rendering.updateBackground = true;
             
             //should make this check if its already connected
-            g.comms.displayConnections[fromWho] = connection
-
+            // g.comms.displayConnections[fromWho] = connection
             
+
+            g.comms.p2pConnections[fromWho] = {}
             //will change to this then move it out of the function
             g.comms.p2pConnections[fromWho].connection = connection;
             g.comms.p2pConnections[fromWho].type = "display";
@@ -206,30 +249,35 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
     //got an offer so accept it and send an answer
 
     
-    let connectionInstance = g.comms.pendingConnections[fromWho]
+    let connection = g.comms.pendingConnections[fromWho]
     //quick check to confirm connection exists 
-    if(!connectionInstance){
+    if(!connection){
         return;
     }
 
-    connectionInstance.acceptAnswer(JSON.parse(answer))
+    connection.acceptAnswer(JSON.parse(answer))
 
     let connectionIsController = isAController;
 
-    connectionInstance.connectionId = fromWho;
+    connection.connectionId = fromWho;
 
-    connectionInstance.dataChannelSetupCallback = ()=>{
+    connection.dataChannelSetupCallback = ()=>{
         //POSSIBLE LOOP ISSUES HERE IF NOT THOUGHT ABOUT PROPERLY
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
             //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
+        g.comms.p2pConnections[fromWho].status = "connected"
         updateDisplayConnections()
     }
 
     if(connectionIsController){
-        connectionInstance.handleMessage = handleControllerMessage
+        connection.handleMessage = handleControllerMessage
         
-        g.comms.controllerConnections[fromWho] = connectionInstance
+        // g.comms.controllerConnections[fromWho] = connectionInstance
+        
+        g.comms.p2pConnections[fromWho].connection = connection;
+        g.comms.p2pConnections[fromWho].type = "controller";
+        g.comms.p2pConnections[fromWho].status = "pending";
 
     }
     else{        //if not in portals add it
@@ -238,13 +286,15 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
             g.rendering.updateBackground = true;
 
             //should make this check if its already connected
-            g.comms.displayConnections[fromWho] = connectionInstance
+            // g.comms.displayConnections[fromWho] = connectionInstance
+
+            g.comms.p2pConnections[fromWho] = {}
 
             g.comms.p2pConnections[fromWho].connection = connection;
             g.comms.p2pConnections[fromWho].type = "display";
             g.comms.p2pConnections[fromWho].status = "pending";
         }
-        connectionInstance.handleMessage = handleDisplayMessage
+        connection.handleMessage = handleDisplayMessage
     }
 }
 
@@ -256,7 +306,8 @@ function updateDisplayConnections(){
     //in a more planned manner do the same with the list of displays
         //tell one of two displays to connect. not both
 
-    let connectedControllerIds = {addControllerConnections:Object.keys(g.comms.controllerConnections)}
+    // let connectedControllerIds = {addControllerConnections:Object.keys(g.comms.controllerConnections)}
+    let connectedControllerIds = {addControllerConnections:Object.keys(getControllerConnections())}
 
     console.log(connectedControllerIds)
 
@@ -266,13 +317,20 @@ function updateDisplayConnections(){
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function broadcastToDisplays(message){
 
-    let dusplayConnections = Object.keys(g.comms.p2pConnections).filter((connectionInfo)=>{
-        return connectionInfo.type == "display" && connectionInfo.status == "connected";
+    // let dusplayConnections = Object.keys(g.comms.p2pConnections).filter((connectionInfo)=>{
+    //     return connectionInfo.type == "display" && connectionInfo.status == "connected";
+    // })
+
+    // dusplayConnections.forEach((key)=>{
+    //     g.comms.p2pConnections[key].channel.dataChannel.send(JSON.stringify(message))
+    // })
+
+
+    let displayConnections = getDisplayConnections();
+    Object.keys(displayConnections).forEach((key)=>{
+        displayConnections[key].dataChannel.send(JSON.stringify(message))
     })
 
-    dusplayConnections.forEach((key)=>{
-        g.comms.p2pConnections[key].channel.dataChannel.send(JSON.stringify(message))
-    })
     // Object.keys(g.comms.displayConnections).forEach((key)=>{
     //     g.comms.displayConnections[key].dataChannel.send(JSON.stringify(message))
     // })
@@ -302,14 +360,16 @@ function handleDisplayMessage(message,fromWho){
     }
     else if(theMessage.addControllerConnections){
         let newConnections = theMessage.addControllerConnections.filter((connectionToAdd)=>{
-            return !(Object.keys(g.comms.controllerConnections).find((connectedControllerId)=>{
+            // return !(Object.keys(g.comms.controllerConnections).find((connectedControllerId)=>{
+            return !(Object.keys(getControllerConnections()).find((connectedControllerId)=>{
                 return connectedControllerId == connectionToAdd;
             }))
         })
 
         newConnections.forEach((connectionId)=>{
             //not the best way but will check if it stops double ups
-            g.comms.controllerConnections[connectionId] = {inProgress: true}
+            //not sure this was actually used and dont want to remove it completly incase it was actually quite important
+            // g.comms.controllerConnections[connectionId] = {inProgress: true}
             console.log("connecting to ",connectionId)
 
             g.comms.pendingConnections[connectionId] = p2pConnect(connectionId,g.game.activeDisplayId,g.comms.serverConnection);
@@ -367,7 +427,8 @@ function handleControllerMessage(message,fromWho){
             }
         }
         else if(theMessage.whoAreYou){
-            g.comms.controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:g.game.activeDisplayId}))
+            getControllerConnections()[fromWho].dataChannel.send(JSON.stringify({displayId:g.game.activeDisplayId}))
+            // g.comms.controllerConnections[fromWho].dataChannel.send(JSON.stringify({displayId:g.game.activeDisplayId}))
         }
     }
     else if(theMessage.joinAsNewController){
@@ -484,7 +545,8 @@ function swapMenuContent(show){
         leftSideDestination.appendChild(displayOption);
 
         //show the list of options
-        Object.keys(g.comms.displayConnections).forEach((key)=>{
+        // Object.keys(g.comms.displayConnections).forEach((key)=>{
+        Object.keys(getDisplayConnections()).forEach((key)=>{
             displayOption = document.createElement("option");
             displayOption.value = key;
             displayOption.innerHTML = key;
@@ -505,7 +567,8 @@ function swapMenuContent(show){
         rightSideDestination.appendChild(displayOption);
 
         //show the list of options
-        Object.keys(g.comms.displayConnections).forEach((key)=>{
+        // Object.keys(g.comms.displayConnections).forEach((key)=>{
+        Object.keys(getDisplayConnections()).forEach((key)=>{
             displayOption = document.createElement("option");
             displayOption.value = key;
             displayOption.innerHTML = key;
@@ -908,15 +971,19 @@ function updateEntityStates(){
             playerObject.x = sideCollision.x;
 
             if(sideCollision.left && g.displayDetails.leftDisplay){
-                g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.leftDisplay}))
-                g.comms.displayConnections[g.displayDetails.leftDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+                // g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.leftDisplay}))
+                getControllerConnections()[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.leftDisplay}))
+                // g.comms.displayConnections[g.displayDetails.leftDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+                getDisplayConnections()[g.displayDetails.leftDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
                 if(!playersShifted.find( player => player == playerObject.id)){
                     playersShifted.push(playerObject.id)
                 }
             }
             else if(sideCollision.right && g.displayDetails.rightDisplay){
-                g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.rightDisplay}))
-                g.comms.displayConnections[g.displayDetails.rightDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+                // g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.rightDisplay}))
+                getControllerConnections()[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:g.displayDetails.rightDisplay}))
+                // g.comms.displayConnections[g.displayDetails.rightDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+                getDisplayConnections()[g.displayDetails.rightDisplay].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
                 if(!playersShifted.find( player => player == playerObject.id)){
                     playersShifted.push(playerObject.id)
                 }
@@ -932,8 +999,10 @@ function updateEntityStates(){
 
         if(portalCollision){
             //send off controller to other display
-            g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
-            g.comms.displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+            // g.comms.controllerConnections[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
+            getControllerConnections()[playerIndex].dataChannel.send(JSON.stringify({shiftDisplay:portalCollision.destination}))
+            // g.comms.displayConnections[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
+            getDisplayConnections()[portalCollision.destination].dataChannel.send(JSON.stringify({shiftedPlayer:playerIndex}))
             
             if(!playersShifted.find( player => player == playerObject.id)){
                 playersShifted.push(playerObject.id)
