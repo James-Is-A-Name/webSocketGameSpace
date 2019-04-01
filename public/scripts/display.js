@@ -1,5 +1,3 @@
-
-
 //Alter this to call a seperate function that sets a global object of the gamestate
     //or have this done in the top file and have it decide the draw and inter objects interations code
 document.addEventListener("DOMContentLoaded",setupDisplayArea);
@@ -122,7 +120,7 @@ function getControllerConnections(){
 /*---------------------Connection refining actions----------------------*/
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
-function p2pConnect(whoTo,displayId,serverConnection){
+function p2pConnect(whoTo,displayId,serverConnection,p2pConnections){
 
     //create a socket thing
     let connection = getAWebRTC();
@@ -145,19 +143,19 @@ function p2pConnect(whoTo,displayId,serverConnection){
     connection.createOffer()
 
     //first need to make it an object so properties can be added
-    g.comms.p2pConnections[whoTo] = {}
+    p2pConnections[whoTo] = {}
 
     //This will probably just be removed
     //will change to this then move it out of the function
-    g.comms.p2pConnections[whoTo].connection = connection;
-    g.comms.p2pConnections[whoTo].type = "pending";
-    g.comms.p2pConnections[whoTo].status = "pending";
+    p2pConnections[whoTo].connection = connection;
+    p2pConnections[whoTo].type = "pending";
+    p2pConnections[whoTo].status = "pending";
 
     return connection;
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
-function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
+function p2pAcceptOffer(offer,fromWho,isAController,p2pConnections){ //got an offer so accept it and send an answer
     // function p2pAcceptOffer(offer,fromWho,isAController,displayId,serverConnection){
 
     let connection = getAWebRTC();
@@ -182,7 +180,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
             //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
-        g.comms.p2pConnections[fromWho].status = "connected"
+        p2pConnections[fromWho].status = "connected"
         updateDisplayConnections()
     }
 
@@ -194,11 +192,11 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
         connection.handleMessage = handleControllerMessage
 
         // g.comms.controllerConnections[fromWho] = connection
-        g.comms.p2pConnections[fromWho] = {}
+        p2pConnections[fromWho] = {}
         //will change to this then move it out of the function
-        g.comms.p2pConnections[fromWho].connection = connection;
-        g.comms.p2pConnections[fromWho].type = "controller";
-        g.comms.p2pConnections[fromWho].status = "pending";
+        p2pConnections[fromWho].connection = connection;
+        p2pConnections[fromWho].type = "controller";
+        p2pConnections[fromWho].status = "pending";
     }
     else{
         //if not in portals add it
@@ -207,11 +205,11 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
             g.rendering.updateBackground = true;
 
             //might want to make this check if its already connected to avoid a possible miss alignment
-            g.comms.p2pConnections[fromWho] = {}
+            p2pConnections[fromWho] = {}
             //will change to this then move it out of the function
-            g.comms.p2pConnections[fromWho].connection = connection;
-            g.comms.p2pConnections[fromWho].type = "display";
-            g.comms.p2pConnections[fromWho].status = "pending";
+            p2pConnections[fromWho].connection = connection;
+            p2pConnections[fromWho].type = "display";
+            p2pConnections[fromWho].status = "pending";
         }
 
         connection.handleMessage = handleDisplayMessage
@@ -219,7 +217,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
-function p2pAcceptAnswer(answer,fromWho,isAController){
+function p2pAcceptAnswer(answer,fromWho,isAController,p2pConnections){
 
     console.log("accept an answer from ",fromWho)
     //got an offer so accept it and send an answer
@@ -241,16 +239,16 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
             //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
-        g.comms.p2pConnections[fromWho].status = "connected"
+        p2pConnections[fromWho].status = "connected"
         updateDisplayConnections()
     }
 
     if(connectionIsController){
         connection.handleMessage = handleControllerMessage
 
-        g.comms.p2pConnections[fromWho].connection = connection;
-        g.comms.p2pConnections[fromWho].type = "controller";
-        g.comms.p2pConnections[fromWho].status = "pending";
+        p2pConnections[fromWho].connection = connection;
+        p2pConnections[fromWho].type = "controller";
+        p2pConnections[fromWho].status = "pending";
 
     }
     else{        //if not in portals add it
@@ -259,11 +257,11 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
             g.rendering.updateBackground = true;
 
             //might want to make this check if its already connected to avoid a possible miss alignment
-            g.comms.p2pConnections[fromWho] = {}
+            p2pConnections[fromWho] = {}
 
-            g.comms.p2pConnections[fromWho].connection = connection;
-            g.comms.p2pConnections[fromWho].type = "display";
-            g.comms.p2pConnections[fromWho].status = "pending";
+            p2pConnections[fromWho].connection = connection;
+            p2pConnections[fromWho].type = "display";
+            p2pConnections[fromWho].status = "pending";
         }
         connection.handleMessage = handleDisplayMessage
     }
@@ -271,15 +269,13 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function updateDisplayConnections(){
-
     //send to all displays the current list of controllers
-
-    //in a more planned manner do the same with the list of displays
-        //tell one of two displays to connect. not both
-
     let connectedControllerIds = {addControllerConnections:Object.keys(getControllerConnections())}
 
     broadcastToDisplays(connectedControllerIds)
+    
+    //in a more planned manner do the same with the list of displays
+        //tell one of two displays to connect. not both
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
@@ -321,10 +317,7 @@ function handleDisplayMessage(message,fromWho){
 
         newConnections.forEach((connectionId)=>{
             //not the best way but will check if it stops double ups
-            //not sure this was actually used and dont want to remove it completly incase it was actually quite important
-            // g.comms.controllerConnections[connectionId] = {inProgress: true}
-
-            g.comms.pendingConnections[connectionId] = p2pConnect(connectionId,g.game.activeDisplayId,g.comms.serverConnection);
+            g.comms.pendingConnections[connectionId] = p2pConnect(connectionId,g.game.activeDisplayId,g.comms.serverConnection,g.comms.p2pConnections);
         })
     }
     else if(theMessage.shiftedPlayer){
@@ -401,9 +394,7 @@ function swapMenuContent(show){
         menuSection.removeChild(element)
     })
 
-
     if(show){
-
         let newButton = document.createElement("button");
         newButton.title = "Hide Menu";
         newButton.innerHTML = newButton.title;
@@ -466,7 +457,7 @@ function swapMenuContent(show){
             let value = document.getElementById("connectionTarget").value;
             if(!isNaN(parseInt(value))){
                 let whoTo = parseInt(value)
-                g.comms.pendingConnections[whoTo] = p2pConnect(whoTo,g.game.activeDisplayId,g.comms.serverConnection);
+                g.comms.pendingConnections[whoTo] = p2pConnect(whoTo,g.game.activeDisplayId,g.comms.serverConnection,g.comms.p2pConnections);
             }
         }
         let p2pTarget = document.createElement("input");
@@ -557,10 +548,8 @@ function swapMenuContent(show){
         menuSection.appendChild(rightBlock)
 
         menuSection.className = "menuShowingSection"
-
     }
     else{
-
         let newButton = document.createElement("button");
         newButton.title = "Options menu";
         newButton.innerHTML = newButton.title;
@@ -659,10 +648,10 @@ function connectWebSocket(){
         else if(theMessage.p2pConnect){
 
             if(theMessage.answer){
-                p2pAcceptAnswer(theMessage.answer,theMessage.from,!theMessage.isADisplay)
+                p2pAcceptAnswer(theMessage.answer,theMessage.from,!theMessage.isADisplay,g.comms.p2pConnections)
             }
             else if(theMessage.offer){
-                p2pAcceptOffer(theMessage.offer,theMessage.from,!theMessage.isADisplay)
+                p2pAcceptOffer(theMessage.offer,theMessage.from,!theMessage.isADisplay,g.comms.p2pConnections)
             }
         }
     }
@@ -932,14 +921,10 @@ function updateEntityStates(){
                     playersShifted.push(playerObject.id)
                 }
             }
-
-
         }
-
 
         let portalCollision = physActions.portalCollisions(playerObject,g.game.portals)
         let playerBattles = physActions.checkPlayerInteractions(playerObject,g.game.playerEntities)
-
 
         if(portalCollision){
             //send off controller to other display
