@@ -13,8 +13,34 @@
     setInteractionType:,
     platformPlaceState:
 }
+
+show,
+menuElement,
+menuShowCallback
+{
+    displayIds,
+    serverComs,
+    connectP2p,
+    toggleInteractionType,
+    platformPlaceState,
+    portalPlaceState,
+    rightDisplay,
+    leftDisplay
+}
+then a ...info or 
 */
-function swapMenuContent(show,menuElement,portals,serverComs,connectP2p,toggleInteractionType,platformPlaceState,portalPlaceState){
+// function swapMenuContent(show,menuElement,displayIds,serverComs,connectP2p,toggleInteractionType,platformPlaceState,portalPlaceState,rightDisplay, leftDisplay){
+function swapMenuContent(show,menuElement,menuShowCallback,parameter){
+
+    let displayIds = parameter.displayIds;
+    let serverComs = parameter.serverComs;
+    let connectP2p = parameter.connectP2p;
+    let toggleInteractionType = parameter.toggleInteractionType;
+    let platformPlaceState = parameter.platformPlaceState;
+    let portalPlaceState = parameter.portalPlaceState;
+    let rightDisplay = parameter.rightDisplay;
+    let leftDisplay = parameter.leftDisplay;
+    let sideDisplayChange = parameter.sideDisplayChange;
 
     let menuElementContents = []
     menuElement.childNodes.forEach( (element)=>{
@@ -30,26 +56,16 @@ function swapMenuContent(show,menuElement,portals,serverComs,connectP2p,toggleIn
         
         // let newButton = document.createElement("button");
         // let menuButton = newButton(title,inner,onclick)
-        let menuButton = newButton("Hide Menu","Hide Menu",()=>{swapMenuContent(false)})
+        let menuButton = newButton("Hide Menu","Hide Menu",()=>{menuShowCallback(false)})
         menuButton.style.gridColumn = "2";
         menuButton.style.gridRow = "1";
 
         let name = platformPlaceState ? "platform draw enabled":"platform draw disabled"
-        let platformDrawButton = newButton(name,name,() => {toggleInteractionType("platform")
-            // //As it will be toggled
-            // if(!g.menuOptions.placePlatformsAllow){
-            //     platformDrawButton.innerHTML = "platform draw enabled"
-            //     portalMoveButton.innerHTML = "portal move disabled"
-            // }
-            // else{
-            //     platformDrawButton.innerHTML = "platform draw disabled"
-            //     portalMoveButton.innerHTML = "portal move disabled"
-            // }            
-        })
+        let platformDrawButton = newButton(name,name,() => {toggleInteractionType("platform")})
         platformDrawButton.style.gridColumn = "1";
         platformDrawButton.style.gridRow = "2";
 
-        let name = portalPlaceState ? "platform draw enabled":"platform draw disabled"
+        name = portalPlaceState ? "portal move enabled":"portal move disabled"
         let portalMoveButton = newButton(name,name,() => {toggleInteractionType("portal")})
         portalMoveButton.style.gridColumn = "2";
         portalMoveButton.style.gridRow = "2";
@@ -71,11 +87,9 @@ function swapMenuContent(show,menuElement,portals,serverComs,connectP2p,toggleIn
         p2pTargetForm.style.gridColumn = "3";
         p2pTargetForm.style.gridRow = "2";
 
-        let rightSideDestination = setupSideDestinations("right",g.displayDetails.rightDisplay,Object.keys(g.comms.displayConnections))
-        let leftSideDestination = setupSideDestinations("left",g.displayDetails.leftDisplay,Object.keys(g.comms.displayConnections))
-
-        // let menuLineBreak = document.createElement("br");
-        // p2pTargetForm.appendChild(menuLineBreak);
+        let rightSideDestination = setupSideDestinations("right",rightDisplay,displayIds,sideDisplayChange)
+        let leftSideDestination = setupSideDestinations("left",leftDisplay,displayIds,sideDisplayChange)
+        
         p2pTargetForm.appendChild(p2pTarget);
         p2pTargetForm.appendChild(p2pSubmit);
 
@@ -94,8 +108,6 @@ function swapMenuContent(show,menuElement,portals,serverComs,connectP2p,toggleIn
         leftBlock.style.gridRow = "3";
         menuElement.appendChild(leftBlock);
         
-        p2pTargetForm.appendChild(menuLineBreak);
-
         let rightDisplayState = document.createElement("span");
         rightDisplayState.innerHTML = "right side destination"
         let rightBlock = document.createElement("div");
@@ -114,7 +126,7 @@ function swapMenuContent(show,menuElement,portals,serverComs,connectP2p,toggleIn
         let menuShowButton = document.createElement("button");
         menuShowButton.title = "Options menu";
         menuShowButton.innerHTML = menuShowButton.title;
-        menuShowButton.onclick = () => {swapMenuContent(true)};
+        menuShowButton.onclick = () => {menuShowCallback(true)};
 
         menuElement.className = "menuHidingSection"
 
@@ -144,7 +156,7 @@ function newButton(title,text,onclick){
     return aButton
 }
 
-function setupSideDestinations(side,currentDestination,possibleDestinations){
+function setupSideDestinations(side,currentDestination,possibleDestinations,sideDisplayChange){
 
     let sideDestination = document.createElement("select");
     if(side == "left"){
@@ -155,7 +167,7 @@ function setupSideDestinations(side,currentDestination,possibleDestinations){
     }
 
     sideDestination.onchange = (e)=>{
-        changesideDisplay(side,e.target.value)
+        sideDisplayChange(side,e.target.value)
     }
     
     let displayOption = document.createElement("option");

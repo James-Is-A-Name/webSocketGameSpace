@@ -119,9 +119,8 @@ function getControllerConnections(){
 }
 /*---------------------Connection refining actions----------------------*/
 
-/* ---------------------- MOVE TO connections             -------------------------------*/
-function p2pConnect(whoTo,displayId,serverConnection,p2pConnections){
-
+/* ---------------------- MOVE TO connections Maybe   -------------------------------*/
+function p2pConnect(whoTo){
     //create a socket thing
     let connection = getAWebRTC();
 
@@ -131,31 +130,34 @@ function p2pConnect(whoTo,displayId,serverConnection,p2pConnections){
         let message = {
             p2pConnect: true,
             target: whoTo,
-            from: displayId,
+            from: g.game.activeDisplayId,
             isADisplay: true,
             offer: connection.offerToSend
         }
-        serverConnection.send(JSON.stringify(message))
+        g.comms.serverConnection.send(JSON.stringify(message))
 
     }
 
     //trigger the offer that will then trigger the send
     connection.createOffer()
 
+    
+    g.comms.pendingConnections[whoTo] = connection;
+
     //first need to make it an object so properties can be added
-    p2pConnections[whoTo] = {}
+    g.comms.p2pConnections[whoTo] = {}
 
     //This will probably just be removed
     //will change to this then move it out of the function
-    p2pConnections[whoTo].connection = connection;
-    p2pConnections[whoTo].type = "pending";
-    p2pConnections[whoTo].status = "pending";
+    g.comms.p2pConnections[whoTo].connection = connection;
+    g.comms.p2pConnections[whoTo].type = "pending";
+    g.comms.p2pConnections[whoTo].status = "pending";
 
     return connection;
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
-function p2pAcceptOffer(offer,fromWho,isAController,p2pConnections){ //got an offer so accept it and send an answer
+function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept it and send an answer
     // function p2pAcceptOffer(offer,fromWho,isAController,displayId,serverConnection){
 
     let connection = getAWebRTC();
@@ -180,7 +182,7 @@ function p2pAcceptOffer(offer,fromWho,isAController,p2pConnections){ //got an of
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
             //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
-        p2pConnections[fromWho].status = "connected"
+        g.comms.p2pConnections[fromWho].status = "connected"
         updateDisplayConnections()
     }
 
@@ -192,11 +194,11 @@ function p2pAcceptOffer(offer,fromWho,isAController,p2pConnections){ //got an of
         connection.handleMessage = handleControllerMessage
 
         // g.comms.controllerConnections[fromWho] = connection
-        p2pConnections[fromWho] = {}
+        g.comms.p2pConnections[fromWho] = {}
         //will change to this then move it out of the function
-        p2pConnections[fromWho].connection = connection;
-        p2pConnections[fromWho].type = "controller";
-        p2pConnections[fromWho].status = "pending";
+        g.comms.p2pConnections[fromWho].connection = connection;
+        g.comms.p2pConnections[fromWho].type = "controller";
+        g.comms.p2pConnections[fromWho].status = "pending";
     }
     else{
         //if not in portals add it
@@ -205,11 +207,11 @@ function p2pAcceptOffer(offer,fromWho,isAController,p2pConnections){ //got an of
             g.rendering.updateBackground = true;
 
             //might want to make this check if its already connected to avoid a possible miss alignment
-            p2pConnections[fromWho] = {}
+            g.comms.p2pConnections[fromWho] = {}
             //will change to this then move it out of the function
-            p2pConnections[fromWho].connection = connection;
-            p2pConnections[fromWho].type = "display";
-            p2pConnections[fromWho].status = "pending";
+            g.comms.p2pConnections[fromWho].connection = connection;
+            g.comms.p2pConnections[fromWho].type = "display";
+            g.comms.p2pConnections[fromWho].status = "pending";
         }
 
         connection.handleMessage = handleDisplayMessage
@@ -217,14 +219,11 @@ function p2pAcceptOffer(offer,fromWho,isAController,p2pConnections){ //got an of
 }
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
-function p2pAcceptAnswer(answer,fromWho,isAController,p2pConnections){
-
-    console.log("accept an answer from ",fromWho)
-    //got an offer so accept it and send an answer
-
+function p2pAcceptAnswer(answer,fromWho,isAController){
     let connection = g.comms.pendingConnections[fromWho]
     //quick check to confirm connection exists
     if(!connection){
+
         return;
     }
 
@@ -239,29 +238,32 @@ function p2pAcceptAnswer(answer,fromWho,isAController,p2pConnections){
         //INTIAL TESTING HAPPENING
             //dosent seem to loop too much but might be different
             //possibly will loop when trying to connect to a new controller that isnt active. not entierly sure it will but it might
-        p2pConnections[fromWho].status = "connected"
+        g.comms.p2pConnections[fromWho].status = "connected"
         updateDisplayConnections()
     }
 
+
     if(connectionIsController){
+
         connection.handleMessage = handleControllerMessage
 
-        p2pConnections[fromWho].connection = connection;
-        p2pConnections[fromWho].type = "controller";
-        p2pConnections[fromWho].status = "pending";
+        g.comms.p2pConnections[fromWho].connection = connection;
+        g.comms.p2pConnections[fromWho].type = "controller";
+        g.comms.p2pConnections[fromWho].status = "pending";
 
     }
     else{        //if not in portals add it
         if(!g.game.portals.find( (portal) => portal.id == fromWho )){
+
             addPortal(fromWho)
             g.rendering.updateBackground = true;
 
             //might want to make this check if its already connected to avoid a possible miss alignment
-            p2pConnections[fromWho] = {}
+            g.comms.p2pConnections[fromWho] = {}
 
-            p2pConnections[fromWho].connection = connection;
-            p2pConnections[fromWho].type = "display";
-            p2pConnections[fromWho].status = "pending";
+            g.comms.p2pConnections[fromWho].connection = connection;
+            g.comms.p2pConnections[fromWho].type = "display";
+            g.comms.p2pConnections[fromWho].status = "pending";
         }
         connection.handleMessage = handleDisplayMessage
     }
@@ -382,183 +384,50 @@ function handleControllerMessage(message,fromWho){
 }
 
 /* ---------------------- sort out a better way of doing this    -------------------------------*/
-function swapMenuContent(show){
-    let menuSection = document.getElementById("menuSection")
+//function swapMenuContent(show,menuElement,portals,serverComs,connectP2p,toggleInteractionType,platformPlaceState,portalPlaceState){
+function menuStateToggle(show){
+    let menuElement = document.getElementById("menuSection");
+    let portals = Object.keys(getDisplayConnections());
+    let serverComs = null; //not convinced this is needed
+   
+    //This inconsistency in naming is going to bite me in the ass at a later point
+    let connectP2p = p2pConnect
+    
+    let toggleInteractionType = (type) =>{
 
-    let menuSectionContents = []
-    menuSection.childNodes.forEach( (element)=>{
-        menuSectionContents.push(element);
-    })
-
-    menuSectionContents.forEach((element)=>{
-        menuSection.removeChild(element)
-    })
-
-    if(show){
-        let newButton = document.createElement("button");
-        newButton.title = "Hide Menu";
-        newButton.innerHTML = newButton.title;
-        newButton.onclick = () => {swapMenuContent(false)};
-        newButton.style.gridColumn = "2";
-        newButton.style.gridRow = "1";
-
-        let platformDrawButton = document.createElement("button")
-        platformDrawButton.style.gridColumn = "1";
-        platformDrawButton.style.gridRow = "2";
-
-        if(g.menuOptions.placePlatformsAllow){
-            platformDrawButton.innerHTML = "platform draw enabled"
+        if(type == "platform" && !g.menuOptions.placePlatformsAllow){
+            setNewPlatformDraw(true)
+        }
+        else if(type == "portal" && !g.menuOptions.portalMoveAllow){
+            setPortalMovemDraw(true)
         }
         else{
-            platformDrawButton.innerHTML = "platform draw disabled"
+            //they essentially do the same thing when false is used. might consider consolodating them then
+            setNewPlatformDraw(false)
         }
-
-        platformDrawButton.onclick = () => {
-            //As it will be toggled
-            if(!g.menuOptions.placePlatformsAllow){
-                platformDrawButton.innerHTML = "platform draw enabled"
-                portalMoveButton.innerHTML = "portal move disabled"
-            }
-            else{
-                platformDrawButton.innerHTML = "platform draw disabled"
-                portalMoveButton.innerHTML = "portal move disabled"
-            }
-            setNewPlatformDraw(!g.menuOptions.placePlatformsAllow);
-        }
-
-        let portalMoveButton = document.createElement("button")
-        portalMoveButton.style.gridColumn = "2";
-        portalMoveButton.style.gridRow = "2";
-
-        if(g.menuOptions.portalMoveAllow){
-            portalMoveButton.innerHTML = "portal move enabled"
-        }
-        else{
-            portalMoveButton.innerHTML = "portal move disabled"
-        }
-
-        portalMoveButton.onclick = () => {
-            //As it will be toggled
-            if(!g.menuOptions.portalMoveAllow){
-                portalMoveButton.innerHTML = "portal move enabled"
-                platformDrawButton.innerHTML = "platform draw disabled"
-            }
-            else{
-                portalMoveButton.innerHTML = "portal move disabled"
-                platformDrawButton.innerHTML = "platform draw disabled"
-            }
-            setPortalMovemDraw(!g.menuOptions.portalMoveAllow);
-        }
-
-        let p2pTargetForm = document.createElement("form");
-        p2pTargetForm.onsubmit = (event)=>{
-            event.preventDefault();
-
-            let value = document.getElementById("connectionTarget").value;
-            if(!isNaN(parseInt(value))){
-                let whoTo = parseInt(value)
-                g.comms.pendingConnections[whoTo] = p2pConnect(whoTo,g.game.activeDisplayId,g.comms.serverConnection,g.comms.p2pConnections);
-            }
-        }
-        let p2pTarget = document.createElement("input");
-        p2pTarget.type = "text";
-        p2pTarget.id = "connectionTarget";
-        p2pTarget.style.width = "100%";
-
-        let p2pSubmit = document.createElement("input");
-        p2pSubmit.type = "Submit";
-        p2pSubmit.id = "connectToPeer";
-        p2pSubmit.value = "connect to peer";
-
-        p2pTargetForm.style.gridColumn = "3";
-        p2pTargetForm.style.gridRow = "2";
-
-        let leftSideDestination = document.createElement("select");
-        leftSideDestination.id = "leftSideDestination"
-
-        leftSideDestination.onchange = (e)=>{
-            g.displayDetails.leftDisplay = e.target.value
-        }
-
-        let displayOption = document.createElement("option");
-        displayOption.value = g.displayDetails.leftDisplay ? g.displayDetails.leftDisplay : null;
-        displayOption.innerHTML = g.displayDetails.leftDisplay ? g.displayDetails.leftDisplay : "none";
-        leftSideDestination.appendChild(displayOption);
-
-        //show the list of options
-        Object.keys(getDisplayConnections()).forEach((key)=>{
-            displayOption = document.createElement("option");
-            displayOption.value = key;
-            displayOption.innerHTML = key;
-            leftSideDestination.appendChild(displayOption);
-        })
-        leftSideDestination.value = g.displayDetails.leftDisplay;
-
-        let rightSideDestination = document.createElement("select");
-        rightSideDestination.id = "rightSideDestination"
-
-        rightSideDestination.onchange = (e)=>{
-            g.displayDetails.rightDisplay = e.target.value
-        }
-
-        displayOption = document.createElement("option");
-        displayOption.value = g.displayDetails.rightDisplay ? g.displayDetails.rightDisplay : null;
-        displayOption.innerHTML = g.displayDetails.rightDisplay ? g.displayDetails.rightDisplay : "none";
-        rightSideDestination.appendChild(displayOption);
-
-        //show the list of options
-        Object.keys(getDisplayConnections()).forEach((key)=>{
-            displayOption = document.createElement("option");
-            displayOption.value = key;
-            displayOption.innerHTML = key;
-            rightSideDestination.appendChild(displayOption);
-        })
-        rightSideDestination.value = g.displayDetails.rightDisplay;
-
-        let menuLineBreak = document.createElement("br");
-        p2pTargetForm.appendChild(menuLineBreak);
-        p2pTargetForm.appendChild(p2pTarget);
-        p2pTargetForm.appendChild(p2pSubmit);
-
-        menuSection.appendChild(newButton);
-        menuSection.appendChild(platformDrawButton);
-        menuSection.appendChild(portalMoveButton);
-        menuSection.appendChild(p2pTargetForm);
-
-        let leftDisplayState = document.createElement("span");
-        leftDisplayState.innerHTML = "left side destination";
-        let leftBlock = document.createElement("div");
-        leftBlock.appendChild(leftDisplayState);
-        leftBlock.appendChild(leftSideDestination);
-
-        leftBlock.style.gridColumn = "1";
-        leftBlock.style.gridRow = "3";
-        menuSection.appendChild(leftBlock);
-
-        p2pTargetForm.appendChild(menuLineBreak);
-
-        let rightDisplayState = document.createElement("span");
-        rightDisplayState.innerHTML = "right side destination"
-        let rightBlock = document.createElement("div");
-        rightBlock.appendChild(rightDisplayState)
-        rightBlock.appendChild(rightSideDestination);
-
-        rightBlock.style.gridColumn = "3";
-        rightBlock.style.gridRow = "3";
-        menuSection.appendChild(rightBlock)
-
-        menuSection.className = "menuShowingSection"
+        //shouldnt really matter too much to just redraw the whole menu as it would be user triggered(so not often to impede things) and not noticable to them
+        menuStateToggle(true)
     }
-    else{
-        let newButton = document.createElement("button");
-        newButton.title = "Options menu";
-        newButton.innerHTML = newButton.title;
-        newButton.onclick = () => {swapMenuContent(true)};
+    
+    let platformPlaceState = g.menuOptions.placePlatformsAllow;
+    let portalPlaceState = g.menuOptions.portalMoveAllow;
 
-        menuSection.className = "menuHidingSection"
-
-        menuSection.appendChild(newButton);
+    let settings = {
+        displayIds: portals,
+        serverComs: serverComs,
+        connectP2p: connectP2p,
+        toggleInteractionType: toggleInteractionType,
+        platformPlaceState: platformPlaceState,
+        portalPlaceState: portalPlaceState,
+        rightDisplay: g.displayDetails.rightDisplay,
+        leftDisplay: g.displayDetails.leftDisplay,
+        sideDisplayChange: sideDisplayChange,
     }
+
+
+    /* -----------------------------------------THIS IS CURRENTLY BEING RELIED IT IS SET GLOBALY SOMEWHERE. AIM TO CHANGE THAT SOONER RATHER THAN LATER */
+    swapMenuContent(show,menuElement,menuStateToggle,settings);
+
 }
 
 function setNewPlatformDraw(allow){
@@ -647,6 +516,7 @@ function connectWebSocket(){
         }
         else if(theMessage.p2pConnect){
 
+
             if(theMessage.answer){
                 p2pAcceptAnswer(theMessage.answer,theMessage.from,!theMessage.isADisplay,g.comms.p2pConnections)
             }
@@ -680,6 +550,14 @@ function addPlayerEntity(player){
     }
     g.game.playerEntities[player] = newPlayer;
 
+}
+
+function sideDisplayChange(side,destination){
+    if(side == "left"){
+        g.displayDetails.leftDisplay = destination
+    }else if(side == "right"){
+        g.displayDetails.rightDisplay = destination
+    }
 }
 
 function startGame(){

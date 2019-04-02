@@ -85,7 +85,6 @@ function getAWebRTC(){
         }
     }
 
-
     connectionObject.createOffer = () =>{
         connectionObject.connection.createOffer()
         .then( (offer)=>{
