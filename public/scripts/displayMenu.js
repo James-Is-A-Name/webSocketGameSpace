@@ -50,7 +50,6 @@ function swapMenuContent(show,menuElement,menuShowCallback,parameter){
     menuElementContents.forEach((element)=>{
         menuElement.removeChild(element)
     })
-    
 
     if(show){
         
