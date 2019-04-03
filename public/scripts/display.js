@@ -27,7 +27,6 @@ class gameDisplay{
 
             //Will be replaced with functions that obtain these from the main list
             serverConnection: {},
-            pendingConnections: {},
         }
 
         this.game = {
@@ -150,8 +149,6 @@ function p2pConnect(whoTo){
 
     //trigger the offer that will then trigger the send
     connection.createOffer()
-    
-    g.comms.pendingConnections[whoTo] = connection;
 
     assignConnection(whoTo,connection,"pending","pending")
 
@@ -212,10 +209,10 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
 
 /* ---------------------- MOVE TO connections             -------------------------------*/
 function p2pAcceptAnswer(answer,fromWho,isAController){
-    let connection = g.comms.pendingConnections[fromWho]
+    // this will have issues if the connection isnt setup first. consider putting a first check if there is even a connection object assigned
+    let connection = g.comms.p2pConnections[fromWho].connection
     //quick check to confirm connection exists
     if(!connection){
-
         return;
     }
 
@@ -233,7 +230,6 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
         g.comms.p2pConnections[fromWho].status = "connected"
         updateDisplayConnections()
     }
-
 
     if(connectionIsController){
 
@@ -285,9 +281,6 @@ function handleDisplayMessage(message,fromWho){
                 return false;
             }
 
-
-
-            // return !(Object.keys(g.comms.p2pConnections).filter((con)=>(con.type == "display" && con.status == "connected"))
             return !(Object.keys(getDisplayConnections())
             .find((displayConnection)=> displayConnection == connectionToAdd))
         })
@@ -306,7 +299,7 @@ function handleDisplayMessage(message,fromWho){
 
         newConnections.forEach((connectionId)=>{
             //not the best way but will check if it stops double ups
-            g.comms.pendingConnections[connectionId] = p2pConnect(connectionId,g.game.activeDisplayId,g.comms.serverConnection,g.comms.p2pConnections);
+            p2pConnect(connectionId);
         })
     }
     else if(theMessage.shiftedPlayer){
