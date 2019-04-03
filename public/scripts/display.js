@@ -119,6 +119,16 @@ function getControllerConnections(){
 }
 /*---------------------Connection refining actions----------------------*/
 
+function assignConnection(connectionId,connection,type,status){
+    if(g.comms.p2pConnections[connectionId] == undefined){
+        g.comms.p2pConnections[connectionId] = {}
+    }
+    
+    g.comms.p2pConnections[connectionId].connection = connection;
+    g.comms.p2pConnections[connectionId].type = type;
+    g.comms.p2pConnections[connectionId].status = status;
+}
+
 /* ---------------------- MOVE TO connections Maybe   -------------------------------*/
 function p2pConnect(whoTo){
     //create a socket thing
@@ -140,18 +150,10 @@ function p2pConnect(whoTo){
 
     //trigger the offer that will then trigger the send
     connection.createOffer()
-
     
     g.comms.pendingConnections[whoTo] = connection;
 
-    //first need to make it an object so properties can be added
-    g.comms.p2pConnections[whoTo] = {}
-
-    //This will probably just be removed
-    //will change to this then move it out of the function
-    g.comms.p2pConnections[whoTo].connection = connection;
-    g.comms.p2pConnections[whoTo].type = "pending";
-    g.comms.p2pConnections[whoTo].status = "pending";
+    assignConnection(whoTo,connection,"pending","pending")
 
     return connection;
 }
@@ -192,13 +194,8 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
 
     if(connectionIsController){
         connection.handleMessage = handleControllerMessage
-
-        // g.comms.controllerConnections[fromWho] = connection
-        g.comms.p2pConnections[fromWho] = {}
-        //will change to this then move it out of the function
-        g.comms.p2pConnections[fromWho].connection = connection;
-        g.comms.p2pConnections[fromWho].type = "controller";
-        g.comms.p2pConnections[fromWho].status = "pending";
+        
+        assignConnection(fromWho,connection,"controller","pending")
     }
     else{
         //if not in portals add it
@@ -206,12 +203,7 @@ function p2pAcceptOffer(offer,fromWho,isAController){ //got an offer so accept i
             addPortal(fromWho)
             g.rendering.updateBackground = true;
 
-            //might want to make this check if its already connected to avoid a possible miss alignment
-            g.comms.p2pConnections[fromWho] = {}
-            //will change to this then move it out of the function
-            g.comms.p2pConnections[fromWho].connection = connection;
-            g.comms.p2pConnections[fromWho].type = "display";
-            g.comms.p2pConnections[fromWho].status = "pending";
+            assignConnection(fromWho,connection,"display","pending")
         }
 
         connection.handleMessage = handleDisplayMessage
@@ -247,9 +239,7 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
 
         connection.handleMessage = handleControllerMessage
 
-        g.comms.p2pConnections[fromWho].connection = connection;
-        g.comms.p2pConnections[fromWho].type = "controller";
-        g.comms.p2pConnections[fromWho].status = "pending";
+        assignConnection(fromWho,connection,"controller","pending")
 
     }
     else{        //if not in portals add it
@@ -258,12 +248,7 @@ function p2pAcceptAnswer(answer,fromWho,isAController){
             addPortal(fromWho)
             g.rendering.updateBackground = true;
 
-            //might want to make this check if its already connected to avoid a possible miss alignment
-            g.comms.p2pConnections[fromWho] = {}
-
-            g.comms.p2pConnections[fromWho].connection = connection;
-            g.comms.p2pConnections[fromWho].type = "display";
-            g.comms.p2pConnections[fromWho].status = "pending";
+            assignConnection(fromWho,connection,"display","pending")
         }
         connection.handleMessage = handleDisplayMessage
     }
@@ -301,7 +286,9 @@ function handleDisplayMessage(message,fromWho){
             }
 
 
-            return !(Object.keys(g.comms.p2pConnections).filter((con)=>(con.type == "display" && con.status == "connected"))
+
+            // return !(Object.keys(g.comms.p2pConnections).filter((con)=>(con.type == "display" && con.status == "connected"))
+            return !(Object.keys(getDisplayConnections())
             .find((displayConnection)=> displayConnection == connectionToAdd))
         })
 
@@ -518,10 +505,10 @@ function connectWebSocket(){
 
 
             if(theMessage.answer){
-                p2pAcceptAnswer(theMessage.answer,theMessage.from,!theMessage.isADisplay,g.comms.p2pConnections)
+                p2pAcceptAnswer(theMessage.answer,theMessage.from,!theMessage.isADisplay)
             }
             else if(theMessage.offer){
-                p2pAcceptOffer(theMessage.offer,theMessage.from,!theMessage.isADisplay,g.comms.p2pConnections)
+                p2pAcceptOffer(theMessage.offer,theMessage.from,!theMessage.isADisplay)
             }
         }
     }
