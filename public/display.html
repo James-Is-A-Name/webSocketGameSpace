@@ -9,6 +9,7 @@
     <title>Display</title>
     <script type="text/javascript" src="/scripts/objectDraws.js"></script>
     <script type="text/javascript" src="/scripts/objectInteractions.js"></script>
+    <script type="text/javascript" src="/scripts/displayMenu.js"></script>
     <script type="text/javascript" src="/scripts/display.js"></script>
     <script type="text/javascript" src="/scripts/p2p.js"></script>
 
@@ -20,7 +21,8 @@
         <h1 style="position: absolute; right: 5%" id="serverConnectionState">Server Connection</h1>
         <!-- if this is broken onto multiple lines then the linebreaks count as text elements annoyingly -->
         <!-- <div id="menuSection" style="position: absolute; z-index: 999; left: 40%; top: 0%; width: 20%; background-color: yellow; text-align: center"><button style="width: 50%; height: 100%" onclick="swapMenuContent(true)">Options menu</button></div> -->
-        <div id="menuSection" class="menuHidingSection"><button onclick="swapMenuContent(true)">Options menu</button></div>
+        <!-- THIS WONT WORK WHEN THE FUNCTION IS ON AN OBJECT THAT HAS YET TO BE CREATED  <div id="menuSection" class="menuHidingSection"><button onclick="menuStateToggle(true)">Options menu</button></div> -->
+        <div id="menuSection" class="menuHidingSection"><button>Options menu</button></div>
         
         <canvas style="position: absolute; left: 0; z-index: 1" id="canvasArea"></canvas>
         <canvas style="position: absolute; left: 0; z-index: 2;" id="canvasAreaFront"></canvas>
