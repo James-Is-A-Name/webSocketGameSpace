@@ -177,7 +177,7 @@ class gameDisplay{
         }
         else{
             //if not in portals add it
-            if(!this.game.portals.find( (portal) => portal.id == fromWho )){
+            if(!this.game.portals.find( (portal) => portal.destination == fromWho )){
                 this.addPortal(fromWho)
                 this.rendering.updateBackground = true;
 
@@ -218,7 +218,7 @@ class gameDisplay{
             this.assignConnection(fromWho,connection,"controller","pending")
         }
         else{        //if not in portals add it
-            if(!this.game.portals.find( (portal) => portal.id == fromWho )){
+            if(!this.game.portals.find( (portal) => portal.destination == fromWho )){
 
                 this.addPortal(fromWho)
                 this.rendering.updateBackground = true;
